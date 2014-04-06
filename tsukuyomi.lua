@@ -89,21 +89,22 @@ function core._read(text)
   -- necessary because a file can contain many functions
   local lists = {}
 
-  -- the head of a linked list chain
   local head_stack = {}
   local tail_stack = {}
 
   local prev_cell
 
-  local function append(datum)
+  local function append(datum, is_quoted)
+    if is_quoted then
+      datum = core.CreateCell(core.CreateSymbol('quote'), core.CreateCell(datum, nil))
+      is_quoted = false
+    end
     if prev_cell == nil then
       table.insert(lists, datum)
     else
       if prev_cell[1] == nil then
-        -- the first cons cell
         prev_cell[1] = datum
       else
-        -- the rest
         local cell = core.CreateCell(datum, nil)
         prev_cell[2] = cell
         prev_cell = cell
@@ -111,19 +112,28 @@ function core._read(text)
     end
   end
 
+  local quote_next = false
+  local need_quote = {}
+
   for i = 1, #tokens do
     local token = tokens[i]
     if token == '(' then
-      
       local new_cell = core.CreateCell(nil, nil)
       table.insert(head_stack, new_cell)
       table.insert(tail_stack, prev_cell)
       prev_cell = new_cell
+
+      if quote_next then
+        need_quote[new_cell] = true
+        quote_next = false
+      end
     elseif token == ')' then
       local finished_list = table.remove(head_stack)
       prev_cell = table.remove(tail_stack)
-      append(finished_list)
+      append(finished_list, need_quote[finished_list])
+      need_quote[finished_list] = nil
     elseif token == '\'' then
+      quote_next = true
     else
       local atom
       if token:find('^%-?%d+') then
@@ -136,7 +146,8 @@ function core._read(text)
         local symbol = core.CreateSymbol(token)
         atom = symbol
       end
-      append(atom)
+      append(atom, quote_next)
+      quote_next = false
     end
   end
 
@@ -158,7 +169,6 @@ function core._print(datum)
       return fqn
     elseif mt == core.tags.cell then
       local items = {}
-      table.insert(items, '(')
       local cell = datum
       while cell do
         if cell[1] then
@@ -166,8 +176,7 @@ function core._print(datum)
         end
         cell = cell[2]
       end
-      table.insert(items, ')')
-      return table.concat(items, ' ')
+      return '(' .. table.concat(items, ' ') .. ')'
     else
       assert(false)
     end
