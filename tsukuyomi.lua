@@ -7,6 +7,7 @@ function core._init()
   -- create metatable tags
   core.tags = {}
   core.tags.symbol = {}
+  -- TODO
   core.tags.keyword = {}
   core.tags.cell = {}
 end
@@ -96,7 +97,7 @@ function core._read(text)
 
   local function append(datum, is_quoted)
     if is_quoted then
-      datum = core.CreateCell(core.CreateSymbol('quote'), core.CreateCell(datum, nil))
+      datum = core.CreateCell(core.CreateSymbol('quote', 'core'), core.CreateCell(datum, nil))
       is_quoted = false
     end
     if prev_cell == nil then
@@ -143,7 +144,16 @@ function core._read(text)
         local str = token:sub(2, #token - 1)
         atom = str
       else
-        local symbol = core.CreateSymbol(token)
+        local index = token:find('/')
+        local namespace
+        local name
+        if index then
+          namespace = token:sub(1, index - 1)
+          name = token:sub(index + 1)
+        else
+          name = token
+        end
+        local symbol = core.CreateSymbol(name, namespace)
         atom = symbol
       end
       append(atom, quote_next)

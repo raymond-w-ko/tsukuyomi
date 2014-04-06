@@ -35,6 +35,7 @@ parser_test(
 (-2.56e-4)
 (+ 1 1)
 (+ '(+ 1 1) '(+ 1 1))
+(core/car foo bar)
 ]])
 
 parser_test(
