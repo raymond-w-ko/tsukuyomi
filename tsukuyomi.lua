@@ -3,30 +3,63 @@ local M = {}
 M.core = {}
 local core = M.core
 
+local kKeywordTag = {}
+local kSymbolTag = {}
+local kCellTag = {}
+
+M.TheGlobalEnvironment = {}
+
+local ParentEnvironmentOf = {}
+local kSymbolCache = {}
+
 function core._init()
-  -- create metatable tags
-  core.tags = {}
-  core.tags.symbol = {}
-  -- TODO
-  core.tags.keyword = {}
-  core.tags.cell = {}
+  local mt = {}
+  mt.__mode = 'kv'
+  setmetatable(ParentEnvironmentOf, mt)
+  setmetatable(kSymbolCache, mt)
 end
 
+
 function core.CreateSymbol(name, namespace)
+  local key
+  if namespace then
+    key = namespace .. '/' .. name
+  else
+    key = name
+  end
+  local value = kSymbolCache[key]
+  if value then
+    return value
+  end
+
   local symbol = {
     ['name'] = name,
     ['namespace'] = namespace,
   }
-  setmetatable(symbol, core.tags.symbol)
+  setmetatable(symbol, kSymbolTag)
+
+  kSymbolCache[key] = symbol
   return symbol
 end
+function core.GetSymbolName(symbol)
+  return symbol.name
+end
+function core.GetSymbolNamespace(symbol)
+  return symbol.namespace
+end
+
+local kQuoteSymbol = core.CreateSymbol('quote')
+local kSetSymbol = core.CreateSymbol('set!')
+local kDefineSymbol = core.CreateSymbol('define')
+local kIfSymbol = core.CreateSymbol('if')
+local kOkSymbol = core.CreateSymbol('ok')
 
 function core.CreateCell(first, rest)
   local cell = {
     [1] = first,
     [2] = rest,
   }
-  setmetatable(cell, core.tags.cell)
+  setmetatable(cell, kCellTag)
   return cell
 end
 
@@ -77,6 +110,8 @@ function core._tokenize(text)
     end
   end
 
+  word_done_check()
+
   return tokens
 end
 
@@ -97,7 +132,7 @@ function core._read(text)
 
   local function append(datum, is_quoted)
     if is_quoted then
-      datum = core.CreateCell(core.CreateSymbol('quote', 'core'), core.CreateCell(datum, nil))
+      datum = core.CreateCell(kQuoteSymbol, core.CreateCell(datum, nil))
       is_quoted = false
     end
     if prev_cell == nil then
@@ -137,7 +172,11 @@ function core._read(text)
       quote_next = true
     else
       local atom
-      if token:find('^%-?%d+') then
+      if token == 'true' then
+        atom = true
+      elseif token == 'false' then
+        atom = false
+      elseif token:find('^%-?%d+') then
         local num = tonumber(token)
         atom = num
       elseif token:sub(1, 1) == '"' then
@@ -165,23 +204,25 @@ function core._read(text)
 end
 
 function core._print(datum)
-  if type(datum) == 'number' then
+  if type(datum) == 'boolean' then
+    return tostring(datum)
+  elseif type(datum) == 'number' then
     return tostring(datum)
   elseif type(datum) == 'string' then
     return '"' .. datum .. '"'
   elseif type(datum) == 'table' then
     local mt = getmetatable(datum)
-    if mt == core.tags.symbol then
+    if mt == kSymbolTag then
       local fqn = datum.name
       if datum.namespace then
         fqn = datum.namespace .. '/' .. fqn
       end
       return fqn
-    elseif mt == core.tags.cell then
+    elseif mt == kCellTag then
       local items = {}
       local cell = datum
       while cell do
-        if cell[1] then
+        if cell[1] ~= nil then
           table.insert(items, core._print(cell[1]))
         end
         cell = cell[2]
@@ -191,8 +232,98 @@ function core._print(datum)
       assert(false)
     end
   else
-    assert(false)
+    return tostring(datum)
   end
+end
+
+local function is_self_evaluating(expr)
+  local expr_type = type(expr) 
+  if expr_type == 'boolean' then
+    return true
+  elseif expr_type == 'string' then
+    return true
+  elseif expr_type == 'number' then
+    return true
+  else
+    return false
+  end
+end
+
+local function is_variable(expr)
+  if type(expr) == 'table' and getmetatable(expr) == kSymbolTag then
+    return true
+  else
+    return false
+  end
+end
+
+local function lookup_variable_value(expr, env)
+  assert(env)
+
+  local name = core.GetSymbolName(expr)
+  while env do
+    local value = env[name]
+    if value then
+      return value
+    end
+    env = ParentEnvironmentOf[env]
+  end
+end
+
+local function set_symbol(cell, env)
+  local symbol = cell[1]
+  local expr = cell[2][1]
+
+  local name = core.GetSymbolName(symbol)
+  while env do
+    if env[name] then
+      env[name] = core._eval(expr)
+      return kOkSymbol
+    end
+    env = ParentEnvironmentOf[env]
+  end
+end
+
+local function define_symbol(cell, env)
+  local symbol = cell[1]
+  local expr = cell[2][1]
+
+  local name = core.GetSymbolName(symbol)
+  env[name] = core._eval(expr)
+
+  -- TODO: maybe account for scheme type function define here?
+  -- (define func (var1 var2) body)
+  return kOkSymbol
+end
+
+local function eval_if(expr, env)
+end
+
+function core._eval(expr, env)
+  if expr == nil then
+    return nil
+  elseif is_self_evaluating(expr) then
+    return expr
+  elseif is_variable(expr) then
+    return lookup_variable_value(expr, env)
+  end
+
+  local func_symbol
+  if type(expr) == 'table' and getmetatable(expr) == kCellTag then
+    func_symbol = expr[1]
+  end
+
+  if func_symbol == kQuoteSymbol then
+    return expr[2][1]
+  elseif func_symbol == kSetSymbol then
+    return set_symbol(expr[2], env)
+  elseif func_symbol == kDefineSymbol then
+    return define_symbol(expr[2], env)
+  elseif func_symbol == kIfSymbol then
+    return eval_if(expr[2], env)
+  end
+
+  assert(false)
 end
 
 M.core._init()
