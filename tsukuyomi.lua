@@ -53,6 +53,7 @@ local kSetSymbol = core.CreateSymbol('set!')
 local kDefineSymbol = core.CreateSymbol('define')
 local kIfSymbol = core.CreateSymbol('if')
 local kOkSymbol = core.CreateSymbol('ok')
+local kLambdaSymbol = core.CreateSymbol('lambda')
 
 function core.CreateCell(first, rest)
   local cell = {
@@ -271,12 +272,14 @@ local function lookup_variable_value(expr, env)
 end
 
 local function set_symbol(cell, env)
+  assert(env)
+
   local symbol = cell[1]
   local expr = cell[2][1]
 
   local name = core.GetSymbolName(symbol)
   while env do
-    if env[name] then
+    if env[name] ~= nil then
       env[name] = core._eval(expr)
       return kOkSymbol
     end
@@ -285,6 +288,8 @@ local function set_symbol(cell, env)
 end
 
 local function define_symbol(cell, env)
+  assert(env)
+
   local symbol = cell[1]
   local expr = cell[2][1]
 
@@ -297,6 +302,28 @@ local function define_symbol(cell, env)
 end
 
 local function eval_if(expr, env)
+  local cell = expr
+
+  local predicate = cell[1]
+  cell = cell[2]
+  local subsequent = cell[1]
+  cell = cell[2]
+  local alternative = cell[1]
+
+  --print(table.show(predicate, 'predicate'))
+  --print(table.show(subsequent, 'subsquent'))
+  --print(table.show(alternative, 'alternative'))
+  
+  if core._eval(predicate) then
+    return core._eval(subsequent)
+  else
+    return core._eval(alternative)
+  end
+end
+
+local function make_procedure(expr, env)
+  local args = expr[1]
+  local body = expr[1][2]
 end
 
 function core._eval(expr, env)
@@ -321,6 +348,8 @@ function core._eval(expr, env)
     return define_symbol(expr[2], env)
   elseif func_symbol == kIfSymbol then
     return eval_if(expr[2], env)
+  elseif func_symbol == kLambdaSymbol then
+    return make_procedure(expr[2], env)
   end
 
   assert(false)

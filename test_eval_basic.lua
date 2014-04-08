@@ -117,3 +117,19 @@ test(
 test(
   '(define f \'(data))',
   ok)
+
+test(
+  '(set! a "wat")',
+  ok)
+
+test(
+  '(set! b "wat")',
+  ok)
+
+test(
+  '(if true 42 13)',
+  42)
+
+test(
+  '(if false 42 13)',
+  13)
