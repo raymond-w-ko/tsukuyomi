@@ -3,7 +3,6 @@ local M = {}
 M.core = {}
 local core = M.core
 
-local kKeywordTag = {}
 local kSymbolTag = {}
 local kCellTag = {}
 
@@ -124,7 +123,11 @@ function core._read(text)
   -- a Lua array of all the lists, and atoms
   -- like if you fed this function "42 foobar (+ 1 1)" you would get 3 items in the array
   -- necessary because a file can contain many functions
-  local lists = {}
+  local data_list = core.CreateCell(nil, nil)
+  local data_list_head = data_list
+  data_list[1] = core.CreateSymbol('do')
+  data_list[2] = core.CreateCell(nil, nil)
+  data_list = data_list[2]
 
   local head_stack = {}
   local tail_stack = {}
@@ -137,7 +140,10 @@ function core._read(text)
       is_quoted = false
     end
     if prev_cell == nil then
-      table.insert(lists, datum)
+      data_list[1] = datum
+      local new_cell = core.CreateCell(nil, nil)
+      data_list[2] = new_cell
+      data_list = new_cell
     else
       if prev_cell[1] == nil then
         prev_cell[1] = datum
@@ -201,7 +207,7 @@ function core._read(text)
     end
   end
 
-  return lists
+  return data_list_head
 end
 
 function core._print(datum)
@@ -237,122 +243,82 @@ function core._print(datum)
   end
 end
 
-local function is_self_evaluating(expr)
-  local expr_type = type(expr) 
-  if expr_type == 'boolean' then
-    return true
-  elseif expr_type == 'string' then
-    return true
-  elseif expr_type == 'number' then
-    return true
-  else
-    return false
+local function unpack_args(expr, output)
+  while expr do
+    table.insert(output, core._compile(expr[1]))
+    expr = expr[2]
+    table.insert(output, ',')
+  end
+
+  if output[#output] == ',' then
+    table.remove(output)
   end
 end
 
-local function is_variable(expr)
-  if type(expr) == 'table' and getmetatable(expr) == kSymbolTag then
-    return true
-  else
-    return false
-  end
-end
+function core._compile(expr)
+  print('compiling: ' .. core._print(expr))
+  local output = {}
 
-local function lookup_variable_value(expr, env)
-  assert(env)
-
-  local name = core.GetSymbolName(expr)
-  while env do
-    local value = env[name]
-    if value then
-      return value
-    end
-    env = ParentEnvironmentOf[env]
-  end
-end
-
-local function set_symbol(cell, env)
-  assert(env)
-
-  local symbol = cell[1]
-  local expr = cell[2][1]
-
-  local name = core.GetSymbolName(symbol)
-  while env do
-    if env[name] ~= nil then
-      env[name] = core._eval(expr)
-      return kOkSymbol
-    end
-    env = ParentEnvironmentOf[env]
-  end
-end
-
-local function define_symbol(cell, env)
-  assert(env)
-
-  local symbol = cell[1]
-  local expr = cell[2][1]
-
-  local name = core.GetSymbolName(symbol)
-  env[name] = core._eval(expr)
-
-  -- TODO: maybe account for scheme type function define here?
-  -- (define func (var1 var2) body)
-  return kOkSymbol
-end
-
-local function eval_if(expr, env)
-  local cell = expr
-
-  local predicate = cell[1]
-  cell = cell[2]
-  local subsequent = cell[1]
-  cell = cell[2]
-  local alternative = cell[1]
-
-  --print(table.show(predicate, 'predicate'))
-  --print(table.show(subsequent, 'subsquent'))
-  --print(table.show(alternative, 'alternative'))
-  
-  if core._eval(predicate) then
-    return core._eval(subsequent)
-  else
-    return core._eval(alternative)
-  end
-end
-
-local function make_procedure(expr, env)
-  local args = expr[1]
-  local body = expr[1][2]
-end
-
-function core._eval(expr, env)
-  if expr == nil then
-    return nil
-  elseif is_self_evaluating(expr) then
-    return expr
-  elseif is_variable(expr) then
-    return lookup_variable_value(expr, env)
+  if type(expr) ~= 'table' or getmetatable(expr) ~= kCellTag then
+    return core._print(expr)
   end
 
-  local func_symbol
+  local function_symbol
   if type(expr) == 'table' and getmetatable(expr) == kCellTag then
-    func_symbol = expr[1]
+    local item = expr[1]
+    if getmetatable(item) == kSymbolTag then
+      function_symbol = expr[1]
+    end
   end
 
-  if func_symbol == kQuoteSymbol then
-    return expr[2][1]
-  elseif func_symbol == kSetSymbol then
-    return set_symbol(expr[2], env)
-  elseif func_symbol == kDefineSymbol then
-    return define_symbol(expr[2], env)
-  elseif func_symbol == kIfSymbol then
-    return eval_if(expr[2], env)
-  elseif func_symbol == kLambdaSymbol then
-    return make_procedure(expr[2], env)
+  if function_symbol then
+    local name = core.GetSymbolName(function_symbol)
+
+    if name == 'do' then
+      local bodies = expr[2]
+      while bodies do
+        table.insert(output, core._compile(bodies[1]))
+        bodies = bodies[2]
+      end
+    elseif name == 'if' then
+      local subexprs = {}
+      expr = expr[2]
+      while expr do
+        table.insert(subexprs, expr[1])
+        expr = expr[2]
+      end
+
+      table.insert(output, 'if (')
+      table.insert(output, core._compile(subexprs[1]))
+      table.insert(output, ') then\n')
+      table.insert(output, core._compile(subexprs[2]))
+      table.insert(output, '\nelse\n')
+      table.insert(output, core._compile(subexprs[3]))
+      table.insert(output, '\nend\n')
+    else
+      -- regular function call
+      local prefix = name:sub(1, 1)
+      if prefix == '.' or prefix == ':' then
+        expr = expr[2]
+        local object_symbol = expr[1]
+        local object_name = core.GetSymbolName(object_symbol)
+        table.insert(output, object_name)
+        table.insert(output, prefix)
+        table.insert(output, name:sub(2))
+      else
+        table.insert(output, name)
+      end
+      expr = expr[2]
+
+      table.insert(output, '(');
+      unpack_args(expr, output)
+      table.insert(output, ');\n')
+    end
+  else
+    table.insert(output, core._print(expr))
   end
 
-  assert(false)
+  return table.concat(output)
 end
 
 M.core._init()
