@@ -309,6 +309,9 @@ end
 compiled_forms['do'] = function(datum, output)
   table.insert(output, '(function()\n')
   while datum do
+    if datum[2] == nil then
+      table.insert(output, 'return ')
+    end
     table.insert(output, M.compile(datum[1]))
     table.insert(output, '\n')
     datum = datum[2]
