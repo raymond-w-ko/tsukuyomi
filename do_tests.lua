@@ -3,28 +3,29 @@ require('util')
 local tsukuyomi = require('tsukuyomi')
 
 local function compile(text)
-  local data = tsukuyomi.core._read(text)
+  local data = tsukuyomi._read(text)
   print()
-  print(tsukuyomi.core._print(data))
+  --print('raw: ' .. table.show(data))
 
-  local output = tsukuyomi.core._compile(data)
+  local output = tsukuyomi.compile(data)
   print()
   print(output)
 
   print('--------------------------------------------------------------------------------')
 end
 
+compile([[]])
+compile([[
+]])
+
 compile([[
 (require "strict")
 (require "util")
 
-(:sub str1 1 2)
-(:len str2)
-
-(.concat table t1 t2)
-(.show table t)
-
 (func arg1 arg2 arg3)
+
+(if cond
+  foo)
 
 (if cond
   foo
@@ -39,6 +40,8 @@ compile([[
   (if bar
     buzz
     baz))
+
+(cat)
 
 ]]
 )

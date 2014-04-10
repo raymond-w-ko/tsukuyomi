@@ -1,9 +1,9 @@
 local M = {}
 
-M.core = {}
-local core = M.core
+M = {}
 
 local kSymbolTag = {}
+-- tag for cons cell
 local kCellTag = {}
 
 M.TheGlobalEnvironment = {}
@@ -11,15 +11,22 @@ M.TheGlobalEnvironment = {}
 local ParentEnvironmentOf = {}
 local kSymbolCache = {}
 
-function core._init()
+local function _init()
   local mt = {}
   mt.__mode = 'kv'
   setmetatable(ParentEnvironmentOf, mt)
   setmetatable(kSymbolCache, mt)
 end
 
+function kSymbolTag.__tostring(symbol)
+  if symbol.namespace then
+    return symbol.namespace .. '/' .. symbol
+  else
+    return symbol.name
+  end
+end
 
-function core.CreateSymbol(name, namespace)
+local function CreateSymbol(name, namespace)
   local key
   if namespace then
     key = namespace .. '/' .. name
@@ -40,21 +47,21 @@ function core.CreateSymbol(name, namespace)
   kSymbolCache[key] = symbol
   return symbol
 end
-function core.GetSymbolName(symbol)
+function GetSymbolName(symbol)
   return symbol.name
 end
-function core.GetSymbolNamespace(symbol)
+function GetSymbolNamespace(symbol)
   return symbol.namespace
 end
 
-local kQuoteSymbol = core.CreateSymbol('quote')
-local kSetSymbol = core.CreateSymbol('set!')
-local kDefineSymbol = core.CreateSymbol('define')
-local kIfSymbol = core.CreateSymbol('if')
-local kOkSymbol = core.CreateSymbol('ok')
-local kLambdaSymbol = core.CreateSymbol('lambda')
+local kQuoteSymbol = CreateSymbol('quote')
+local kSetSymbol = CreateSymbol('set!')
+local kDefineSymbol = CreateSymbol('define')
+local kIfSymbol = CreateSymbol('if')
+local kOkSymbol = CreateSymbol('ok')
+local kLambdaSymbol = CreateSymbol('lambda')
 
-function core.CreateCell(first, rest)
+function CreateCell(first, rest)
   local cell = {
     [1] = first,
     [2] = rest,
@@ -76,7 +83,7 @@ local kWhitespaces = {
 }
 
 -- splits a raw input string into an array of tokens suitable for parsing
-function core._tokenize(text)
+local function _tokenize(text)
   local tokens = {}
 
   -- stores an array of chars to form the next word
@@ -117,17 +124,15 @@ end
 
 -- the base reader
 -- for bootstrapping, and maybe actual execution?
-function core._read(text)
-  local tokens = core._tokenize(text)
+function M._read(text)
+  local tokens = _tokenize(text)
 
   -- a Lua array of all the lists, and atoms
   -- like if you fed this function "42 foobar (+ 1 1)" you would get 3 items in the array
   -- necessary because a file can contain many functions
-  local data_list = core.CreateCell(nil, nil)
+  local data_list = CreateCell(nil, nil)
   local data_list_head = data_list
-  data_list[1] = core.CreateSymbol('do')
-  data_list[2] = core.CreateCell(nil, nil)
-  data_list = data_list[2]
+  data_list[1] = CreateSymbol('do')
 
   local head_stack = {}
   local tail_stack = {}
@@ -136,19 +141,18 @@ function core._read(text)
 
   local function append(datum, is_quoted)
     if is_quoted then
-      datum = core.CreateCell(kQuoteSymbol, core.CreateCell(datum, nil))
+      datum = CreateCell(kQuoteSymbol, CreateCell(datum, nil))
       is_quoted = false
     end
+
     if prev_cell == nil then
-      data_list[1] = datum
-      local new_cell = core.CreateCell(nil, nil)
-      data_list[2] = new_cell
-      data_list = new_cell
+      data_list[2] = CreateCell(datum, nil)
+      data_list = data_list[2]
     else
       if prev_cell[1] == nil then
         prev_cell[1] = datum
       else
-        local cell = core.CreateCell(datum, nil)
+        local cell = CreateCell(datum, nil)
         prev_cell[2] = cell
         prev_cell = cell
       end
@@ -161,7 +165,7 @@ function core._read(text)
   for i = 1, #tokens do
     local token = tokens[i]
     if token == '(' then
-      local new_cell = core.CreateCell(nil, nil)
+      local new_cell = CreateCell(nil, nil)
       table.insert(head_stack, new_cell)
       table.insert(tail_stack, prev_cell)
       prev_cell = new_cell
@@ -199,7 +203,7 @@ function core._read(text)
         else
           name = token
         end
-        local symbol = core.CreateSymbol(name, namespace)
+        local symbol = CreateSymbol(name, namespace)
         atom = symbol
       end
       append(atom, quote_next)
@@ -210,7 +214,7 @@ function core._read(text)
   return data_list_head
 end
 
-function core._print(datum)
+function M._print(datum)
   if type(datum) == 'boolean' then
     return tostring(datum)
   elseif type(datum) == 'number' then
@@ -230,7 +234,7 @@ function core._print(datum)
       local cell = datum
       while cell do
         if cell[1] ~= nil then
-          table.insert(items, core._print(cell[1]))
+          table.insert(items, M._print(cell[1]))
         end
         cell = cell[2]
       end
@@ -245,7 +249,7 @@ end
 
 local function unpack_args(expr, output)
   while expr do
-    table.insert(output, core._compile(expr[1]))
+    table.insert(output, M.compile(expr[1]))
     expr = expr[2]
     table.insert(output, ',')
   end
@@ -255,72 +259,85 @@ local function unpack_args(expr, output)
   end
 end
 
-function core._compile(expr)
-  print('compiling: ' .. core._print(expr))
+local compiled_forms = {}
+
+function M.compile(datum)
+  print('compiling: ' .. M._print(datum))
+  --print('raw: ' .. table.show(datum))
+
   local output = {}
 
-  if type(expr) ~= 'table' or getmetatable(expr) ~= kCellTag then
-    return core._print(expr)
-  end
+  if type(datum) == 'boolean' or type(datum) == 'string' or type(datum) == 'number' then
+    -- atom types
+    table.insert(output, tostring(datum))
+  elseif type(datum) == 'table' then
+    local tag = getmetatable(datum)
+    if tag == kSymbolTag then
+      -- FIXME: proper symbol name lookup
+      return tostring(datum)
+    elseif tag == kCellTag then
+      local first = datum[1]
+      local symbol_name = tostring(first)
+      local rest = datum[2]
 
-  local function_symbol
-  if type(expr) == 'table' and getmetatable(expr) == kCellTag then
-    local item = expr[1]
-    if getmetatable(item) == kSymbolTag then
-      function_symbol = expr[1]
-    end
-  end
+      if type(first) == 'table' and getmetatable(first) == kSymbolTag then
+        -- this is a form, meaning something like (lisp-function arg0 arg1 arg2)
 
-  if function_symbol then
-    local name = core.GetSymbolName(function_symbol)
-
-    if name == 'do' then
-      local bodies = expr[2]
-      while bodies do
-        table.insert(output, core._compile(bodies[1]))
-        bodies = bodies[2]
+        if compiled_forms[symbol_name] then
+          compiled_forms[symbol_name](rest, output)
+        else
+          -- already compiled
+          --table.insert(output, '(function() return ')
+          --table.insert(output, tostring(first))
+          --table.insert(output, '() end)()')
+          table.insert(output, tostring(first))
+          table.insert(output, '(')
+          unpack_args(rest, output)
+          table.insert(output, ')')
+        end
       end
-    elseif name == 'if' then
-      local subexprs = {}
-      expr = expr[2]
-      while expr do
-        table.insert(subexprs, expr[1])
-        expr = expr[2]
-      end
-
-      table.insert(output, 'if (')
-      table.insert(output, core._compile(subexprs[1]))
-      table.insert(output, ') then\n')
-      table.insert(output, core._compile(subexprs[2]))
-      table.insert(output, '\nelse\n')
-      table.insert(output, core._compile(subexprs[3]))
-      table.insert(output, '\nend\n')
-    else
-      -- regular function call
-      local prefix = name:sub(1, 1)
-      if prefix == '.' or prefix == ':' then
-        expr = expr[2]
-        local object_symbol = expr[1]
-        local object_name = core.GetSymbolName(object_symbol)
-        table.insert(output, object_name)
-        table.insert(output, prefix)
-        table.insert(output, name:sub(2))
-      else
-        table.insert(output, name)
-      end
-      expr = expr[2]
-
-      table.insert(output, '(');
-      unpack_args(expr, output)
-      table.insert(output, ');\n')
     end
   else
-    table.insert(output, core._print(expr))
+    print(M._print(datum))
+    assert(false)
   end
 
   return table.concat(output)
 end
 
-M.core._init()
+-- FIXME: WRONG, first var should be let style binding arg list
+compiled_forms['do'] = function(datum, output)
+  table.insert(output, '(function()\n')
+  while datum do
+    table.insert(output, M.compile(datum[1]))
+    table.insert(output, '\n')
+    datum = datum[2]
+  end
+  table.insert(output, 'end)()\n')
+end
+
+compiled_forms['if'] = function(datum, output)
+  table.insert(output, '(function()\n')
+  table.insert(output, 'if ')
+  table.insert(output, M.compile(datum[1]))
+  datum = datum[2]
+  table.insert(output, ' then\n')
+  table.insert(output, 'return ')
+  table.insert(output, M.compile(datum[1]))
+  table.insert(output, ' \n')
+  datum = datum[2]
+  if datum then
+    table.insert(output, 'else\n')
+    table.insert(output, 'return ')
+    table.insert(output, M.compile(datum[1]))
+    table.insert(output, ' \n')
+  end
+  table.insert(output, 'end)()\n')
+end
+
+compiled_forms['define'] = function(datum, output)
+end
+
+_init()
 
 return M
