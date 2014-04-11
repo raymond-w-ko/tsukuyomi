@@ -197,7 +197,7 @@ function M._read(text)
         local index = token:find('/')
         local namespace
         local name
-        if index then
+        if index and token:len() > 1 then
           namespace = token:sub(1, index - 1)
           name = token:sub(index + 1)
         else
@@ -247,7 +247,7 @@ function M._print(datum)
   end
 end
 
-local function unpack_args(expr, output)
+local function unpack_and_compile_args(expr, output)
   while expr do
     table.insert(output, M.compile(expr[1]))
     expr = expr[2]
@@ -257,6 +257,27 @@ local function unpack_args(expr, output)
   if output[#output] == ',' then
     table.remove(output)
   end
+end
+
+local function unpack_args(expr, output)
+  while expr do
+    table.insert(output, tostring(expr[1]))
+    expr = expr[2]
+    table.insert(output, ',')
+  end
+
+  if output[#output] == ',' then
+    table.remove(output)
+  end
+end
+
+local function list_to_array(datum)
+  local arr = {}
+  while datum do
+    table.insert(arr, datum[1])
+    datum = datum[2]
+  end
+  return arr
 end
 
 local compiled_forms = {}
@@ -292,7 +313,7 @@ function M.compile(datum)
           --table.insert(output, '() end)()')
           table.insert(output, tostring(first))
           table.insert(output, '(')
-          unpack_args(rest, output)
+          unpack_and_compile_args(rest, output)
           table.insert(output, ')')
         end
       end
@@ -338,7 +359,94 @@ compiled_forms['if'] = function(datum, output)
   table.insert(output, 'end)()\n')
 end
 
-compiled_forms['define'] = function(datum, output)
+compiled_forms['lambda'] = function(datum, output)
+  local args = datum[1]
+  datum = datum[2]
+
+  local bodies = datum
+
+  table.insert(output, '(function (')
+  unpack_args(args, output)
+  table.insert(output, ')\n')
+  while bodies do
+    if bodies[2] == nil then
+      table.insert(output, 'return ')
+    end
+    table.insert(output, M.compile(bodies[1]))
+    table.insert(output, '\n')
+    bodies = bodies[2]
+  end
+  table.insert(output, 'end)\n')
+end
+
+compiled_forms['+'] = function(datum, output)
+  table.insert(output, '(')
+  table.insert(output, '0')
+  while datum do
+    table.insert(output, ' + (')
+    table.insert(output, M.compile(datum[1]))
+    table.insert(output, ')')
+    datum = datum[2]
+  end
+  table.insert(output, ')')
+end
+
+compiled_forms['*'] = function(datum, output)
+  table.insert(output, '(')
+  table.insert(output, '1')
+  while datum do
+    table.insert(output, ' * (')
+    table.insert(output, M.compile(datum[1]))
+    table.insert(output, ')')
+    datum = datum[2]
+  end
+  table.insert(output, ')')
+end
+
+compiled_forms['-'] = function(datum, output)
+  table.insert(output, '(')
+  local args = list_to_array(datum)
+  if #args == 0 then
+    assert(false)
+  elseif #args == 1 then
+    table.insert(output, '0 - (')
+    table.insert(output, M.compile(args[1]))
+    table.insert(output, ')')
+  else
+    table.insert(output, '(')
+    table.insert(output, M.compile(args[1]))
+    table.insert(output, ')')
+
+    for i = 2, #args do
+      table.insert(output, ' - (')
+      table.insert(output, M.compile(args[i]))
+      table.insert(output, ')')
+    end
+  end
+  table.insert(output, ')')
+end
+
+compiled_forms['/'] = function(datum, output)
+  table.insert(output, '(')
+  local args = list_to_array(datum)
+  if #args == 0 then
+    assert(false)
+  elseif #args == 1 then
+    table.insert(output, '1 / (')
+    table.insert(output, M.compile(args[1]))
+    table.insert(output, ')')
+  else
+    table.insert(output, '(')
+    table.insert(output, M.compile(args[1]))
+    table.insert(output, ')')
+
+    for i = 2, #args do
+      table.insert(output, ' / (')
+      table.insert(output, M.compile(args[i]))
+      table.insert(output, ')')
+    end
+  end
+  table.insert(output, ')')
 end
 
 _init()

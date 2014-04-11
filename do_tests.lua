@@ -43,5 +43,16 @@ compile([[
 
 (cat)
 
+(lambda (x) (* x x))
+(lambda (y) (+ y y))
+
+(lambda (x y z) (* x x))
+
+(lambda (x) (- 1))
+(lambda (x) (- 1 2 x))
+
+(lambda (x) (/ 2))
+(lambda (x) (/ 3 4 x))
+
 ]]
 )
