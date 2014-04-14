@@ -248,7 +248,7 @@ function M._print(datum)
 end
 
 local function unpack_and_compile_args(expr, output)
-  while expr do
+  while expr and expr[1] do
     table.insert(output, M.compile(expr[1]))
     expr = expr[2]
     table.insert(output, ',')
@@ -260,7 +260,7 @@ local function unpack_and_compile_args(expr, output)
 end
 
 local function unpack_args(expr, output)
-  while expr do
+  while expr and expr[1] do
     table.insert(output, tostring(expr[1]))
     expr = expr[2]
     table.insert(output, ',')
@@ -288,9 +288,13 @@ function M.compile(datum)
 
   local output = {}
 
-  if type(datum) == 'boolean' or type(datum) == 'string' or type(datum) == 'number' then
+  if type(datum) == 'boolean' or type(datum) == 'number' then
     -- atom types
     table.insert(output, tostring(datum))
+  elseif type(datum) == 'string' then
+    table.insert(output, '"')
+    table.insert(output, tostring(datum))
+    table.insert(output, '"')
   elseif type(datum) == 'table' then
     local tag = getmetatable(datum)
     if tag == kSymbolTag then
@@ -334,14 +338,14 @@ compiled_forms['do'] = function(datum, output)
       table.insert(output, 'return ')
     end
     table.insert(output, M.compile(datum[1]))
-    table.insert(output, '\n')
+    table.insert(output, ';\n')
     datum = datum[2]
   end
   table.insert(output, 'end)()\n')
 end
 
 compiled_forms['if'] = function(datum, output)
-  table.insert(output, '(function()\n')
+  table.insert(output, '((function()\n')
   table.insert(output, 'if ')
   table.insert(output, M.compile(datum[1]))
   datum = datum[2]
@@ -356,7 +360,7 @@ compiled_forms['if'] = function(datum, output)
     table.insert(output, M.compile(datum[1]))
     table.insert(output, ' \n')
   end
-  table.insert(output, 'end)()\n')
+  table.insert(output, 'end)())\n')
 end
 
 compiled_forms['lambda'] = function(datum, output)
@@ -377,6 +381,28 @@ compiled_forms['lambda'] = function(datum, output)
     bodies = bodies[2]
   end
   table.insert(output, 'end)\n')
+end
+
+compiled_forms['define'] = function(datum, output)
+  local symbol = datum[1]
+  local symbol_name = tostring(symbol)
+  datum = datum[2]
+
+  table.insert(output, '(function ()\n')
+
+  -- strict.lua
+  if global then
+    table.insert(output, 'global(\'')
+    table.insert(output, symbol_name)
+    table.insert(output, '\')\n')
+  end
+
+  table.insert(output, '_G[\'')
+  table.insert(output, symbol_name)
+  table.insert(output, '\'] = ')
+  table.insert(output, M.compile(datum[1]))
+
+  table.insert(output, 'end)()\n')
 end
 
 compiled_forms['+'] = function(datum, output)
