@@ -132,7 +132,6 @@ function M._read(text)
   -- necessary because a file can contain many functions
   local data_list = CreateCell(nil, nil)
   local data_list_head = data_list
-  data_list[1] = CreateSymbol('do')
 
   local head_stack = {}
   local tail_stack = {}
@@ -146,8 +145,12 @@ function M._read(text)
     end
 
     if prev_cell == nil then
-      data_list[2] = CreateCell(datum, nil)
-      data_list = data_list[2]
+      if data_list[1] == nil then
+        data_list[1] = datum
+      else
+        data_list[2] = CreateCell(datum, nil)
+        data_list = data_list[2]
+      end
     else
       if prev_cell[1] == nil then
         prev_cell[1] = datum
@@ -273,7 +276,7 @@ end
 
 local function list_to_array(datum)
   local arr = {}
-  while datum do
+  while datum and datum[1] do
     table.insert(arr, datum[1])
     datum = datum[2]
   end
@@ -282,52 +285,164 @@ end
 
 local compiled_forms = {}
 
-function M.compile(datum)
-  print('compiling: ' .. M._print(datum))
-  --print('raw: ' .. table.show(datum))
+local counter = -1
+local function make_unique_var_name()
+  counter = counter + 1
+  return 'var' .. tostring(counter)
+end
 
-  local output = {}
+local function compile_vars(datum, output)
+  local var_names = {}
+  while datum and datum[1] do
+    local var_name = make_unique_var_name()
+    table.insert(var_names, var_name)
+    table.insert(output, 'local ')
+    table.insert(output, var_name)
+    table.insert(output, ' = ')
+    table.insert(output, M.compile(datum[1], output))
+    table.insert(output, '\n')
+    datum = datum[2]
+  end
 
-  if type(datum) == 'boolean' or type(datum) == 'number' then
-    -- atom types
-    table.insert(output, tostring(datum))
-  elseif type(datum) == 'string' then
-    table.insert(output, '"')
-    table.insert(output, tostring(datum))
-    table.insert(output, '"')
-  elseif type(datum) == 'table' then
+  return var_names
+end
+
+local function is_lua_primitive(datum)
+  if type(datum) == 'string' or type(datum) == 'number' or type(datum) == 'boolean' then
+    return true
+  end
+
+  if type(datum) == 'table' then
     local tag = getmetatable(datum)
     if tag == kSymbolTag then
-      -- FIXME: proper symbol name lookup
+      return true
+    end
+  end
+
+  return false
+end
+
+local function compile_lua_primitive(datum)
+  if type(datum) == 'number' or type(datum) == 'boolean' then
+    return tostring(datum)
+  end
+
+  if type(datum) == 'string' then
+    return '"' .. datum .. '"'
+  end
+
+  if type(datum) == 'table' then
+    local tag = getmetatable(datum)
+    if tag == kSymbolTag then
       return tostring(datum)
-    elseif tag == kCellTag then
-      local first = datum[1]
-      local symbol_name = tostring(first)
-      local rest = datum[2]
+    end
+  end
 
-      if type(first) == 'table' and getmetatable(first) == kSymbolTag then
-        -- this is a form, meaning something like (lisp-function arg0 arg1 arg2)
+  assert(false)
+end
 
-        if compiled_forms[symbol_name] then
-          compiled_forms[symbol_name](rest, output)
-        else
-          -- already compiled
-          --table.insert(output, '(function() return ')
-          --table.insert(output, tostring(first))
-          --table.insert(output, '() end)()')
-          table.insert(output, tostring(first))
-          table.insert(output, '(')
-          unpack_and_compile_args(rest, output)
-          table.insert(output, ')')
+function M.compile_to_ir(ir)
+  -- setup
+  local index_to_process = 1
+
+  while index_to_process <= #ir do
+    local n = #ir
+
+    for i = index_to_process, n do
+      local insn = ir[i]
+      if insn.op == 'CALL' then
+        for j = 1, #insn.args do
+          local arg = insn.args[j]
+          if is_lua_primitive(arg) then
+            insn.args[j] = compile_lua_primitive(arg)
+          else
+            local var_name = make_unique_var_name()
+            insn.args[j] = var_name
+
+            local insn = {}
+            insn.op = 'VAR'
+            insn.args = {var_name}
+            table.insert(ir, insn)
+
+            local insn = {}
+            insn.op = 'CALL'
+            insn.args = list_to_array(arg)
+            table.insert(ir, insn)
+          end
         end
       end
     end
-  else
-    print(M._print(datum))
-    assert(false)
+
+    index_to_process = n + 1
+  end
+end
+
+local function to_lua_call(insn)
+  local text = {}
+  assert(insn.op == 'CALL')
+  local args = insn.args
+  assert(type(args[1]) == 'string')
+  table.insert(text, args[1])
+  table.insert(text, '(')
+  for i = 2, #args do
+    assert(type(args[i]) == 'string')
+    table.insert(text, args[i])
+    if i < #args then
+      table.insert(text, ', ')
+    end
+  end
+  table.insert(text, ')')
+  return table.concat(text)
+end
+
+function M.compile_to_lua(ir)
+  local lines = {}
+
+  local i = 1
+  while i <= #ir do
+    local line = {}
+
+    local insn = ir[i]
+    if insn.op == 'VAR' then
+      table.insert(line, 'local ')
+      table.insert(line, insn.args[1])
+      table.insert(line, ' = ')
+
+      i = i + 1
+      insn = ir[i]
+    end
+
+    if insn.op == 'CALL' then
+      table.insert(line, to_lua_call(insn))
+    end
+
+    table.insert(lines, table.concat(line))
+    i = i + 1
   end
 
-  return table.concat(output)
+  return table.concat(lines, '\n')
+end
+
+function M.compile(datum)
+  local ir = {}
+  local tag
+  if type(datum) == 'table' then
+    tag = getmetatable(datum)
+  end
+
+  if tag == kCellTag then
+    -- function all
+    local insn = {}
+    insn.op = 'CALL'
+    insn.args = list_to_array(datum)
+    table.insert(ir, insn)
+  end
+
+  M.compile_to_ir(ir)
+  print(table.show(ir))
+  local lua_source_code = M.compile_to_lua(ir)
+
+  return lua_source_code
 end
 
 -- FIXME: WRONG, first var should be let style binding arg list

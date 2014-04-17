@@ -3,36 +3,50 @@ require('util')
 local tsukuyomi = require('tsukuyomi')
 
 local function compile(text)
-  local data = tsukuyomi._read(text)
-  --print('raw: ' .. table.show(data))
+  local datum = tsukuyomi._read(text)
+  print(tsukuyomi._print(datum))
+  print()
 
-  local output = tsukuyomi.compile(data)
-  print(output)
+  while datum and datum[1] do
+    print('--------------------------------------------------------------------------------')
 
-  local f = io.open('compiled.lua', 'wb')
-  f:write(output)
-  f:close()
+    local output = tsukuyomi.compile(datum[1])
+    print(output)
 
-  assert(loadstring(output, 'repl'))()
-
-  print('--------------------------------------------------------------------------------')
+    datum = datum[2]
+  end
 end
 
 --compile([[]])
 --compile([[
 --]])
 
-compile([[
-(lambda () (+ 2 2))
-1
-]]
-)
+compile(
+[[
+(func a b c d)
+(print "stuff" "more stuff" "even more stuff")
+(f1 (f2 a) b c d)
+(f1 (f2 (f3 a) b) c d e)
+
+(require "strict")
+(require "util")
+
+(lambda (x) (* x x))
+(lambda (y) (+ y y))
+
+(lambda (x y z) (* x x))
+
+(lambda (x) (- 1))
+(lambda (x) (- 1 2 x))
+
+(lambda (x) (/ 2))
+(lambda (x) (/ 3 4 x))
+
+]])
 
 
 --compile([[
 
---(require "strict")
---(require "util")
 
 --(define square (lambda (x) (* x x)))
 --(print (square 2))
@@ -60,17 +74,6 @@ compile([[
     --baz))
 
 --(cat)
-
---(lambda (x) (* x x))
---(lambda (y) (+ y y))
-
---(lambda (x y z) (* x x))
-
---(lambda (x) (- 1))
---(lambda (x) (- 1 2 x))
-
---(lambda (x) (/ 2))
---(lambda (x) (/ 3 4 x))
 
 
 --]]
