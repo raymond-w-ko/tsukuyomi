@@ -7,14 +7,8 @@ local function compile(text)
   print(tsukuyomi._print(datum))
   print()
 
-  while datum and datum[1] do
-    print('--------------------------------------------------------------------------------')
-
-    local output = tsukuyomi.compile(datum[1])
-    print(output)
-
-    datum = datum[2]
-  end
+  local output = tsukuyomi.compile(datum)
+  print(output)
 end
 
 --compile([[]])
@@ -27,25 +21,26 @@ compile(
 (print "stuff" "more stuff" "even more stuff")
 (f1 (f2 a) b c d)
 (f1 (f2 (f3 a) b) c d e)
-
-(require "strict")
-(require "util")
-
-(lambda (x) (* x x))
-(lambda (y) (+ y y))
-
-(lambda (x y z) (* x x))
-
-(lambda (x) (- 1))
-(lambda (x) (- 1 2 x))
-
-(lambda (x) (/ 2))
-(lambda (x) (/ 3 4 x))
+(f1 (f2 (f3 a) b) c (f5 x y z) (f8 i (foo bar baz) k))
 
 ]])
 
 
 --compile([[
+
+--(require "strict")
+--(require "util")
+
+--(lambda (x) (* x x))
+--(lambda (y) (+ y y))
+
+--(lambda (x y z) (* x x))
+
+--(lambda (x) (- 1))
+--(lambda (x) (- 1 2 x))
+
+--(lambda (x) (/ 2))
+--(lambda (x) (/ 3 4 x))
 
 
 --(define square (lambda (x) (* x x)))

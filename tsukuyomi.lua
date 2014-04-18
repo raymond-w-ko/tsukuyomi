@@ -2,19 +2,49 @@ local M = {}
 
 M = {}
 
+--------------------------------------------------------------------------------
+-- doubly-linked list
+--------------------------------------------------------------------------------
+local function ll_new_node()
+  return {}
+end
+
+local function ll_insert_after(node, new_node)
+  new_node.prev = node
+  new_node.next = node.next
+  if node.next then
+    node.next.prev = new_node
+  end
+  node.next = new_node
+end
+
+local function ll_insert_before(node, new_node)
+  new_node.prev = node.prev
+  new_node.next = node
+  if node.prev then
+    node.prev.next = new_node
+  end
+  node.prev = new_node
+end
+
+local function ll_remove(node)
+  node.prev.next = node.next
+  node.next.prev = node.prev
+end
+
+--------------------------------------------------------------------------------
+-- tsukuyomi
+--------------------------------------------------------------------------------
+
 local kSymbolTag = {}
 -- tag for cons cell
 local kCellTag = {}
 
-M.TheGlobalEnvironment = {}
-
-local ParentEnvironmentOf = {}
 local kSymbolCache = {}
 
 local function _init()
   local mt = {}
   mt.__mode = 'kv'
-  setmetatable(ParentEnvironmentOf, mt)
   setmetatable(kSymbolCache, mt)
 end
 
@@ -250,30 +280,6 @@ function M._print(datum)
   end
 end
 
-local function unpack_and_compile_args(expr, output)
-  while expr and expr[1] do
-    table.insert(output, M.compile(expr[1]))
-    expr = expr[2]
-    table.insert(output, ',')
-  end
-
-  if output[#output] == ',' then
-    table.remove(output)
-  end
-end
-
-local function unpack_args(expr, output)
-  while expr and expr[1] do
-    table.insert(output, tostring(expr[1]))
-    expr = expr[2]
-    table.insert(output, ',')
-  end
-
-  if output[#output] == ',' then
-    table.remove(output)
-  end
-end
-
 local function list_to_array(datum)
   local arr = {}
   while datum and datum[1] do
@@ -288,23 +294,7 @@ local compiled_forms = {}
 local counter = -1
 local function make_unique_var_name()
   counter = counter + 1
-  return 'var' .. tostring(counter)
-end
-
-local function compile_vars(datum, output)
-  local var_names = {}
-  while datum and datum[1] do
-    local var_name = make_unique_var_name()
-    table.insert(var_names, var_name)
-    table.insert(output, 'local ')
-    table.insert(output, var_name)
-    table.insert(output, ' = ')
-    table.insert(output, M.compile(datum[1], output))
-    table.insert(output, '\n')
-    datum = datum[2]
-  end
-
-  return var_names
+  return '_var' .. tostring(counter)
 end
 
 local function is_lua_primitive(datum)
@@ -341,39 +331,78 @@ local function compile_lua_primitive(datum)
   assert(false)
 end
 
-function M.compile_to_ir(ir)
-  -- setup
-  local index_to_process = 1
+function M.compile_to_ir(head_node)
+  local dirty_nodes = {}
 
-  while index_to_process <= #ir do
-    local n = #ir
+  local node = head_node
+  while node do
+    table.insert(dirty_nodes, node)
+    node = node.next
+  end
 
-    for i = index_to_process, n do
-      local insn = ir[i]
-      if insn.op == 'CALL' then
-        for j = 1, #insn.args do
-          local arg = insn.args[j]
-          if is_lua_primitive(arg) then
-            insn.args[j] = compile_lua_primitive(arg)
+  while #dirty_nodes > 0 do
+    local new_dirty_nodes = {}
+
+    for _, node in ipairs(dirty_nodes) do
+      local op = node.op
+      local args = node.args
+      if op == 'LISP' then
+        local datum = args[1]
+        local tag
+        if type(datum) == 'table' then
+          tag = getmetatable(datum)
+        end
+
+        if tag == kCellTag then
+          -- normal function call
+          node.op = 'CALL'
+          node.args = list_to_array(datum)
+          table.insert(new_dirty_nodes, node)
+        end
+      elseif op == 'CALL' then
+        for i = 1, #args do
+          if is_lua_primitive(args[i]) then
+            args[i] = compile_lua_primitive(args[i])
           else
+            local var_node = ll_new_node()
+            table.insert(dirty_nodes, var_node)
+
+            var_node.op = 'VAR'
             local var_name = make_unique_var_name()
-            insn.args[j] = var_name
-
-            local insn = {}
-            insn.op = 'VAR'
-            insn.args = {var_name}
-            table.insert(ir, insn)
-
-            local insn = {}
-            insn.op = 'CALL'
-            insn.args = list_to_array(arg)
-            table.insert(ir, insn)
+            var_node.args = {var_name, args[i]}
+            args[i] = var_name
+            ll_insert_before(node, var_node)
           end
         end
+      elseif op == 'VAR' then
+        table.insert(dirty_nodes, node)
+        node.op = 'LISP'
+        node.var_name = args[1]
+        args[1] = args[2]
+        args[2] = nil
       end
     end
 
-    index_to_process = n + 1
+    dirty_nodes = new_dirty_nodes
+  end
+
+  -- DEBUG
+  local node = head_node
+  while node do
+    local line = {}
+    table.insert(line, node.op)
+    table.insert(line, ': ')
+    if node.op == 'VAR' then
+      table.insert(line, node.args[1])
+      table.insert(line, ' - > ')
+      table.insert(line, node.args[2].op)
+      table.insert(line, ' - > ')
+      table.insert(line, table.show(node.args[2].args))
+    else
+      table.insert(line, table.show(node.args))
+    end
+    print(table.concat(line))
+    node = node.next
   end
 end
 
@@ -395,200 +424,206 @@ local function to_lua_call(insn)
   return table.concat(text)
 end
 
-function M.compile_to_lua(ir)
+function M.compile_to_lua(ir_list)
   local lines = {}
 
-  local i = 1
-  while i <= #ir do
+  local insn = ir_list
+  while insn do
     local line = {}
 
-    local insn = ir[i]
-    if insn.op == 'VAR' then
+    if insn.var_name then
       table.insert(line, 'local ')
-      table.insert(line, insn.args[1])
+      table.insert(line, insn.var_name)
       table.insert(line, ' = ')
-
-      i = i + 1
-      insn = ir[i]
     end
 
-    if insn.op == 'CALL' then
+    if insn.op == 'NOP' then
+      -- pass
+    elseif insn.op == 'CALL' then
       table.insert(line, to_lua_call(insn))
+    elseif insn.op == 'LISP' then
+      table.insert(line, 'UNCOMPILED LISP: ')
     end
 
-    table.insert(lines, table.concat(line))
-    i = i + 1
+    if #line > 0 then
+      table.insert(lines, table.concat(line))
+    end
+
+    insn = insn.next
   end
 
   return table.concat(lines, '\n')
 end
 
 function M.compile(datum)
-  local ir = {}
-  local tag
-  if type(datum) == 'table' then
-    tag = getmetatable(datum)
+  -- convert cons cell linked list to lua doubly-linked list
+  local head_node
+  local node
+  while datum and datum[1] do
+    local new_node = ll_new_node()
+    new_node.op = 'LISP'
+    new_node.args = { datum[1] }
+
+    if node then
+      ll_insert_after(node, new_node)
+    else
+      head_node = new_node
+    end
+    node = new_node
+
+    datum = datum[2]
   end
 
-  if tag == kCellTag then
-    -- function all
-    local insn = {}
-    insn.op = 'CALL'
-    insn.args = list_to_array(datum)
-    table.insert(ir, insn)
-  end
-
-  M.compile_to_ir(ir)
-  print(table.show(ir))
-  local lua_source_code = M.compile_to_lua(ir)
+  M.compile_to_ir(head_node)
+  local lua_source_code = M.compile_to_lua(head_node)
 
   return lua_source_code
 end
 
 -- FIXME: WRONG, first var should be let style binding arg list
-compiled_forms['do'] = function(datum, output)
-  table.insert(output, '(function()\n')
-  while datum do
-    if datum[2] == nil then
-      table.insert(output, 'return ')
-    end
-    table.insert(output, M.compile(datum[1]))
-    table.insert(output, ';\n')
-    datum = datum[2]
-  end
-  table.insert(output, 'end)()\n')
-end
+--compiled_forms['do'] = function(datum, output)
+  --table.insert(output, '(function()\n')
+  --while datum do
+    --if datum[2] == nil then
+      --table.insert(output, 'return ')
+    --end
+    --table.insert(output, M.compile(datum[1]))
+    --table.insert(output, ';\n')
+    --datum = datum[2]
+  --end
+  --table.insert(output, 'end)()\n')
+--end
 
-compiled_forms['if'] = function(datum, output)
-  table.insert(output, '((function()\n')
-  table.insert(output, 'if ')
-  table.insert(output, M.compile(datum[1]))
-  datum = datum[2]
-  table.insert(output, ' then\n')
-  table.insert(output, 'return ')
-  table.insert(output, M.compile(datum[1]))
-  table.insert(output, ' \n')
-  datum = datum[2]
-  if datum then
-    table.insert(output, 'else\n')
-    table.insert(output, 'return ')
-    table.insert(output, M.compile(datum[1]))
-    table.insert(output, ' \n')
-  end
-  table.insert(output, 'end)())\n')
-end
+--compiled_forms['if'] = function(datum, output)
+  --table.insert(output, '((function()\n')
+  --table.insert(output, 'if ')
+  --table.insert(output, M.compile(datum[1]))
+  --datum = datum[2]
+  --table.insert(output, ' then\n')
+  --table.insert(output, 'return ')
+  --table.insert(output, M.compile(datum[1]))
+  --table.insert(output, ' \n')
+  --datum = datum[2]
+  --if datum then
+    --table.insert(output, 'else\n')
+    --table.insert(output, 'return ')
+    --table.insert(output, M.compile(datum[1]))
+    --table.insert(output, ' \n')
+  --end
+  --table.insert(output, 'end)())\n')
+--end
 
-compiled_forms['lambda'] = function(datum, output)
-  local args = datum[1]
-  datum = datum[2]
+--compiled_forms['lambda'] = function(datum, output)
+  --local args = datum[1]
+  --datum = datum[2]
 
-  local bodies = datum
+  --local bodies = datum
 
-  table.insert(output, '(function (')
-  unpack_args(args, output)
-  table.insert(output, ')\n')
-  while bodies do
-    if bodies[2] == nil then
-      table.insert(output, 'return ')
-    end
-    table.insert(output, M.compile(bodies[1]))
-    table.insert(output, '\n')
-    bodies = bodies[2]
-  end
-  table.insert(output, 'end)\n')
-end
+  --table.insert(output, '(function (')
+  --unpack_args(args, output)
+  --table.insert(output, ')\n')
+  --while bodies do
+    --if bodies[2] == nil then
+      --table.insert(output, 'return ')
+    --end
+    --table.insert(output, M.compile(bodies[1]))
+    --table.insert(output, '\n')
+    --bodies = bodies[2]
+  --end
+  --table.insert(output, 'end)\n')
+--end
 
-compiled_forms['define'] = function(datum, output)
-  local symbol = datum[1]
-  local symbol_name = tostring(symbol)
-  datum = datum[2]
+--compiled_forms['define'] = function(datum, output)
+  --local symbol = datum[1]
+  --local symbol_name = tostring(symbol)
+  --datum = datum[2]
 
-  table.insert(output, '(function ()\n')
+  --table.insert(output, '(function ()\n')
 
-  -- strict.lua
-  if global then
-    table.insert(output, 'global(\'')
-    table.insert(output, symbol_name)
-    table.insert(output, '\')\n')
-  end
+  ---- strict.lua
+  --if global then
+    --table.insert(output, 'global(\'')
+    --table.insert(output, symbol_name)
+    --table.insert(output, '\')\n')
+  --end
 
-  table.insert(output, '_G[\'')
-  table.insert(output, symbol_name)
-  table.insert(output, '\'] = ')
-  table.insert(output, M.compile(datum[1]))
+  --table.insert(output, '_G[\'')
+  --table.insert(output, symbol_name)
+  --table.insert(output, '\'] = ')
+  --table.insert(output, M.compile(datum[1]))
 
-  table.insert(output, 'end)()\n')
-end
+  --table.insert(output, 'end)()\n')
+--end
 
-compiled_forms['+'] = function(datum, output)
-  table.insert(output, '(')
-  table.insert(output, '0')
-  while datum do
-    table.insert(output, ' + (')
-    table.insert(output, M.compile(datum[1]))
-    table.insert(output, ')')
-    datum = datum[2]
-  end
-  table.insert(output, ')')
-end
+--compiled_forms['+'] = function(datum, output)
+  --table.insert(output, '(')
+  --table.insert(output, '0')
+  --while datum do
+    --table.insert(output, ' + (')
+    --table.insert(output, M.compile(datum[1]))
+    --table.insert(output, ')')
+    --datum = datum[2]
+  --end
+  --table.insert(output, ')')
+--end
 
-compiled_forms['*'] = function(datum, output)
-  table.insert(output, '(')
-  table.insert(output, '1')
-  while datum do
-    table.insert(output, ' * (')
-    table.insert(output, M.compile(datum[1]))
-    table.insert(output, ')')
-    datum = datum[2]
-  end
-  table.insert(output, ')')
-end
+--compiled_forms['*'] = function(datum, output)
+  --table.insert(output, '(')
+  --table.insert(output, '1')
+  --while datum do
+    --table.insert(output, ' * (')
+    --table.insert(output, M.compile(datum[1]))
+    --table.insert(output, ')')
+    --datum = datum[2]
+  --end
+  --table.insert(output, ')')
+--end
 
-compiled_forms['-'] = function(datum, output)
-  table.insert(output, '(')
-  local args = list_to_array(datum)
-  if #args == 0 then
-    assert(false)
-  elseif #args == 1 then
-    table.insert(output, '0 - (')
-    table.insert(output, M.compile(args[1]))
-    table.insert(output, ')')
-  else
-    table.insert(output, '(')
-    table.insert(output, M.compile(args[1]))
-    table.insert(output, ')')
+--compiled_forms['-'] = function(datum, output)
+  --table.insert(output, '(')
+  --local args = list_to_array(datum)
+  --if #args == 0 then
+    --assert(false)
+  --elseif #args == 1 then
+    --table.insert(output, '0 - (')
+    --table.insert(output, M.compile(args[1]))
+    --table.insert(output, ')')
+  --else
+    --table.insert(output, '(')
+    --table.insert(output, M.compile(args[1]))
+    --table.insert(output, ')')
 
-    for i = 2, #args do
-      table.insert(output, ' - (')
-      table.insert(output, M.compile(args[i]))
-      table.insert(output, ')')
-    end
-  end
-  table.insert(output, ')')
-end
+    --for i = 2, #args do
+      --table.insert(output, ' - (')
+      --table.insert(output, M.compile(args[i]))
+      --table.insert(output, ')')
+    --end
+  --end
+  --table.insert(output, ')')
+--end
 
-compiled_forms['/'] = function(datum, output)
-  table.insert(output, '(')
-  local args = list_to_array(datum)
-  if #args == 0 then
-    assert(false)
-  elseif #args == 1 then
-    table.insert(output, '1 / (')
-    table.insert(output, M.compile(args[1]))
-    table.insert(output, ')')
-  else
-    table.insert(output, '(')
-    table.insert(output, M.compile(args[1]))
-    table.insert(output, ')')
+--compiled_forms['/'] = function(datum, output)
+  --table.insert(output, '(')
+  --local args = list_to_array(datum)
+  --if #args == 0 then
+    --assert(false)
+  --elseif #args == 1 then
+    --table.insert(output, '1 / (')
+    --table.insert(output, M.compile(args[1]))
+    --table.insert(output, ')')
+  --else
+    --table.insert(output, '(')
+    --table.insert(output, M.compile(args[1]))
+    --table.insert(output, ')')
 
-    for i = 2, #args do
-      table.insert(output, ' / (')
-      table.insert(output, M.compile(args[i]))
-      table.insert(output, ')')
-    end
-  end
-  table.insert(output, ')')
-end
+    --for i = 2, #args do
+      --table.insert(output, ' / (')
+      --table.insert(output, M.compile(args[i]))
+      --table.insert(output, ')')
+    --end
+  --end
+  --table.insert(output, ')')
+--end
 
 _init()
 
