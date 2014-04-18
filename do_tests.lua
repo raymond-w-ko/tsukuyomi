@@ -22,6 +22,7 @@ compile(
 (f1 (f2 a) b c d)
 (f1 (f2 (f3 a) b) c d e)
 (f1 (f2 (f3 a) b) c (f5 x y z) (f8 i (foo bar baz) k))
+((lambda (x) (+ 1 x)) 9000)
 
 (lambda (x) (* x x))
 (lambda (y) (+ y y))
