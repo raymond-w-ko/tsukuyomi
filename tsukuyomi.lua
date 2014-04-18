@@ -5,8 +5,10 @@ M = {}
 --------------------------------------------------------------------------------
 -- doubly-linked list
 --------------------------------------------------------------------------------
-local function ll_new_node()
-  return {}
+local function ll_new_node(op)
+  local node = {}
+  node.op = op
+  return node
 end
 
 local function ll_insert_after(node, new_node)
@@ -354,20 +356,48 @@ function M.compile_to_ir(head_node)
         end
 
         if tag == kCellTag then
-          -- normal function call
-          node.op = 'CALL'
-          node.args = list_to_array(datum)
-          table.insert(new_dirty_nodes, node)
+          local first = datum[1]
+          local rest = datum[2]
+          
+          if first == kLambdaSymbol then
+            node.op = 'FUNC'
+            node.args = list_to_array(rest[1])
+            -- convert symbol to string
+            for i = 1, #node.args do
+              node.args[i] = tostring(node.args[i])
+            end
+            
+            local body = rest[2]
+            while body and body[1] do
+              local lisp_node = ll_new_node('LISP')
+              table.insert(new_dirty_nodes, lisp_node)
+              lisp_node.args = { body[1] }
+              if body[2] == nil then
+                lisp_node.is_return = true
+              end
+              ll_insert_after(node, lisp_node)
+
+              node = lisp_node
+              body = body[2]
+            end
+
+            local end_func_node = ll_new_node('ENDFUNC')
+            ll_insert_after(node, end_func_node)
+          else
+            -- normal function call
+            node.op = 'CALL'
+            node.args = list_to_array(datum)
+            table.insert(new_dirty_nodes, node)
+          end
         end
       elseif op == 'CALL' then
         for i = 1, #args do
           if is_lua_primitive(args[i]) then
             args[i] = compile_lua_primitive(args[i])
           else
-            local var_node = ll_new_node()
+            local var_node = ll_new_node('VAR')
             table.insert(dirty_nodes, var_node)
 
-            var_node.op = 'VAR'
             local var_name = make_unique_var_name()
             var_node.args = {var_name, args[i]}
             args[i] = var_name
@@ -387,23 +417,23 @@ function M.compile_to_ir(head_node)
   end
 
   -- DEBUG
-  local node = head_node
-  while node do
-    local line = {}
-    table.insert(line, node.op)
-    table.insert(line, ': ')
-    if node.op == 'VAR' then
-      table.insert(line, node.args[1])
-      table.insert(line, ' - > ')
-      table.insert(line, node.args[2].op)
-      table.insert(line, ' - > ')
-      table.insert(line, table.show(node.args[2].args))
-    else
-      table.insert(line, table.show(node.args))
-    end
-    print(table.concat(line))
-    node = node.next
-  end
+  --local node = head_node
+  --while node do
+    --local line = {}
+    --table.insert(line, node.op)
+    --table.insert(line, ': ')
+    --if node.op == 'VAR' then
+      --table.insert(line, node.args[1])
+      --table.insert(line, ' - > ')
+      --table.insert(line, node.args[2].op)
+      --table.insert(line, ' - > ')
+      --table.insert(line, table.show(node.args[2].args))
+    --else
+      --table.insert(line, table.show(node.args))
+    --end
+    --print(table.concat(line))
+    --node = node.next
+  --end
 end
 
 local function to_lua_call(insn)
@@ -427,6 +457,8 @@ end
 function M.compile_to_lua(ir_list)
   local lines = {}
 
+  local indent_level = 0
+
   local insn = ir_list
   while insn do
     local line = {}
@@ -436,17 +468,40 @@ function M.compile_to_lua(ir_list)
       table.insert(line, insn.var_name)
       table.insert(line, ' = ')
     end
+    if insn.is_return then
+      table.insert(line, 'return ')
+    end
 
     if insn.op == 'NOP' then
       -- pass
     elseif insn.op == 'CALL' then
       table.insert(line, to_lua_call(insn))
+    elseif insn.op == 'FUNC' then
+      table.insert(line, 'local function (')
+      for i = 1, #insn.args do
+        table.insert(line, insn.args[i])
+        if i < #insn.args then
+          table.insert(line, ', ')
+        end
+      end
+      table.insert(line, ')')
+    elseif insn.op == 'ENDFUNC' then
+      table.insert(line, 'end')
+
+      indent_level = indent_level - 1
     elseif insn.op == 'LISP' then
       table.insert(line, 'UNCOMPILED LISP: ')
     end
 
     if #line > 0 then
+      for i = 1, indent_level do
+        table.insert(line, 1, '    ')
+      end
       table.insert(lines, table.concat(line))
+    end
+
+    if insn.op == 'FUNC' then
+      indent_level = indent_level + 1
     end
 
     insn = insn.next
@@ -460,8 +515,7 @@ function M.compile(datum)
   local head_node
   local node
   while datum and datum[1] do
-    local new_node = ll_new_node()
-    new_node.op = 'LISP'
+    local new_node = ll_new_node('LISP')
     new_node.args = { datum[1] }
 
     if node then
@@ -475,6 +529,7 @@ function M.compile(datum)
   end
 
   M.compile_to_ir(head_node)
+
   local lua_source_code = M.compile_to_lua(head_node)
 
   return lua_source_code

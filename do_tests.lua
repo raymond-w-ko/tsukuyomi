@@ -23,6 +23,16 @@ compile(
 (f1 (f2 (f3 a) b) c d e)
 (f1 (f2 (f3 a) b) c (f5 x y z) (f8 i (foo bar baz) k))
 
+(lambda (x) (* x x))
+(lambda (y) (+ y y))
+
+(lambda (x y z) (* x x))
+
+(lambda (x) (- 1))
+(lambda (x) (- 1 2 x))
+
+(lambda (x) (/ 2))
+(lambda (x) ((lambda (a b c) (+ a b c)) 3 4 x))
 ]])
 
 
@@ -30,17 +40,6 @@ compile(
 
 --(require "strict")
 --(require "util")
-
---(lambda (x) (* x x))
---(lambda (y) (+ y y))
-
---(lambda (x y z) (* x x))
-
---(lambda (x) (- 1))
---(lambda (x) (- 1 2 x))
-
---(lambda (x) (/ 2))
---(lambda (x) (/ 3 4 x))
 
 
 --(define square (lambda (x) (* x x)))
