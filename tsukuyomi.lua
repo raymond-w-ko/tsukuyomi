@@ -477,7 +477,11 @@ function M.compile_to_lua(ir_list)
     elseif insn.op == 'CALL' then
       table.insert(line, to_lua_call(insn))
     elseif insn.op == 'FUNC' then
-      table.insert(line, 'local function (')
+      if not insn.var_name then
+        table.insert(line, 'local ')
+      end
+      table.insert(line, 'function ')
+      table.insert(line, '(')
       for i = 1, #insn.args do
         table.insert(line, insn.args[i])
         if i < #insn.args then

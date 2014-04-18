@@ -33,8 +33,20 @@ compile(
 
 (lambda (x) (/ 2))
 (lambda (x) ((lambda (a b c) (+ a b c)) 3 4 x))
+
+(func a b (lambda (x y) (< x y)))
 ]])
 
+local namespace = {}
+
+-- ANTI stack overflow test
+--namespace['!!!'] = function (x, y)
+  --if x > 1000000000 then
+    --return 'works'
+  --end
+  --return namespace['!!!'](x + 1, y)
+--end
+--print(namespace['!!!'](1, 2))
 
 --compile([[
 
