@@ -2,6 +2,18 @@ local M = {}
 
 M = {}
 
+-- holds all quoted data temporarily
+M._data = {}
+
+function M._consume_data(key)
+  local data = M._data[key]
+  M._data[key] = nil
+  return data
+end
+
+-- holds all the core functions of the language
+M.core = {}
+
 --------------------------------------------------------------------------------
 -- doubly-linked list
 --------------------------------------------------------------------------------
@@ -58,6 +70,22 @@ function kSymbolTag.__tostring(symbol)
   end
 end
 
+function SymbolToLua(symbol)
+  local namespace = symbol.namespace
+  local name = symbol.name
+  if not namespace then
+    namespace = 'core'
+  end
+
+  local text = {}
+  table.insert(text, "tsukuyomi['")
+  table.insert(text, namespace)
+  table.insert(text, "']['")
+  table.insert(text, name)
+  table.insert(text, "']")
+  return table.concat(text)
+end
+
 local function CreateSymbol(name, namespace)
   local key
   if namespace then
@@ -92,6 +120,8 @@ local kDefineSymbol = CreateSymbol('define')
 local kIfSymbol = CreateSymbol('if')
 local kOkSymbol = CreateSymbol('ok')
 local kLambdaSymbol = CreateSymbol('lambda')
+
+local kRawSymbol = CreateSymbol('_raw_')
 
 function CreateCell(first, rest)
   local cell = {
@@ -293,10 +323,16 @@ end
 
 local compiled_forms = {}
 
-local counter = -1
+local var_counter = -1
 local function make_unique_var_name()
-  counter = counter + 1
-  return '_var' .. tostring(counter)
+  var_counter = var_counter + 1
+  return '__Var' .. tostring(var_counter)
+end
+
+local data_key_counter = -1
+local function make_unique_data_key()
+  data_key_counter = data_key_counter + 1
+  return data_key_counter
 end
 
 local function is_lua_primitive(datum)
@@ -304,12 +340,12 @@ local function is_lua_primitive(datum)
     return true
   end
 
-  if type(datum) == 'table' then
-    local tag = getmetatable(datum)
-    if tag == kSymbolTag then
-      return true
-    end
-  end
+  --if type(datum) == 'table' then
+    --local tag = getmetatable(datum)
+    --if tag == kSymbolTag then
+      --return true
+    --end
+  --end
 
   return false
 end
@@ -323,12 +359,12 @@ local function compile_lua_primitive(datum)
     return '"' .. datum .. '"'
   end
 
-  if type(datum) == 'table' then
-    local tag = getmetatable(datum)
-    if tag == kSymbolTag then
-      return tostring(datum)
-    end
-  end
+  --if type(datum) == 'table' then
+    --local tag = getmetatable(datum)
+    --if tag == kSymbolTag then
+      --return SymbolToLua(datum)
+    --end
+  --end
 
   assert(false)
 end
@@ -355,11 +391,24 @@ function M.compile_to_ir(head_node)
           tag = getmetatable(datum)
         end
 
-        if tag == kCellTag then
+        if tag == kSymbolTag then
+          node.op = 'RAW'
+          node.args = { SymbolToLua(datum) }
+        elseif tag == kCellTag then
           local first = datum[1]
           local rest = datum[2]
           
-          if first == kLambdaSymbol then
+          if first == kRawSymbol then
+            node.op = 'RAW'
+            local inline = rest[1]
+            assert(type(inline) == 'string')
+            node.args = { inline }
+          elseif first == kQuoteSymbol then
+            node.op = 'DATA'
+            node.data_key = make_unique_data_key()
+            M._data[node.data_key] = rest[1]
+          elseif first == kLambdaSymbol then
+            -- (labmda (arg0 arg1) (body))
             node.op = 'FUNC'
             node.args = list_to_array(rest[1])
             -- convert symbol to string
@@ -383,6 +432,16 @@ function M.compile_to_ir(head_node)
 
             local end_func_node = ll_new_node('ENDFUNC')
             ll_insert_after(node, end_func_node)
+          elseif first == kDefineSymbol then
+            -- (define symbol datum)
+            table.insert(dirty_nodes, node)
+            node.op = 'LISP'
+            local symbol = rest[1]
+            node.define_symbol = symbol
+
+            args[1] = rest[2][1]
+            args[2] = nil
+
           else
             -- normal function call
             node.op = 'CALL'
@@ -467,6 +526,9 @@ function M.compile_to_lua(ir_list)
       table.insert(line, 'local ')
       table.insert(line, insn.var_name)
       table.insert(line, ' = ')
+    elseif insn.define_symbol then
+      table.insert(line, SymbolToLua(insn.define_symbol))
+      table.insert(line, " = ")
     end
     if insn.is_return then
       table.insert(line, 'return ')
@@ -474,10 +536,16 @@ function M.compile_to_lua(ir_list)
 
     if insn.op == 'NOP' then
       -- pass
+    elseif insn.op == 'RAW' then
+      table.insert(line, insn.args[1])
+    elseif insn.op == 'DATA' then
+      table.insert(line, 'tsukuyomi._consume_data(')
+      table.insert(line, insn.data_key)
+      table.insert(line, ')')
     elseif insn.op == 'CALL' then
       table.insert(line, to_lua_call(insn))
     elseif insn.op == 'FUNC' then
-      if not insn.var_name then
+      if not (insn.var_name or insn.define_symbol) then
         table.insert(line, 'local ')
       end
       table.insert(line, 'function ')
