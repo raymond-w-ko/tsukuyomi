@@ -13,6 +13,7 @@ end
 
 -- holds all the core functions of the language
 M.core = {}
+M.math = {}
 
 --------------------------------------------------------------------------------
 -- doubly-linked list
@@ -340,13 +341,6 @@ local function is_lua_primitive(datum)
     return true
   end
 
-  --if type(datum) == 'table' then
-    --local tag = getmetatable(datum)
-    --if tag == kSymbolTag then
-      --return true
-    --end
-  --end
-
   return false
 end
 
@@ -358,13 +352,6 @@ local function compile_lua_primitive(datum)
   if type(datum) == 'string' then
     return '"' .. datum .. '"'
   end
-
-  --if type(datum) == 'table' then
-    --local tag = getmetatable(datum)
-    --if tag == kSymbolTag then
-      --return SymbolToLua(datum)
-    --end
-  --end
 
   assert(false)
 end
@@ -392,8 +379,8 @@ function M.compile_to_ir(head_node)
         end
 
         if tag == kSymbolTag then
-          node.op = 'RAW'
-          node.args = { SymbolToLua(datum) }
+          node.op = 'SYMBOL'
+          node.args = { datum }
         elseif tag == kCellTag then
           local first = datum[1]
           local rest = datum[2]
@@ -518,10 +505,47 @@ function M.compile_to_lua(ir_list)
 
   local indent_level = 0
 
+  -- these are basically a variables that are not bound to the current
+  -- namespace because a function being defined is generating them.
+  --
+  -- like
+  --   (ns core)
+  --   (lambda (a b c)
+  --     (print a))
+  --
+  -- the "a" in "print a" would NOT bind to core.a, but the a of the lambda
+
+  --mapping of variable name to number of time mentioned in enclosing functions
+  local environment_symbols = {}
+  local environment_stack = {}
+
+  local function push_new_frame()
+    table.insert(environment_stack, {})
+  end
+  local function add_arg_to_frame(arg_name)
+    local frame = environment_stack[#environment_stack]
+    table.insert(frame, arg_name)
+
+    environment_symbols[arg_name] = environment_symbols[arg_name] or 0
+    environment_symbols[arg_name] = environment_symbols[arg_name] + 1
+  end
+  local function pop_frame()
+    local frame = table.remove(environment_stack)
+    for i = 1, #frame do
+      local arg_name = frame[i]
+      environment_symbols[arg_name] = environment_symbols[arg_name] - 1
+      if environment_symbols[arg_name] == 0 then
+        environment_symbols[arg_name] = nil
+      end
+    end
+  end
+
   local insn = ir_list
   while insn do
     local line = {}
 
+    -- IR instructions can be tagged in the following fashion to signal
+    -- variable definition, or returning
     if insn.var_name then
       table.insert(line, 'local ')
       table.insert(line, insn.var_name)
@@ -538,6 +562,13 @@ function M.compile_to_lua(ir_list)
       -- pass
     elseif insn.op == 'RAW' then
       table.insert(line, insn.args[1])
+    elseif insn.op == 'SYMBOL' then
+      local symbol = insn.args[1]
+      if environment_symbols[GetSymbolName(symbol)] then
+        table.insert(line, GetSymbolName(symbol))
+      else
+        table.insert(line, SymbolToLua(symbol))
+      end
     elseif insn.op == 'DATA' then
       table.insert(line, 'tsukuyomi._consume_data(')
       table.insert(line, insn.data_key)
@@ -549,9 +580,12 @@ function M.compile_to_lua(ir_list)
         table.insert(line, 'local ')
       end
       table.insert(line, 'function ')
+      push_new_frame()
       table.insert(line, '(')
       for i = 1, #insn.args do
-        table.insert(line, insn.args[i])
+        local arg_name = insn.args[i]
+        add_arg_to_frame(arg_name)
+        table.insert(line, arg_name)
         if i < #insn.args then
           table.insert(line, ', ')
         end
@@ -560,9 +594,12 @@ function M.compile_to_lua(ir_list)
     elseif insn.op == 'ENDFUNC' then
       table.insert(line, 'end')
 
+      pop_frame()
+
       indent_level = indent_level - 1
     elseif insn.op == 'LISP' then
-      table.insert(line, 'UNCOMPILED LISP: ')
+      table.insert(line, '-- ')
+      table.insert(line, M._print(insn.args[1]))
     end
 
     if #line > 0 then
@@ -577,6 +614,11 @@ function M.compile_to_lua(ir_list)
     end
 
     insn = insn.next
+  end
+
+  assert(#environment_stack == 0)
+  for _, frame in pairs(environment_symbols) do
+    assert(false)
   end
 
   return table.concat(lines, '\n')

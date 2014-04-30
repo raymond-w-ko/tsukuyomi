@@ -15,6 +15,10 @@ local function compile(text)
   print(output)
   print()
 
+  local f = io.open('compiled.lua', 'w')
+  f:write(output)
+  f:close()
+
   print('*** load ***')
   print()
   local chunk, err = loadstring(output, 'compiler output')
@@ -38,36 +42,37 @@ compile(
 
 (print "first lisp code is now being executed!")
 
-(define car
+(define core/car
   (lambda (cell)
     (_raw_ "cell[1]")))
 
-(define cdr
+(define core/cdr
   (lambda (cell)
     (_raw_ "cell[2]")))
 
-(define cadr
+(define core/cadr
   (lambda (cell)
     (car (cdr cell))))
 
-(define data (quote (1 2)))
+(define core/first
+  (lambda (cell)
+    (car cell)))
 
-(print (car data))
-(print (cdr data))
-(print (cadr data))
+(define core/ffirst
+  (lambda (cell)
+     (first (first cell))))
+
+(define core/rest
+  (lambda (cell)
+     (cdr cell)))
+
+(define list1 (quote (1 2)))
+
+(print (car list1))
+(print (cdr list1))
+(print (cadr list1))
 
 ]])
-
-local namespace = {}
-
--- ANTI stack overflow test
---namespace['!!!'] = function (x, y)
-  --if x > 1000000000 then
-    --return 'works'
-  --end
-  --return namespace['!!!'](x + 1, y)
---end
---print(namespace['!!!'](1, 2))
 
 --compile([[
 --(func a b c d)
