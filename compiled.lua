@@ -1,51 +1,84 @@
-tsukuyomi['core']['print'] = function (arg0)
+function tsukuyomi.core__SLASH__print(arg0)
     return print(arg0)
 end
-local __Var0 = tsukuyomi['core']['print']
-__Var0("first lisp code is now being executed!")
-tsukuyomi['core']['car'] = function (cell)
+tsukuyomi.core__SLASH__print("first lisp code is now being executed!")
+function tsukuyomi.core__SLASH__car(cell)
     return cell[1]
 end
-tsukuyomi['core']['cdr'] = function (cell)
+function tsukuyomi.core__SLASH__cdr(cell)
     return cell[2]
 end
-tsukuyomi['core']['cadr'] = function (cell)
-    local __Var7 = tsukuyomi['core']['car']
-    local __Var21 = tsukuyomi['core']['cdr']
-    local __Var22 = cell
-    local __Var8 = __Var21(__Var22)
-    return __Var7(__Var8)
+function tsukuyomi.core__SLASH__cadr(cell)
+    local __Var29 = tsukuyomi.core__SLASH__cdr(cell)
+    return tsukuyomi.core__SLASH__car(__Var29)
 end
-tsukuyomi['core']['first'] = function (cell)
-    local __Var9 = tsukuyomi['core']['car']
-    local __Var10 = cell
-    return __Var9(__Var10)
+function tsukuyomi.core__SLASH__first(cell)
+    return tsukuyomi.core__SLASH__car(cell)
 end
-tsukuyomi['core']['ffirst'] = function (cell)
-    local __Var11 = tsukuyomi['core']['first']
-    local __Var23 = tsukuyomi['core']['first']
-    local __Var24 = cell
-    local __Var12 = __Var23(__Var24)
-    return __Var11(__Var12)
+function tsukuyomi.core__SLASH__ffirst(cell)
+    local __Var30 = tsukuyomi.core__SLASH__first(cell)
+    return tsukuyomi.core__SLASH__first(__Var30)
 end
-tsukuyomi['core']['rest'] = function (cell)
-    local __Var13 = tsukuyomi['core']['cdr']
-    local __Var14 = cell
-    return __Var13(__Var14)
+function tsukuyomi.core__SLASH__rest(cell)
+    return tsukuyomi.core__SLASH__cdr(cell)
 end
-tsukuyomi['core']['list1'] = tsukuyomi._consume_data(0)
-local __Var1 = tsukuyomi['core']['print']
-local __Var15 = tsukuyomi['core']['car']
-local __Var16 = tsukuyomi['core']['list1']
-local __Var2 = __Var15(__Var16)
-__Var1(__Var2)
-local __Var3 = tsukuyomi['core']['print']
-local __Var17 = tsukuyomi['core']['cdr']
-local __Var18 = tsukuyomi['core']['list1']
-local __Var4 = __Var17(__Var18)
-__Var3(__Var4)
-local __Var5 = tsukuyomi['core']['print']
-local __Var19 = tsukuyomi['core']['cadr']
-local __Var20 = tsukuyomi['core']['list1']
-local __Var6 = __Var19(__Var20)
-__Var5(__Var6)
+tsukuyomi.core__SLASH__list1 = tsukuyomi._consume_data(0)
+local __Var0 = tsukuyomi.core__SLASH__car(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__print(__Var0)
+local __Var1 = tsukuyomi.core__SLASH__cdr(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__print(__Var1)
+local __Var2 = tsukuyomi.core__SLASH__cadr(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__print(__Var2)
+local __Var3 = tsukuyomi.core__SLASH__first(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__print(__Var3)
+local __Var4 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__print(__Var4)
+local __Var31 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+local __Var5 = tsukuyomi.core__SLASH__first(__Var31)
+tsukuyomi.core__SLASH__print(__Var5)
+local __Var6 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var6)
+local __Var7 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var7)
+local __Var8 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var8)
+local __Var9 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var9)
+local __Var10 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var10)
+local __Var11 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var11)
+local __Var12 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var12)
+local __Var13 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var13)
+local __Var14 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var14)
+local __Var15 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var15)
+local __Var16 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var16)
+local __Var17 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var17)
+local __Var18 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var18)
+local __Var19 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var19)
+local __Var20 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var20)
+local __Var21 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var21)
+local __Var22 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var22)
+local __Var23 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var23)
+local __Var24 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var24)
+local __Var25 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var25)
+local __Var26 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var26)
+local __Var27 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var27)
+local __Var28 = tsukuyomi.core__SLASH__rest(tsukuyomi.core__SLASH__list1)
+tsukuyomi.core__SLASH__first(__Var28)

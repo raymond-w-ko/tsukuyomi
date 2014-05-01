@@ -79,12 +79,12 @@ function SymbolToLua(symbol)
   end
 
   local text = {}
-  table.insert(text, "tsukuyomi['")
   table.insert(text, namespace)
-  table.insert(text, "']['")
+  table.insert(text, "/")
   table.insert(text, name)
-  table.insert(text, "']")
-  return table.concat(text)
+  local ideal_name = table.concat(text)
+  ideal_name = ideal_name:gsub('/', '__SLASH__')
+  return 'tsukuyomi.' .. ideal_name
 end
 
 local function CreateSymbol(name, namespace)
@@ -113,6 +113,17 @@ function GetSymbolName(symbol)
 end
 function GetSymbolNamespace(symbol)
   return symbol.namespace
+end
+function IsSymbol(datum)
+  if type(datum) ~= 'table' then
+    return false
+  end
+  
+  if getmetatable(datum) == kSymbolTag then
+    return true
+  end
+
+  return false
 end
 
 local kQuoteSymbol = CreateSymbol('quote')
@@ -341,6 +352,13 @@ local function is_lua_primitive(datum)
     return true
   end
 
+  if type(datum) == 'table' then
+    local tag = getmetatable(datum)
+    if tag == kSymbolTag then
+      return true
+    end
+  end
+
   return false
 end
 
@@ -351,6 +369,13 @@ local function compile_lua_primitive(datum)
 
   if type(datum) == 'string' then
     return '"' .. datum .. '"'
+  end
+
+  if type(datum) == 'table' then
+    local tag = getmetatable(datum)
+    if tag == kSymbolTag then
+      return datum
+    end
   end
 
   assert(false)
@@ -394,6 +419,8 @@ function M.compile_to_ir(head_node)
             node.op = 'DATA'
             node.data_key = make_unique_data_key()
             M._data[node.data_key] = rest[1]
+          elseif first == kIfSymbol then
+            assert(false)
           elseif first == kLambdaSymbol then
             -- (labmda (arg0 arg1) (body))
             node.op = 'FUNC'
@@ -483,21 +510,6 @@ function M.compile_to_ir(head_node)
 end
 
 local function to_lua_call(insn)
-  local text = {}
-  assert(insn.op == 'CALL')
-  local args = insn.args
-  assert(type(args[1]) == 'string')
-  table.insert(text, args[1])
-  table.insert(text, '(')
-  for i = 2, #args do
-    assert(type(args[i]) == 'string')
-    table.insert(text, args[i])
-    if i < #args then
-      table.insert(text, ', ')
-    end
-  end
-  table.insert(text, ')')
-  return table.concat(text)
 end
 
 function M.compile_to_lua(ir_list)
@@ -540,6 +552,21 @@ function M.compile_to_lua(ir_list)
     end
   end
 
+  local function resolve_symbol_or_string(datum)
+    if type(datum) == 'string' then
+      return datum
+    elseif IsSymbol(datum) then
+      local name = GetSymbolName(datum)
+      if environment_symbols[name] then
+        return name
+      else
+        return SymbolToLua(datum)
+      end
+    else
+      assert(false)
+    end
+  end
+
   local insn = ir_list
   while insn do
     local line = {}
@@ -550,7 +577,7 @@ function M.compile_to_lua(ir_list)
       table.insert(line, 'local ')
       table.insert(line, insn.var_name)
       table.insert(line, ' = ')
-    elseif insn.define_symbol then
+    elseif insn.define_symbol and insn.op ~= 'FUNC' then
       table.insert(line, SymbolToLua(insn.define_symbol))
       table.insert(line, " = ")
     end
@@ -574,12 +601,25 @@ function M.compile_to_lua(ir_list)
       table.insert(line, insn.data_key)
       table.insert(line, ')')
     elseif insn.op == 'CALL' then
-      table.insert(line, to_lua_call(insn))
+      local args = insn.args
+      table.insert(line, resolve_symbol_or_string(args[1]))
+
+      table.insert(line, '(')
+      for i = 2, #args do
+        table.insert(line, resolve_symbol_or_string(args[i]))
+        if i < #args then
+          table.insert(line, ', ')
+        end
+      end
+      table.insert(line, ')')
     elseif insn.op == 'FUNC' then
       if not (insn.var_name or insn.define_symbol) then
         table.insert(line, 'local ')
       end
       table.insert(line, 'function ')
+      if insn.define_symbol then
+        table.insert(line, SymbolToLua(insn.define_symbol))
+      end
       push_new_frame()
       table.insert(line, '(')
       for i = 1, #insn.args do

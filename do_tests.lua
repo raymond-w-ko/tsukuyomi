@@ -25,7 +25,10 @@ local function compile(text)
   if chunk == nil then
     print(err)
   else
-    chunk()
+    xpcall(chunk, function(err)
+      print(err)
+      print(debug.traceback())
+    end)
   end
   print()
 end
@@ -71,6 +74,10 @@ compile(
 (print (car list1))
 (print (cdr list1))
 (print (cadr list1))
+
+(print (first list1))
+(print (rest list1))
+(print (first (rest list1)))
 
 ]])
 
