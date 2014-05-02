@@ -73,7 +73,9 @@ function tsukuyomi.compile_to_ir(head_node)
   while #dirty_nodes > 0 do
     local new_dirty_nodes = {}
 
-    for _, node in ipairs(dirty_nodes) do
+    for nodei = 1, #dirty_nodes do
+      local node = dirty_nodes[nodei]
+
       local op = node.op
       local args = node.args
       if op == 'LISP' then
@@ -122,7 +124,7 @@ function tsukuyomi.compile_to_ir(head_node)
             tsukuyomi.ll_insert_after(node, end_func_node)
           elseif first == kDefineSymbol then
             -- (define symbol datum)
-            table.insert(dirty_nodes, node)
+            table.insert(new_dirty_nodes, node)
             node.op = 'LISP'
             local symbol = rest[1]
             node.define_symbol = compile_symbol(symbol, current_ns)
@@ -146,7 +148,7 @@ function tsukuyomi.compile_to_ir(head_node)
             args[i] = compile_lua_primitive(args[i], current_ns)
           else
             local var_node = tsukuyomi.ll_new_node('VAR')
-            table.insert(dirty_nodes, var_node)
+            table.insert(new_dirty_nodes, var_node)
 
             local var_name = make_unique_var_name()
             var_node.args = {var_name, args[i]}
@@ -155,7 +157,7 @@ function tsukuyomi.compile_to_ir(head_node)
           end
         end
       elseif op == 'VAR' then
-        table.insert(dirty_nodes, node)
+        table.insert(new_dirty_nodes, node)
         node.op = 'LISP'
         node.var_name = args[1]
         args[1] = args[2]
