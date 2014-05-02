@@ -62,15 +62,12 @@ end
 function tsukuyomi.symbol_to_lua(symbol)
   local namespace = symbol.namespace
   local name = symbol.name
-  if not namespace then
-    namespace = 'core'
-  end
+  assert(namespace)
 
   local text = {}
   table.insert(text, namespace)
-  table.insert(text, "/")
+  table.insert(text, ".")
   table.insert(text, name)
   local ideal_name = table.concat(text)
-  ideal_name = ideal_name:gsub('/', '__SLASH__')
   return 'tsukuyomi.' .. ideal_name
 end

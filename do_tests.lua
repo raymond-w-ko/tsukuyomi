@@ -47,29 +47,37 @@ compile(
 
 (print "first lisp code is now being executed!")
 
-(define core/car
+(define car
   (lambda (cell)
     (_raw_ "cell[1]")))
 
-(define core/cdr
+(define cdr
   (lambda (cell)
     (_raw_ "cell[2]")))
 
-(define core/cadr
+(define cadr
   (lambda (cell)
     (car (cdr cell))))
 
-(define core/first
+(define first
   (lambda (cell)
     (car cell)))
 
-(define core/ffirst
+(define ffirst
   (lambda (cell)
      (first (first cell))))
 
-(define core/rest
+(define rest
   (lambda (cell)
      (cdr cell)))
+]])
+
+-- FIXME: split should not be necessary, need to allow for symbols to be
+-- defined as they are being compiled
+
+compile(
+[[
+(ns user)
 
 (define list1 (quote (1 2)))
 

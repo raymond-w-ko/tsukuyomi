@@ -26,4 +26,8 @@ function tsukuyomi._consume_data(key)
   return data
 end
 
+-- this should not be necessary
+tsukuyomi.core = {}
+tsukuyomi.user = {}
+
 return tsukuyomi

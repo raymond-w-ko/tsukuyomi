@@ -33,13 +33,19 @@ end
 local function compile_symbol(datum, current_ns)
     if tsukuyomi.get_symbol_namespace(current_ns) then
       return datum
-    elseif current_ns then
-      return tsukuyomi.create_symbol(tsukuyomi.get_symbol_name(datum), current_ns)
-    else
-      -- could not compile resolve symbol to namespace
-      assert(false)
     end
-    return datum
+
+    -- we have to check to see what symbol is being referred to
+    local resolved_namespace
+    local name = tsukuyomi.get_symbol_name(datum)
+    
+    if tsukuyomi['core'][name] then
+      resolved_namespace = 'core'
+    else
+      resolved_namespace = current_ns
+    end
+
+    return tsukuyomi.create_symbol(name, resolved_namespace)
 end
 
 local function compile_lua_primitive(datum, current_ns)
