@@ -5,7 +5,7 @@ global('tsukuyomi')
 tsukuyomi = require('tsukuyomi')
 
 local function compile(text)
-  local datum = tsukuyomi._read(text)
+  local datum = tsukuyomi.read(text)
   --print(tsukuyomi._print(datum))
   --print()
 
@@ -39,6 +39,8 @@ end
 
 compile(
 [[
+(ns core)
+
 (define print
   (lambda (arg0)
     (_raw_ "print(arg0)")))
