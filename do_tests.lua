@@ -45,7 +45,7 @@ compile(
   (lambda (arg0)
     (_raw_ "print(arg0)")))
 
-(print "first lisp code is now being executed!")
+(print "first \"lisp\" code is now being executed!")
 
 (define car
   (lambda (cell)
