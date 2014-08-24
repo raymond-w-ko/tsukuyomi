@@ -65,9 +65,9 @@ function tsukuyomi.symbol_to_lua(symbol)
   assert(namespace)
 
   local text = {}
+  table.insert(text, 'tsukuyomi.')
   table.insert(text, namespace)
   table.insert(text, ".")
   table.insert(text, name)
-  local ideal_name = table.concat(text)
-  return 'tsukuyomi.' .. ideal_name
+  return table.concat(text)
 end
