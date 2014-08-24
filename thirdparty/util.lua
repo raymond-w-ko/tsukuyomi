@@ -104,6 +104,7 @@ function table.show(t, name, indent)
    return cart .. autoref
 end
 
+-- http://lua-users.org/wiki/SplitJoin
 function string:split(sSeparator, nMax, bRegexp)
   assert(sSeparator ~= '')
   assert(nMax == nil or nMax >= 1)

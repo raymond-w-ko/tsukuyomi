@@ -4,19 +4,19 @@ if _G['global'] then
 end
 tsukuyomi = M
 
-require('tsukuyomi_util')
-require('tsukuyomi_linked_list')
-require('tsukuyomi_symbol')
-require('tsukuyomi_cons_cell')
+require('tsukuyomi.core.util')
+require('tsukuyomi.core.linked_list')
+require('tsukuyomi.core.symbol')
+require('tsukuyomi.core.cons_cell')
 
-require('tsukuyomi_printer')
+require('tsukuyomi.core.printer')
 
-require('tsukuyomi_tokenizer')
-require('tsukuyomi_reader')
+require('tsukuyomi.core.tokenizer')
+require('tsukuyomi.core.reader')
 
-require('tsukuyomi_ir_compiler')
-require('tsukuyomi_lua_compiler')
-require('tsukuyomi_compiler')
+require('tsukuyomi.core.ir_compiler')
+require('tsukuyomi.core.lua_compiler')
+require('tsukuyomi.core.compiler')
 
 -- TODO: is there a better to pass quoted data?
 tsukuyomi._data = {}
