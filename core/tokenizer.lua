@@ -1,7 +1,12 @@
 local kDelimiters = {
   ["("] = true,
   [")"] = true,
+
   ["'"] = true,
+
+  ["`"] = true,
+  [","] = true,
+  ["@"] = true,
 }
 local kWhitespaces = {
   [' '] = true,
@@ -15,14 +20,22 @@ function tsukuyomi.tokenize(text)
   local tokens = {}
   local symbol_buffer = {}
   local line_number = 1
+  local in_comment = false
 
   local i = 1
   while i <= #text do
     local ch = text:sub(i, i)
     local pending_token
     local building_symbol = false
-    
-    if ch == '"' then
+
+    if in_comment then
+      if ch == '\n' then
+        in_comment = false
+        line_number = line_number + 1
+      end
+    elseif ch == ';' then
+      in_comment = true
+    elseif ch == '"' then
       -- string parsing, i.e. "some words" "some \"quoted\" words"
       local string_buffer = {}
       table.insert(string_buffer, ch)
@@ -48,7 +61,7 @@ function tsukuyomi.tokenize(text)
       -- insignificant whitespace
     elseif ch == '\n' then
       line_number = line_number + 1
-    elseif ch == '(' or ch == ')' or ch == "'" then
+    elseif kDelimiters[ch] then
       pending_token = ch
     else
       -- build symbol
