@@ -2,7 +2,7 @@
 local kCellTag = {}
 
 function tsukuyomi.create_cell(first, rest)
-  local cell = { first, rest }
+  local cell = {first, rest}
   setmetatable(cell, kCellTag)
   return cell
 end

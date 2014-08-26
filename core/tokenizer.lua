@@ -20,6 +20,7 @@ local kWhitespaces = {
 -- TODO: somehow store line numbers with tokens
 function tsukuyomi.tokenize(text)
   local tokens = {}
+  local token_line_numbers = {}
   local symbol_buffer = {}
   local line_number = 1
   local in_comment = false
@@ -73,13 +74,17 @@ function tsukuyomi.tokenize(text)
 
     if not building_symbol and #symbol_buffer > 0 then
       table.insert(tokens, table.concat(symbol_buffer))
+      table.insert(token_line_numbers, line_number)
       symbol_buffer = {}
     end
 
-    table.insert(tokens, pending_token)
+    if pending_token then
+      table.insert(tokens, pending_token)
+      table.insert(token_line_numbers, line_number)
+    end
 
     i = i + 1
   end
 
-  return tokens
+  return tokens, token_line_numbers
 end

@@ -1,7 +1,8 @@
 local tsukuyomi = tsukuyomi
 
 local function test(text, expected_tokens)
-  local tokens = tsukuyomi.tokenize(text)
+  local tokens, token_line_numbers = tsukuyomi.tokenize(text)
+  --print(table.show(token_line_numbers))
   for i = 1, math.max(#expected_tokens, #tokens) do
     if tokens[i] ~= expected_tokens[i] then
       print('failed tokenizer test on item '..tostring(i))
