@@ -10,6 +10,7 @@ require('tsukuyomi')
 require('tsukuyomi.tests.tokenizer')
 require('tsukuyomi.tests.reader')
 
+--[[
 local input = io.open('tsukuyomi/tests/window.el', 'r')
 local text = input:read('*all')
 input:close()
@@ -23,3 +24,4 @@ end
 output:close()
 
 local data = tsukuyomi.read(text)
+]]--

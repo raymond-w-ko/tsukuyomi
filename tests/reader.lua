@@ -6,7 +6,7 @@ local function test(text)
 end
 
 test([[
-(1)
+(-42)
 ]])
 
 return true

@@ -14,6 +14,38 @@ local kDigits = {
   ['9'] = true,
 }
 
+local function convert_token_to_atom(token)
+  local atom
+
+  local ch1 = token:sub(1, 1)
+  local ch2 = token:sub(2, 2)
+  if token == 'true' then
+    atom = true
+  elseif token == 'false' then
+    atom = false
+  elseif kDigits[ch1] or (ch1 == '-' and kDigits[ch2]) then
+    local num = tonumber(token)
+    atom = num
+  elseif token:sub(1, 1) == '"' then
+    local str = token:sub(2, #token - 1)
+    atom = str
+  else
+    local namespace
+    local name
+    local index = token:find('/')
+    if index and token:len() > 1 then
+      namespace = token:sub(1, index - 1)
+      name = token:sub(index + 1)
+    else
+      name = token
+    end
+    local symbol = tsukuyomi.create_symbol(name, namespace)
+    atom = symbol
+  end
+
+  return atom
+end
+
 -- converts Lisp text source code and returns a Lisp list of all data
 -- e.g.
 -- "42" -> (42)
@@ -22,7 +54,10 @@ local kDigits = {
 -- "(def a 1) (def b 2)" -> ((def a 1) (def b 2))
 function tsukuyomi.read(text)
   local tokens, token_line_numbers = tsukuyomi.tokenize(text)
+
   local data_head = tsukuyomi.create_cell(nil, nil)
+
+  local quote_next = false
 
   for i = 1, #tokens do
     local token = tokens[i]
@@ -31,32 +66,7 @@ function tsukuyomi.read(text)
     elseif token == "'" then
       quote_next = true
     else
-      local atom
-      local ch1 = token:sub(1, 1)
-      local ch2 = token:sub(2, 2)
-      if token == 'true' then
-        atom = true
-      elseif token == 'false' then
-        atom = false
-      elseif kDigits[ch1] or (ch1 == '-' and kDigits[ch2]) then
-        local num = tonumber(token)
-        atom = num
-      elseif token:sub(1, 1) == '"' then
-        local str = token:sub(2, #token - 1)
-        atom = str
-      else
-        local namespace
-        local name
-        local index = token:find('/')
-        if index and token:len() > 1 then
-          namespace = token:sub(1, index - 1)
-          name = token:sub(index + 1)
-        else
-          name = token
-        end
-        local symbol = tsukuyomi.create_symbol(name, namespace)
-        atom = symbol
-      end
+      local atom = convert_token_to_atom(token)
     end
   end
 
@@ -125,30 +135,7 @@ function tsukuyomi.read(text)
     elseif token == '\'' then
       quote_next = true
     else
-      local atom
-      if token == 'true' then
-        atom = true
-      elseif token == 'false' then
-        atom = false
-      elseif token:find('^%-?%d+') then
-        local num = tonumber(token)
-        atom = num
-      elseif token:sub(1, 1) == '"' then
-        local str = token:sub(2, #token - 1)
-        atom = str
-      else
-        local namespace
-        local name
-        local index = token:find('/')
-        if index and token:len() > 1 then
-          namespace = token:sub(1, index - 1)
-          name = token:sub(index + 1)
-        else
-          name = token
-        end
-        local symbol = tsukuyomi.create_symbol(name, namespace)
-        atom = symbol
-      end
+      local atom = convert_token_to_atom(token)
       append(atom, quote_next)
       quote_next = false
     end
