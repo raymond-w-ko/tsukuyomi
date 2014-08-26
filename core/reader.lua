@@ -1,3 +1,6 @@
+local tsukuyomi = tsukuyomi
+local kQuoteSymbol = tsukuyomi.create_symbol('quote')
+
 function tsukuyomi.read(text)
   local tokens = tsukuyomi.tokenize(text)
 
@@ -71,9 +74,9 @@ function tsukuyomi.read(text)
         local str = token:sub(2, #token - 1)
         atom = str
       else
-        local index = token:find('/')
         local namespace
         local name
+        local index = token:find('/')
         if index and token:len() > 1 then
           namespace = token:sub(1, index - 1)
           name = token:sub(index + 1)

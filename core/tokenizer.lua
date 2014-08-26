@@ -9,13 +9,15 @@ local kDelimiters = {
   ["@"] = true,
 }
 local kWhitespaces = {
+  -- since this increments line numbers we handle it specially
+  --['\n'] = true,
   [' '] = true,
-  ['\n'] = true,
   ['\r'] = true,
   ['\t'] = true,
 }
 
 -- splits Lisp source code as a raw input string into an Lua array of tokens suitable for parsing
+-- TODO: somehow store line numbers with tokens
 function tsukuyomi.tokenize(text)
   local tokens = {}
   local symbol_buffer = {}
@@ -57,10 +59,10 @@ function tsukuyomi.tokenize(text)
         end
         j = j + 1
       end
-    elseif ch == '\r' or ch == '\t' or ch == ' ' then
-      -- insignificant whitespace
     elseif ch == '\n' then
       line_number = line_number + 1
+    elseif kWhitespaces[ch] then
+      -- insignificant whitespace
     elseif kDelimiters[ch] then
       pending_token = ch
     else
