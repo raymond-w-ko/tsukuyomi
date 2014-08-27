@@ -25,6 +25,7 @@ test([[
               a))))
 ]])
 
+-- https://gist.github.com/jlongster/1712455
 test([[
 ;; outlet code for implementing traditional macro expansion
 
