@@ -1,5 +1,4 @@
 local tsukuyomi = tsukuyomi
-local kQuoteSymbol = tsukuyomi.create_symbol('quote')
 
 local kDigits = {
   ['0'] = true,
@@ -12,6 +11,11 @@ local kDigits = {
   ['7'] = true,
   ['8'] = true,
   ['9'] = true,
+}
+
+local kReaderMacros = {
+  ["'"] = tsukuyomi.create_symbol('quote'),
+  ['`'] = tsukuyomi.create_symbol('syntax-quote'),
 }
 
 local function convert_token_to_atom(token)
@@ -68,6 +72,18 @@ local function new_linked_list(stack)
   local cell = tsukuyomi.create_cell(nil, nil)
   local list = {cell, cell}
   table.insert(stack, list)
+  return list
+end
+
+local function wrap(data, symbol)
+  return tsukuyomi.create_cell(symbol, tsukuyomi.create_cell(data, nil))
+end
+local function multiwrap(data, symbol_stack)
+  while #symbol_stack > 0 do
+    local symbol = table.remove(symbol_stack)
+    data = wrap(data, symbol)
+  end
+  return data
 end
 
 -- converts Lisp text source code and returns a Lisp list of all data
@@ -82,20 +98,28 @@ function tsukuyomi.read(text)
   local stack = {}
   new_linked_list(stack)
 
-  local quote_next = false
+  local macro_stack = {}
+  local pending_macro_stack_of_cell = {}
 
   for i = 1, #tokens do
     local token = tokens[i]
     if token == '(' then
-      new_linked_list(stack)
+      local list = new_linked_list(stack)
+      pending_macro_stack_of_cell[list[1]] = macro_stack
+      macro_stack = {}
     elseif token == ')' then
       local list = table.remove(stack)
       local head = list[1]
+      if pending_macro_stack_of_cell[head] then
+        head = multiwrap(head, pending_macro_stack_of_cell[head])
+        pending_macro_stack_of_cell[head] = nil
+      end
       push_back(stack, head)
-    elseif token == "'" then
-      quote_next = true
+    elseif kReaderMacros[token] then
+      table.insert(macro_stack, kReaderMacros[token])
     else
       local atom = convert_token_to_atom(token)
+      atom = multiwrap(atom, macro_stack)
       push_back(stack, atom)
     end
   end

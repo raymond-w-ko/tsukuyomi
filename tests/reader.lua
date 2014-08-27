@@ -8,5 +8,8 @@ end
 test([[
 (-42) (asdf) ((foo)) ((foo) bar ((fuzz)))
 ]])
+test([[
+'42 '`''(asdf)
+]])
 
 return true

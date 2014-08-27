@@ -4,6 +4,7 @@ local kDelimiters = {
 
   ["'"] = true,
 
+  -- elisp macro characters
   ["`"] = true,
   [","] = true,
   ["@"] = true,
