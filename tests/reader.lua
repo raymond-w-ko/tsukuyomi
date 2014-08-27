@@ -6,7 +6,7 @@ local function test(text)
 end
 
 test([[
-(-42)
+(-42) (asdf) ((foo)) ((foo) bar ((fuzz)))
 ]])
 
 return true
