@@ -15,6 +15,7 @@ local kDigits = {
 
 local kReaderMacros = {
   ["'"] = tsukuyomi.create_symbol('quote'),
+  -- TODO: should I use Clojure macros or old-school Lisp macros ???
   ['`'] = tsukuyomi.create_symbol('syntax-quote'),
 }
 
