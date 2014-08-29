@@ -9,6 +9,7 @@ require('tsukuyomi')
 
 require('tsukuyomi.tests.tokenizer')
 require('tsukuyomi.tests.reader')
+require('tsukuyomi.tests.compiler')
 
 --[[
 local input = io.open('tsukuyomi/tests/window.el', 'r')

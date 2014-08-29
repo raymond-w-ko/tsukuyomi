@@ -65,27 +65,29 @@ local function compile_lua_primitive(datum, current_ns)
   assert(false)
 end
 
-function tsukuyomi.compile_to_ir(head_node)
-  local current_ns = nil
+-- dispatch tables to compile down input
 
-  local dirty_nodes = {}
+-- used to implement dispatch based on the first / car of a cons cell
+lisp_dispatch = {}
+lisp_dispatch[kRawSymbol] = true
+lisp_dispatch[kQuoteSymbol] = true
+lisp_dispatch[kIfSymbol] = true
+lisp_dispatch[kLambdaSymbol] = true
+lisp_dispatch[kDefineSymbol] = true
+lisp_dispatch[kNsSymbol] = true
 
-  local node = head_node
-  while node do
-    table.insert(dirty_nodes, node)
-    node = node.next
+op_dispatch = {}
+
+op_dispatch['LISP'] = function(node, ns_stack, new_dirty_nodes)
+  local datum = node.args[1]
+  if tsukuyomi.is_cons_cell(datum) then
   end
+end
+op_dispatch['CALL'] = true
+op_dispatch['VAR'] = true
 
-  while #dirty_nodes > 0 do
-    local new_dirty_nodes = {}
 
-    for nodei = 1, #dirty_nodes do
-      local node = dirty_nodes[nodei]
-
-      local op = node.op
-      local args = node.args
-      if op == 'LISP' then
-        local datum = args[1]
+    --[[
 
         if tsukuyomi.is_cons_cell(datum) then
           local first = datum[1]
@@ -169,8 +171,38 @@ function tsukuyomi.compile_to_ir(head_node)
         args[1] = args[2]
         args[2] = nil
       end
-    end
+    ]]--
 
+-- given a doubly linked list, iteratively process each node until each node
+-- has been "cleaned". processing a node usually expands / creates more nodes
+-- around it, as lisp is being broken into elementary operations.
+--
+-- by default nodes are dirty, until it has been processed through once.
+--
+-- nodes are in the form of
+-- node = {
+--    ['op'] = 'OPCODE',
+--    ['args'] = { arg0, arg1, arg2 },
+-- }
+function tsukuyomi.compile_to_ir(head_node)
+  -- used to resolve symbols, lookup order is from last namespace to first
+  local ns_stack = {}
+
+  -- prepare input nodes by marking them all as dirty
+  local dirty_nodes = {}
+  local node = head_node
+  while node do
+    table.insert(dirty_nodes, node)
+    node = node.next
+  end
+
+  while #dirty_nodes > 0 do
+    local new_dirty_nodes = {}
+    for i = 1, #dirty_nodes do
+      local node = dirty_nodes[i]
+      local op = node.op
+      op_dispatch[op](node, ns_stack, new_dirty_nodes)
+    end
     dirty_nodes = new_dirty_nodes
   end
 
@@ -201,7 +233,11 @@ function tsukuyomi._debug_ir(node)
     if args then
       for i = 1, #args do
         local arg = args[i]
-        table.insert(line, tostring(arg))
+        if node.op == 'LISP' then
+          table.insert(line, tsukuyomi.print(arg))
+        else
+          table.insert(line, tostring(arg))
+        end
         if i < #args then
           table.insert(line, ', ')
         end
