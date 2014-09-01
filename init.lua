@@ -20,7 +20,7 @@ require('tsukuyomi.core.compiler')
 
 -- TODO: is there a better to pass quoted data?
 tsukuyomi._data = {}
-function tsukuyomi._consume_data(key)
+function tsukuyomi._get_data(key)
   local data = tsukuyomi._data[key]
   tsukuyomi._data[key] = nil
   return data

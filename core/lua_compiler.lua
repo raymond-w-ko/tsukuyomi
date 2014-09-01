@@ -83,7 +83,7 @@ function tsukuyomi.compile_to_lua(ir_list)
         table.insert(line, tsukuyomi.symbol_to_lua(symbol))
       end
     elseif insn.op == 'DATA' then
-      table.insert(line, 'tsukuyomi._consume_data(')
+      table.insert(line, 'tsukuyomi._get_data(')
       table.insert(line, insn.data_key)
       table.insert(line, ')')
     elseif insn.op == 'CALL' then

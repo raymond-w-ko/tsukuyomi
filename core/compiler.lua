@@ -15,6 +15,9 @@ local function prepare_data(datum)
 
     datum = datum[2]
   end
+  if node then
+    node.is_return = true
+  end
 
   return head_node
 end

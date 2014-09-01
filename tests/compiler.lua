@@ -18,12 +18,26 @@ test([[
 -- 2 datum test
 test([[
 (ns core)
-(define z2ljr2jlslfl3jf 1)
+(def z2ljr2jlslfl3jf 1)
 ]])
 
 -- real test, 2+
 test([[
 (ns core)
-(define a 3)
-(define b 4)
+(def a 3)
+(def b 4)
+(def b a)
+]])
+
+test([[
+(ns core)
+
+(def first
+  (fn (cell)
+    (_raw_ "cell[1]")))
+
+(def rest
+  (fn (cell)
+    (_raw_ "cell[2]")))
+
 ]])
