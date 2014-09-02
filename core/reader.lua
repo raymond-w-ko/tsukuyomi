@@ -56,13 +56,13 @@ local function push_back(stack, datum)
   -- the first is when the head does not exist,
   -- the second is when you are appending you an existing node
   local list = stack[#stack]
-  local prev_cell = list[2]
+  local prev_cell = list.tail
   if prev_cell[1] == nil then
     prev_cell[1] = datum
   else
     local cell = tsukuyomi.create_cell(datum, nil)
     prev_cell[2] = cell
-    list[2] = cell
+    list.tail = cell
   end
 end
 
@@ -71,7 +71,10 @@ end
 -- head_node is necessary, when closing off a Lisp list via ')'
 local function new_linked_list(stack)
   local cell = tsukuyomi.create_cell(nil, nil)
-  local list = {cell, cell}
+  local list = {
+    ['head'] = cell,
+    ['tail'] = cell,
+  }
   table.insert(stack, list)
   return list
 end
@@ -106,11 +109,11 @@ function tsukuyomi.read(text)
     local token = tokens[i]
     if token == '(' then
       local list = new_linked_list(stack)
-      pending_macro_stack_of_cell[list[1]] = macro_stack
+      pending_macro_stack_of_cell[list.head] = macro_stack
       macro_stack = {}
     elseif token == ')' then
       local list = table.remove(stack)
-      local head = list[1]
+      local head = list.head
       if pending_macro_stack_of_cell[head] then
         head = multiwrap(head, pending_macro_stack_of_cell[head])
         pending_macro_stack_of_cell[head] = nil
@@ -125,5 +128,5 @@ function tsukuyomi.read(text)
     end
   end
 
-  return stack[1][1]
+  return stack[1].head
 end

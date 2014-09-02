@@ -1,6 +1,8 @@
 local kDelimiters = {
-  ["("] = true,
-  [")"] = true,
+  ["("] = true, [")"] = true,
+  ["["] = true, ["]"] = true,
+  -- TODO: support this in reader
+  ["{"] = true, ["}"] = true,
 
   ["'"] = true,
 
