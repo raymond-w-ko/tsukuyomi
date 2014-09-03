@@ -103,20 +103,20 @@ function tsukuyomi.read(text)
   new_linked_list(stack)
 
   local macro_stack = {}
-  local pending_macro_stack_of_cell = {}
+  local pending_macro_stack_of_coll = {}
 
   for i = 1, #tokens do
     local token = tokens[i]
     if token == '(' then
       local list = new_linked_list(stack)
-      pending_macro_stack_of_cell[list.head] = macro_stack
+      pending_macro_stack_of_coll[list.head] = macro_stack
       macro_stack = {}
     elseif token == ')' then
       local list = table.remove(stack)
       local head = list.head
-      if pending_macro_stack_of_cell[head] then
-        head = multiwrap(head, pending_macro_stack_of_cell[head])
-        pending_macro_stack_of_cell[head] = nil
+      if pending_macro_stack_of_coll[head] then
+        head = multiwrap(head, pending_macro_stack_of_coll[head])
+        pending_macro_stack_of_coll[head] = nil
       end
       push_back(stack, head)
     elseif kReaderMacros[token] then
