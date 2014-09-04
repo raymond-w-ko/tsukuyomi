@@ -33,11 +33,11 @@ test([[
 (ns core)
 
 (def first
-  (fn (cell)
+  (fn [cell]
     (_raw_ "cell[1]")))
 
 (def rest
-  (fn (cell)
+  (fn [cell]
     (_raw_ "cell[2]")))
 
 ]])

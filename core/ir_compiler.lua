@@ -156,7 +156,7 @@ end
 special_forms[kFnSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
   -- (fn (arg0 arg1) (body))
   node.op = 'FUNC'
-  node.args = tsukuyomi.cons_to_lua_array(datum[1])
+  node.args = datum[1]
 
   -- convert functino argument symbols to string
   -- TODO: will I or someone ever put namespace symbols here by accident?
