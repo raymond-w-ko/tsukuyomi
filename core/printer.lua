@@ -1,3 +1,5 @@
+local tsukuyomi = tsukuyomi
+
 -- TODO: add indenting
 -- TODO: make not vulnerable to a stack overflow when printing cons cells
 function tsukuyomi.print(datum)
@@ -9,6 +11,12 @@ function tsukuyomi.print(datum)
     return '"' .. datum .. '"'
   elseif tsukuyomi.is_symbol(datum) then
     return tostring(datum)
+  elseif tsukuyomi.is_array(datum) then
+    local items = {}
+    for i = 1, #datum do
+      table.insert(items, tsukuyomi.print(datum[i]))
+    end
+    return '[' .. table.concat(items, ' ') .. ']'
   elseif tsukuyomi.is_cons_cell(datum) then
     local items = {}
     while datum do

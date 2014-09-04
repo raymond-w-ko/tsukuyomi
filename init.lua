@@ -8,6 +8,7 @@ require('tsukuyomi.core.util')
 require('tsukuyomi.core.linked_list')
 require('tsukuyomi.core.symbol')
 require('tsukuyomi.core.cons_cell')
+require('tsukuyomi.core.array')
 
 require('tsukuyomi.core.printer')
 

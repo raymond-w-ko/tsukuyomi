@@ -29,6 +29,8 @@ local function convert_token_to_atom(token)
   elseif token == 'false' then
     atom = false
   elseif kDigits[ch1] or (ch1 == '-' and kDigits[ch2]) then
+    -- TODO: FIXME: this is so wrong, numbers vary like:
+    -- 3   3.0   3.1416   314.16e-2   0.31416E1   0xff   0x56
     local num = tonumber(token)
     atom = num
   elseif token:sub(1, 1) == '"' then
@@ -52,17 +54,21 @@ local function convert_token_to_atom(token)
 end
 
 local function push_back(stack, datum)
-  -- there are two cases, like a linked list,
-  -- the first is when the head does not exist,
-  -- the second is when you are appending you an existing node
-  local list = stack[#stack]
-  local prev_cell = list.tail
-  if prev_cell[1] == nil then
-    prev_cell[1] = datum
+  local coll = stack[#stack]
+  if tsukuyomi.is_array(coll) then
+    table.insert(coll, datum)
   else
-    local cell = tsukuyomi.create_cell(datum, nil)
-    prev_cell[2] = cell
-    list.tail = cell
+    -- there are two cases, like a linked list,
+    -- the first is when the head does not exist,
+    -- the second is when you are appending you an existing node
+    local prev_cell = coll.tail
+    if prev_cell[1] == nil then
+      prev_cell[1] = datum
+    else
+      local cell = tsukuyomi.create_cell(datum, nil)
+      prev_cell[2] = cell
+      coll.tail = cell
+    end
   end
 end
 
@@ -77,6 +83,12 @@ local function new_linked_list(stack)
   }
   table.insert(stack, list)
   return list
+end
+
+local function new_array(stack)
+  local array = tsukuyomi.create_array()
+  table.insert(stack, array)
+  return array
 end
 
 local function wrap(data, symbol)
@@ -107,18 +119,21 @@ function tsukuyomi.read(text)
 
   for i = 1, #tokens do
     local token = tokens[i]
-    if token == '(' then
-      local list = new_linked_list(stack)
-      pending_macro_stack_of_coll[list.head] = macro_stack
+
+    if token == '(' or token == '[' then
+      local coll
+      if token == '(' then coll = new_linked_list(stack).head end
+      if token == '[' then coll = new_array(stack) end
+      pending_macro_stack_of_coll[coll] = macro_stack
       macro_stack = {}
-    elseif token == ')' then
-      local list = table.remove(stack)
-      local head = list.head
-      if pending_macro_stack_of_coll[head] then
-        head = multiwrap(head, pending_macro_stack_of_coll[head])
-        pending_macro_stack_of_coll[head] = nil
+    elseif token == ')' or token == ']' then
+      local coll = table.remove(stack)
+      if not tsukuyomi.is_array(coll) then coll = coll.head end
+      if pending_macro_stack_of_coll[coll] then
+        coll = multiwrap(coll, pending_macro_stack_of_coll[coll])
+        pending_macro_stack_of_coll[coll] = nil
       end
-      push_back(stack, head)
+      push_back(stack, coll)
     elseif kReaderMacros[token] then
       table.insert(macro_stack, kReaderMacros[token])
     else
