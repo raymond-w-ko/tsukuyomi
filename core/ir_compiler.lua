@@ -154,7 +154,7 @@ special_forms[kIfSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
 end
 
 special_forms[kFnSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
-  -- (fn (arg0 arg1) (body))
+  -- (fn [arg0 arg1] (body))
   node.op = 'FUNC'
   node.args = datum[1]
 
