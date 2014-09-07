@@ -1,61 +1,96 @@
+-- these set of function are used to maintain the lexical stack of symbols
+-- introduced that are actually bound to lambdas instead of resolving to
+-- something inside a namespace
+--
+-- like
+--   (ns core)
+--   (def a 1)
+--   ((lambda [a b c] a) 2)
+--
+-- the "a" in "print a" would NOT bind to core/a, but the "a" of the lambda argument
+-- e.g. 2 would print instead of 1
+
+--mapping of variable name to number of time mentioned in enclosing functions
+local function push_new_frame(stack)
+  table.insert(stack, {})
+end
+
+local function add_arg_to_frame(stack, arg_name, fn_arg_symbols)
+  local frame = stack[#stack]
+  table.insert(frame, arg_name)
+
+  fn_arg_symbols[arg_name] = fn_arg_symbols[arg_name] or 0
+  fn_arg_symbols[arg_name] = fn_arg_symbols[arg_name] + 1
+end
+
+local function pop_frame(stack, fn_arg_symbols)
+  local frame = table.remove(stack)
+  for i = 1, #frame do
+    local arg_name = frame[i]
+    fn_arg_symbols[arg_name] = fn_arg_symbols[arg_name] - 1
+    if fn_arg_symbols[arg_name] == 0 then
+      fn_arg_symbols[arg_name] = nil
+    end
+  end
+end
+
+function convert_ns_to_lua(ns)
+  -- TODO: SO much here to make it safe
+  return '__' .. ns
+end
+
+local function symbol_to_lua(symbol, used_namespaces)
+  local code = {}
+
+  local namespace = tsukuyomi.get_symbol_namespace(symbol)
+  local name = tsukuyomi.get_symbol_name(symbol)
+  if namespace then
+    table.insert(code, convert_ns_to_lua(namespace))
+    used_namespaces[namespace] = true
+  else
+    local active_ns = tsukuyomi['*ns*'][symbol]
+    table.insert(code, convert_ns_to_lua(active_ns))
+    used_namespaces[active_ns] = true
+  end
+
+  table.insert(code, '.')
+  table.insert(code, name)
+
+  return table.concat(code)
+end
+
+local function compile_string_or_symbol(datum, fn_arg_symbols, used_namespaces)
+  if type(datum) == 'string' then
+    return datum
+  elseif tsukuyomi.is_symbol(datum) then
+    local name = tsukuyomi.get_symbol_name(datum)
+    if fn_arg_symbols[name] then
+      return name
+    else
+      return symbol_to_lua(datum, used_namespaces)
+    end
+  else
+    assert(false)
+  end
+end
+
 function tsukuyomi.compile_to_lua(ir_list)
   local lines = {}
 
   local indent_level = 0
-
-  -- these are basically a variables that are not bound to the current
-  -- namespace because a function being defined is generating them.
-  --
-  -- like
-  --   (ns core)
-  --   (lambda (a b c)
-  --     (print a))
-  --
-  -- the "a" in "print a" would NOT bind to core.a, but the a of the lambda
-
-  --mapping of variable name to number of time mentioned in enclosing functions
-  local environment_symbols = {}
-  local environment_stack = {}
-
-  local function push_new_frame()
-    table.insert(environment_stack, {})
-  end
-  local function add_arg_to_frame(arg_name)
-    local frame = environment_stack[#environment_stack]
-    table.insert(frame, arg_name)
-
-    environment_symbols[arg_name] = environment_symbols[arg_name] or 0
-    environment_symbols[arg_name] = environment_symbols[arg_name] + 1
-  end
-  local function pop_frame()
-    local frame = table.remove(environment_stack)
-    for i = 1, #frame do
-      local arg_name = frame[i]
-      environment_symbols[arg_name] = environment_symbols[arg_name] - 1
-      if environment_symbols[arg_name] == 0 then
-        environment_symbols[arg_name] = nil
-      end
-    end
-  end
-
-  local function resolve_symbol_or_string(datum)
-    if type(datum) == 'string' then
-      return datum
-    elseif tsukuyomi.is_symbol(datum) then
-      local name = tsukuyomi.get_symbol_name(datum)
-      if environment_symbols[name] then
-        return name
-      else
-        return tsukuyomi.symbol_to_lua(datum)
-      end
-    else
-      assert(false)
-    end
-  end
+  local stack = {}
+  local fn_arg_symbols = {}
+  local used_namespaces = {}
 
   local insn = ir_list
   while insn do
     local line = {}
+    local function emit(...)
+      local t = {...}
+      for _, text in ipairs(t) do
+        table.insert(line, text)
+      end
+    end
 
     -- IR instructions can be tagged in the following fashion to signal
     -- variable definition, or returning
@@ -64,7 +99,7 @@ function tsukuyomi.compile_to_lua(ir_list)
       table.insert(line, insn.var_name)
       table.insert(line, ' = ')
     elseif insn.define_symbol and insn.op ~= 'FUNC' then
-      table.insert(line, tsukuyomi.symbol_to_lua(insn.define_symbol))
+      table.insert(line, symbol_to_lua(insn.define_symbol, used_namespaces))
       table.insert(line, " = ")
     end
     if insn.is_return then
@@ -73,6 +108,12 @@ function tsukuyomi.compile_to_lua(ir_list)
 
     if insn.op == 'NOP' then
       -- pass
+    elseif insn.op == 'NS' then
+      emit('tsukuyomi.set_active_namespace("')
+      emit(tsukuyomi.get_symbol_name(insn.args[1]))
+      emit('"); ')
+    elseif insn.op == 'PRIMITIVE' then
+      emit(compile_string_or_symbol(insn.args[1], fn_arg_symbols, used_namespaces))
     elseif insn.op == 'RAW' then
       table.insert(line, insn.args[1])
     elseif insn.op == 'SYMBOL' then
@@ -80,7 +121,7 @@ function tsukuyomi.compile_to_lua(ir_list)
       if environment_symbols[tsukuyomi.get_symbol_name(symbol)] then
         table.insert(line, tsukuyomi.get_symbol_name(symbol))
       else
-        table.insert(line, tsukuyomi.symbol_to_lua(symbol))
+        table.insert(line, symbol_to_lua(symbol, used_namespaces))
       end
     elseif insn.op == 'DATA' then
       table.insert(line, 'tsukuyomi._get_data(')
@@ -88,11 +129,11 @@ function tsukuyomi.compile_to_lua(ir_list)
       table.insert(line, ')')
     elseif insn.op == 'CALL' then
       local args = insn.args
-      table.insert(line, resolve_symbol_or_string(args[1]))
+      table.insert(line, compile_string_or_symbol(args[1], fn_arg_symbols, used_namespaces))
 
       table.insert(line, '(')
       for i = 2, #args do
-        table.insert(line, resolve_symbol_or_string(args[i]))
+        table.insert(line, compile_string_or_symbol(args[i], fn_arg_symbols, used_namespaces))
         if i < #args then
           table.insert(line, ', ')
         end
@@ -104,13 +145,13 @@ function tsukuyomi.compile_to_lua(ir_list)
       end
       table.insert(line, 'function ')
       if insn.define_symbol then
-        table.insert(line, tsukuyomi.symbol_to_lua(insn.define_symbol))
+        table.insert(line, symbol_to_lua(insn.define_symbol, used_namespaces))
       end
-      push_new_frame()
+      push_new_frame(stack)
       table.insert(line, '(')
       for i = 1, #insn.args do
         local arg_name = insn.args[i]
-        add_arg_to_frame(arg_name)
+        add_arg_to_frame(stack, arg_name, fn_arg_symbols)
         table.insert(line, arg_name)
         if i < #insn.args then
           table.insert(line, ', ')
@@ -120,12 +161,15 @@ function tsukuyomi.compile_to_lua(ir_list)
     elseif insn.op == 'ENDFUNC' then
       table.insert(line, 'end')
 
-      pop_frame()
+      pop_frame(stack, fn_arg_symbols)
 
       indent_level = indent_level - 1
     elseif insn.op == 'LISP' then
       table.insert(line, '-- ')
       table.insert(line, tsukuyomi.print(insn.args[1]))
+    else
+      print('unknown opcode: ' .. insn.op)
+      assert(false)
     end
 
     if #line > 0 then
@@ -142,10 +186,27 @@ function tsukuyomi.compile_to_lua(ir_list)
     insn = insn.next
   end
 
-  assert(#environment_stack == 0)
-  for _, frame in pairs(environment_symbols) do
+  -- sanity checks to make sure there aren't error in the IR with lambda generation
+  assert(#stack == 0)
+  for _, frame in pairs(fn_arg_symbols) do
     assert(false)
   end
 
-  return table.concat(lines, '\n')
+  local body = table.concat(lines, '\n')
+  local header = {}
+  table.insert(header, 'local tsukuyomi = tsukuyomi')
+  for ns, _ in pairs(used_namespaces) do
+    local line = {}
+    table.insert(line, 'local ')
+    table.insert(line, convert_ns_to_lua(ns))
+    table.insert(line, ' = tsukuyomi.get_namespace("')
+    table.insert(line, ns)
+    table.insert(line, '")')
+    table.insert(header, table.concat(line))
+  end
+
+  local final = {}
+  table.insert(final, table.concat(header, '\n'))
+  table.insert(final, body)
+  return table.concat(final, '\n')
 end
