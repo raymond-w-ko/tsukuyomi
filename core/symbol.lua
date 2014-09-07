@@ -57,17 +57,3 @@ function tsukuyomi.is_symbol(datum)
   end
   return true
 end
-
--- used to compile a symbol to Lua code
-function tsukuyomi.symbol_to_lua(symbol)
-  local namespace = symbol.namespace
-  local name = symbol.name
-  assert(namespace)
-
-  local text = {}
-  table.insert(text, 'tsukuyomi.')
-  table.insert(text, namespace)
-  table.insert(text, ".")
-  table.insert(text, name)
-  return table.concat(text)
-end
