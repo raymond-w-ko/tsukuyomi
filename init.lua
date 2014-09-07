@@ -9,6 +9,7 @@ require('tsukuyomi.core.linked_list')
 require('tsukuyomi.core.symbol')
 require('tsukuyomi.core.cons_cell')
 require('tsukuyomi.core.array')
+require('tsukuyomi.core.namespace')
 
 require('tsukuyomi.core.printer')
 
@@ -26,9 +27,5 @@ function tsukuyomi._get_data(key)
   tsukuyomi._data[key] = nil
   return data
 end
-
--- this should not be necessary
-tsukuyomi.core = {}
-tsukuyomi.user = {}
 
 return tsukuyomi
