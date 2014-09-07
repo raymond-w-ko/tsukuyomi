@@ -1,9 +1,19 @@
 local tsukuyomi = tsukuyomi
 
 local function test(text)
-  local data = tsukuyomi.read(text)
-  tsukuyomi.compile(data)
-  print('--------------------------------------------------------------------------------')
+  local datum = tsukuyomi.read(text)
+  while datum and datum[1] do
+    local code = tsukuyomi.compile(datum[1])
+    local chunk, err = loadstring(code)
+    if err then
+      print(err)
+      assert(chunk)
+    else
+      chunk()
+    end
+
+    datum = datum[2]
+  end
 end
 
 -- empty test
@@ -32,6 +42,10 @@ test([[
 test([[
 (ns core)
 
+(def print
+  (fn [obj]
+    (_raw_ "print(tostring(obj))")))
+
 (def first
   (fn [cell]
     (_raw_ "cell[1]")))
@@ -39,5 +53,14 @@ test([[
 (def rest
   (fn [cell]
     (_raw_ "cell[2]")))
+
+(def second
+  (fn [coll]
+    (first (rest coll))))
+
+(print "asdf")
+(print (second '(42 43)))
+
+(def user/test "lisp")
 
 ]])
