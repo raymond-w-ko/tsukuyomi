@@ -34,41 +34,6 @@ local function is_lua_primitive(datum)
   return false
 end
 
---[[
-local function bind_symbol(datum, ns_stack)
-  -- we already explicitly mentioned a namespace
-  if tsukuyomi.get_symbol_namespace(datum) then
-    return datum
-  end
-
-  -- we have to check to see what symbol is being referred to
-  local resolved_namespace
-  local name = tsukuyomi.get_symbol_name(datum)
-
-  for i = #ns_stack, 1, -1 do
-    local ns_name = ns_stack[i]
-    local ns = tsukuyomi[ns_name]
-    if ns and ns[name] then
-      resolved_namespace = ns_name
-      break
-    end
-  end
-    
-  return tsukuyomi.create_symbol(name, resolved_namespace)
-end
-]]--
-
-local function bind_to_main_main_ns(datum, ns_stack)
-  -- we already explicitly mentioned a namespace
-  if tsukuyomi.get_symbol_namespace(datum) then
-    return datum
-  end
-
-  local name = tsukuyomi.get_symbol_name(datum)
-  local ns = ns_stack[#ns_stack]
-  return tsukuyomi.create_symbol(name, ns)
-end
-
 local function compile_lua_primitive(datum)
   if type(datum) == 'number' or type(datum) == 'boolean' then
     return tostring(datum)
@@ -100,23 +65,29 @@ end
 -- used to implement dispatch based on the first / car of a cons cell
 special_forms = {}
 
-special_forms[kNsSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
-  local ns = tsukuyomi.get_symbol_name(datum[1])
-  table.insert(ns_stack, ns)
-
-  node.op = 'NOP'
-  node.args = nil
+special_forms[kNsSymbol] = function(node, datum, new_dirty_nodes)
+  node.op = 'NS'
+  node.args = { datum[1] }
 
   -- TODO: support other namespaces via require
   -- TODO: check for symbol collision in namespaces
+  if node.is_return then
+    node.is_return = false
+
+    local new_node = tsukuyomi.ll_new_node('LISP')
+    new_node.args = { true }
+    tsukuyomi.ll_insert_after(node, new_node)
+    new_node.is_return = true
+    table.insert(new_dirty_nodes, new_node)
+  end
 end
 
-special_forms[kDefSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
+special_forms[kDefSymbol] = function(node, datum, new_dirty_nodes)
   -- (define symbol datum)
   table.insert(new_dirty_nodes, node)
   node.op = 'LISP'
   local symbol = datum[1]
-  node.define_symbol = bind_to_main_main_ns(symbol, ns_stack)
+  node.define_symbol = symbol
 
   node.args[1] = datum[2][1]
   node.args[2] = nil
@@ -135,30 +106,30 @@ special_forms[kDefSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
   end
 end
 
-special_forms[kRawSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
+special_forms[kRawSymbol] = function(node, datum, new_dirty_nodes)
   node.op = 'RAW'
   local inline = datum[1]
   assert(type(inline) == 'string')
   node.args = { inline }
 end
 
-special_forms[kQuoteSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
+special_forms[kQuoteSymbol] = function(node, datum, new_dirty_nodes)
   node.op = 'DATA'
   node.data_key = make_unique_data_key()
   tsukuyomi._data[node.data_key] = datum[1]
 end
 
-special_forms[kIfSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
+special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   -- TODO: implement this
   assert(false)
 end
 
-special_forms[kFnSymbol] = function(node, datum, ns_stack, new_dirty_nodes)
+special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
   -- (fn [arg0 arg1] (body))
   node.op = 'FUNC'
   node.args = datum[1]
 
-  -- convert functino argument symbols to string
+  -- convert function argument symbols to string
   -- TODO: will I or someone ever put namespace symbols here by accident?
   -- is it even worth it to check?
   for i = 1, #node.args do
@@ -185,13 +156,13 @@ end
 
 op_dispatch = {}
 
-op_dispatch['LISP'] = function(node, ns_stack, new_dirty_nodes)
+op_dispatch['LISP'] = function(node, new_dirty_nodes)
   local datum = node.args[1]
   if tsukuyomi.is_cons_cell(datum) then
     local first = datum[1]
     local rest = datum[2]
     if special_forms[first] then
-      special_forms[first](node, rest, ns_stack, new_dirty_nodes)
+      special_forms[first](node, rest, new_dirty_nodes)
     else
       -- normal function call
       node.op = 'CALL'
@@ -205,11 +176,11 @@ op_dispatch['LISP'] = function(node, ns_stack, new_dirty_nodes)
   end
 end
 
-op_dispatch['CALL'] = function(node, ns_stack, new_dirty_nodes)
+op_dispatch['CALL'] = function(node, new_dirty_nodes)
   local args = node.args
   for i = 1, #args do
     if is_lua_primitive(args[i]) then
-      args[i] = compile_lua_primitive(args[i], current_ns)
+      args[i] = compile_lua_primitive(args[i])
     else
       local var_node = tsukuyomi.ll_new_node('VAR')
       table.insert(new_dirty_nodes, var_node)
@@ -222,11 +193,11 @@ op_dispatch['CALL'] = function(node, ns_stack, new_dirty_nodes)
   end
 end
 
-op_dispatch['VAR'] = function(node, ns_stack, new_dirty_nodes)
+op_dispatch['VAR'] = function(node, new_dirty_nodes)
   node.op = 'LISP'
-  node.var_name = args[1]
-  args[1] = args[2]
-  args[2] = nil
+  node.var_name = node.args[1]
+  node.args[1] = node.args[2]
+  node.args[2] = nil
   table.insert(new_dirty_nodes, node)
 end
 
@@ -246,9 +217,6 @@ end
 -- define_symbol
 -- is_return
 function tsukuyomi.compile_to_ir(head_node)
-  -- used to resolve symbols, lookup order is from last namespace to first
-  local ns_stack = {}
-
   -- prepare input nodes by marking them all as dirty
   local dirty_nodes = {}
   local node = head_node
@@ -262,12 +230,17 @@ function tsukuyomi.compile_to_ir(head_node)
     for i = 1, #dirty_nodes do
       local node = dirty_nodes[i]
       local op = node.op
-      op_dispatch[op](node, ns_stack, new_dirty_nodes)
+      op_dispatch[op](node, new_dirty_nodes)
     end
     dirty_nodes = new_dirty_nodes
   end
 
-  tsukuyomi._debug_ir(head_node)
+  -- it is possible that this expansion process has tacked on nodes in front of the head node
+  while head_node.prev do
+    head_node = head_node.prev
+  end
+  
+  return head_node
 end
 
 function tsukuyomi._debug_ir(node)
@@ -311,5 +284,5 @@ function tsukuyomi._debug_ir(node)
     node = node.next
   end
 
-  print(table.concat(lines, '\n'))
+  return table.concat(lines, '\n')
 end
