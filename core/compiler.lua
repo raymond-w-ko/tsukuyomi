@@ -1,30 +1,32 @@
+local log = io.open('tsukuyomi/tests/compiler.out.txt', 'w')
+if not log then assert(false) end
+
 local function prepare_data(datum)
-  -- convert cons cell linked list (list of Lisp data) to Lua doubly-linked list
-  local head_node
-  local node
-  while datum and datum[1] do
-    local new_node = tsukuyomi.ll_new_node('LISP')
-    new_node.args = { datum[1] }
-
-    if node then
-      tsukuyomi.ll_insert_after(node, new_node)
-    else
-      head_node = new_node
-    end
-    node = new_node
-
-    datum = datum[2]
-  end
-  if node then
-    node.is_return = true
-  end
-
-  return head_node
+  local node = tsukuyomi.ll_new_node('LISP')
+  node.args = { datum }
+  node.is_return = true
+  return node
 end
 
 function tsukuyomi.compile(datum)
+  log:write('compiling:\n')
+  log:write(tsukuyomi.print(datum))
+  log:write('\n')
+  log:write('\n')
+
   local list = prepare_data(datum)
-  tsukuyomi.compile_to_ir(list)
-  if true then return end
-  return tsukuyomi.compile_to_lua(list)
+  local list = tsukuyomi.compile_to_ir(list)
+  log:write('IR:\n')
+  log:write(tsukuyomi._debug_ir(list))
+  log:write('\n')
+  log:write('\n')
+
+  local source_code = tsukuyomi.compile_to_lua(list)
+  log:write('Lua source code:\n')
+  log:write(source_code)
+  log:write('\n')
+  log:write('\n')
+
+  log:write('********************************************************************************\n\n')
+  return source_code
 end
