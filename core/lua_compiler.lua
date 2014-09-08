@@ -34,6 +34,8 @@ local function pop_frame(stack, fn_arg_symbols)
   end
 end
 
+-- convert Lisp namespace name to a valid Lua identifier, with some prefix so
+-- that it doesn't get accidentally called
 function convert_ns_to_lua(ns)
   -- TODO: SO much here to make it safe
   return '__' .. ns
@@ -74,13 +76,23 @@ local function compile_string_or_symbol(datum, fn_arg_symbols, used_namespaces)
   end
 end
 
+local data_var_counter = -1
+local function make_unique_data_var(data_bindings, data_key)
+  data_var_counter = data_var_counter + 1
+  local var_name = '__data' .. tostring(data_var_counter)
+  data_bindings[var_name] = data_key
+  return var_name
+end
+
 function tsukuyomi.compile_to_lua(ir_list)
   local lines = {}
 
   local indent_level = 0
   local stack = {}
   local fn_arg_symbols = {}
+
   local used_namespaces = {}
+  local data_bindings = {}
 
   local insn = ir_list
   while insn do
@@ -95,15 +107,11 @@ function tsukuyomi.compile_to_lua(ir_list)
     -- IR instructions can be tagged in the following fashion to signal
     -- variable definition, or returning
     if insn.var_name then
-      table.insert(line, 'local ')
-      table.insert(line, insn.var_name)
-      table.insert(line, ' = ')
+      emit('local ', insn.var_name, ' = ')
     elseif insn.define_symbol and insn.op ~= 'FUNC' then
-      table.insert(line, symbol_to_lua(insn.define_symbol, used_namespaces))
-      table.insert(line, " = ")
-    end
-    if insn.is_return then
-      table.insert(line, 'return ')
+      emit(symbol_to_lua(insn.define_symbol, used_namespaces), " = ")
+    elseif insn.is_return then
+      emit('return ')
     end
 
     if insn.op == 'NOP' then
@@ -116,29 +124,19 @@ function tsukuyomi.compile_to_lua(ir_list)
       emit(compile_string_or_symbol(insn.args[1], fn_arg_symbols, used_namespaces))
     elseif insn.op == 'RAW' then
       table.insert(line, insn.args[1])
-    elseif insn.op == 'SYMBOL' then
-      local symbol = insn.args[1]
-      if environment_symbols[tsukuyomi.get_symbol_name(symbol)] then
-        table.insert(line, tsukuyomi.get_symbol_name(symbol))
-      else
-        table.insert(line, symbol_to_lua(symbol, used_namespaces))
-      end
     elseif insn.op == 'DATA' then
-      table.insert(line, 'tsukuyomi._get_data(')
-      table.insert(line, insn.data_key)
-      table.insert(line, ')')
+      emit(make_unique_data_var(data_bindings, insn.data_key))
     elseif insn.op == 'CALL' then
       local args = insn.args
-      table.insert(line, compile_string_or_symbol(args[1], fn_arg_symbols, used_namespaces))
-
-      table.insert(line, '(')
+      emit(compile_string_or_symbol(insn.args[1], fn_arg_symbols, used_namespaces))
+      emit('(')
       for i = 2, #args do
-        table.insert(line, compile_string_or_symbol(args[i], fn_arg_symbols, used_namespaces))
+        emit(compile_string_or_symbol(args[i], fn_arg_symbols, used_namespaces))
         if i < #args then
-          table.insert(line, ', ')
+          emit(', ')
         end
       end
-      table.insert(line, ')')
+      emit( ')')
     elseif insn.op == 'FUNC' then
       if not (insn.var_name or insn.define_symbol) then
         table.insert(line, 'local ')
@@ -193,9 +191,14 @@ function tsukuyomi.compile_to_lua(ir_list)
   end
 
   local body = table.concat(lines, '\n')
+
   local header = {}
   table.insert(header, 'local tsukuyomi = tsukuyomi')
+  table.insert(header, '')
+  -- write out used namespaces
+  local has_namespace = false
   for ns, _ in pairs(used_namespaces) do
+    has_namespace = true
     local line = {}
     table.insert(line, 'local ')
     table.insert(line, convert_ns_to_lua(ns))
@@ -203,6 +206,25 @@ function tsukuyomi.compile_to_lua(ir_list)
     table.insert(line, ns)
     table.insert(line, '")')
     table.insert(header, table.concat(line))
+  end
+  if has_namespace then
+    table.insert(header, '')
+  end
+
+  -- write out data bindings
+  local has_data_bindings = false
+  for data_var_name, data_key in pairs(data_bindings) do
+    has_data_bindings = true
+    local line = {}
+    table.insert(line, 'local ')
+    table.insert(line, data_var_name)
+    table.insert(line, ' = tsukuyomi._get_data(')
+    table.insert(line, data_key)
+    table.insert(line, ')')
+    table.insert(header, table.concat(line))
+  end
+  if has_data_bindings then
+    table.insert(header, '')
   end
 
   local final = {}

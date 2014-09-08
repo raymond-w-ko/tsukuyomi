@@ -7,6 +7,7 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 tsukuyomi.set_active_namespace("core"); 
 return true
 
@@ -21,6 +22,7 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 tsukuyomi.set_active_namespace("core"); 
 return true
 
@@ -35,7 +37,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 __core.z2ljr2jlslfl3jf = 1
 return true
 
@@ -50,6 +54,7 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 tsukuyomi.set_active_namespace("core"); 
 return true
 
@@ -64,7 +69,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 __core.a = 3
 return true
 
@@ -79,7 +86,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 __core.b = 4
 return true
 
@@ -94,7 +103,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 __core.b = __core.a
 return true
 
@@ -109,6 +120,7 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 tsukuyomi.set_active_namespace("core"); 
 return true
 
@@ -125,7 +137,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 function __core.print(obj)
     return print(tostring(obj))
 end
@@ -144,7 +158,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 function __core.first(cell)
     return cell[1]
 end
@@ -163,7 +179,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 function __core.rest(cell)
     return cell[2]
 end
@@ -183,7 +201,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 function __core.second(coll)
     local __var0 = __core.rest(coll)
     return __core.first(__var0)
@@ -200,7 +220,9 @@ RET CALL print, "asdf"
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
+
 return __core.print("asdf")
 
 ********************************************************************************
@@ -209,16 +231,41 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-VAR __var2 := DATA table: 0x12f4b130
+VAR __var2 := DATA table: 0x1da8bd30
 VAR __var1 := CALL second, __var2
 RET CALL print, __var1
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __core = tsukuyomi.get_namespace("core")
-local __var2 = tsukuyomi._get_data(0)
+
+local __data0 = tsukuyomi._get_data(0)
+
+local __var2 = __data0
 local __var1 = __core.second(__var2)
 return __core.print(__var1)
+
+********************************************************************************
+
+compiling:
+(print (first (quote (3 4 5))))
+
+IR:
+VAR __var4 := DATA table: 0x1da8c9a8
+VAR __var3 := CALL first, __var4
+RET CALL print, __var3
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __data1 = tsukuyomi._get_data(1)
+
+local __var4 = __data1
+local __var3 = __core.first(__var4)
+return __core.print(__var3)
 
 ********************************************************************************
 
@@ -231,7 +278,9 @@ RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
+
 local __user = tsukuyomi.get_namespace("user")
+
 __user.test = "lisp"
 return true
 

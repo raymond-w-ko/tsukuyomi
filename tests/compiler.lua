@@ -4,12 +4,14 @@ local function test(text)
   local datum = tsukuyomi.read(text)
   while datum and datum[1] do
     local code = tsukuyomi.compile(datum[1])
-    local chunk, err = loadstring(code)
+    local chunk, err = loadstring(code, 'asdf')
     if err then
       print(err)
       assert(chunk)
     else
       chunk()
+      -- check to make sure all data is consumed, dangling data is bad
+      for var, data in pairs(tsukuyomi._data) do assert(false) end
     end
 
     datum = datum[2]
@@ -60,6 +62,7 @@ test([[
 
 (print "asdf")
 (print (second '(42 43)))
+(print (first '(3 4 5)))
 
 (def user/test "lisp")
 
