@@ -48,6 +48,10 @@ test([[
   (fn [obj]
     (_raw_ "print(tostring(obj))")))
 
+(def +
+  (fn [x y]
+    (_raw_ "x + y")))
+
 (def first
   (fn [cell]
     (_raw_ "cell[1]")))
@@ -65,5 +69,10 @@ test([[
 (print (first '(3 4 5)))
 
 (def user/test "lisp")
+
+(def f (fn [foo]
+  ((fn [bar] (+ foo bar)) 42)))
+
+(print (f 43))
 
 ]])

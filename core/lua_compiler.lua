@@ -34,6 +34,23 @@ local function pop_frame(stack, fn_arg_symbols)
   end
 end
 
+local safe_char_map = {
+  ['+'] = '__PLUS__',
+  ['-'] = '_MINUS__',
+  ['*'] = '__ASTERISK__',
+  ['/'] = '__SLASH__',
+}
+local function to_lua_identifier(lisp_name)
+  local safe_var = {}
+  for i = 1, lisp_name:len() do
+    local ch = lisp_name:sub(i, i)
+    local safe_ch = safe_char_map[ch]
+    safe_ch = safe_ch or ch
+    safe_var[i] = safe_ch
+  end
+  return table.concat(safe_var)
+end
+
 -- convert Lisp namespace name to a valid Lua identifier, with some prefix so
 -- that it doesn't get accidentally called
 function convert_ns_to_lua(ns)
@@ -56,7 +73,7 @@ local function symbol_to_lua(symbol, used_namespaces)
   end
 
   table.insert(code, '.')
-  table.insert(code, name)
+  table.insert(code, to_lua_identifier(name))
 
   return table.concat(code)
 end
@@ -106,7 +123,7 @@ function tsukuyomi.compile_to_lua(ir_list)
 
     -- IR instructions can be tagged in the following fashion to signal
     -- variable definition, or returning
-    if insn.var_name then
+    if insn.var_name and insn.op ~= 'FUNC' then
       emit('local ', insn.var_name, ' = ')
     elseif insn.define_symbol and insn.op ~= 'FUNC' then
       emit(symbol_to_lua(insn.define_symbol, used_namespaces), " = ")
@@ -138,24 +155,19 @@ function tsukuyomi.compile_to_lua(ir_list)
       end
       emit( ')')
     elseif insn.op == 'FUNC' then
-      if not (insn.var_name or insn.define_symbol) then
-        table.insert(line, 'local ')
-      end
-      table.insert(line, 'function ')
-      if insn.define_symbol then
-        table.insert(line, symbol_to_lua(insn.define_symbol, used_namespaces))
-      end
+      if insn.var_name then emit('local ') end
+      emit('function ')
+      if insn.define_symbol then emit(symbol_to_lua(insn.define_symbol, used_namespaces))
+      elseif insn.var_name then emit(insn.var_name) end
+      emit('(')
       push_new_frame(stack)
-      table.insert(line, '(')
       for i = 1, #insn.args do
         local arg_name = insn.args[i]
         add_arg_to_frame(stack, arg_name, fn_arg_symbols)
-        table.insert(line, arg_name)
-        if i < #insn.args then
-          table.insert(line, ', ')
-        end
+        emit(arg_name)
+        if i < #insn.args then emit(', ') end
       end
-      table.insert(line, ')')
+      emit(')')
     elseif insn.op == 'ENDFUNC' then
       table.insert(line, 'end')
 

@@ -148,6 +148,27 @@ return true
 ********************************************************************************
 
 compiling:
+(def + (fn [x y] (_raw_ "x + y")))
+
+IR:
+DEFSYM + := FUNC x, y
+RET RAW x + y
+ENDFUNC 
+RET PRIMITIVE true
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+function __core.__PLUS__(x, y)
+    return x + y
+end
+return true
+
+********************************************************************************
+
+compiling:
 (def first (fn [cell] (_raw_ "cell[1]")))
 
 IR:
@@ -231,7 +252,7 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-VAR __var2 := DATA table: 0x1da8bd30
+VAR __var2 := DATA table: 0x2b78f058
 VAR __var1 := CALL second, __var2
 RET CALL print, __var1
 
@@ -252,7 +273,7 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-VAR __var4 := DATA table: 0x1da8c9a8
+VAR __var4 := DATA table: 0x2b78f690
 VAR __var3 := CALL first, __var4
 RET CALL print, __var3
 
@@ -283,6 +304,50 @@ local __user = tsukuyomi.get_namespace("user")
 
 __user.test = "lisp"
 return true
+
+********************************************************************************
+
+compiling:
+(def f (fn [foo] ((fn [bar] (+ foo bar)) 42)))
+
+IR:
+DEFSYM f := FUNC foo
+VAR __var5 := FUNC bar
+RET CALL +, foo, bar
+ENDFUNC 
+RET CALL __var5, 42
+ENDFUNC 
+RET PRIMITIVE true
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+function __core.f(foo)
+    local function __var5(bar)
+        return __core.__PLUS__(foo, bar)
+    end
+    return __var5(42)
+end
+return true
+
+********************************************************************************
+
+compiling:
+(print (f 43))
+
+IR:
+VAR __var6 := CALL f, 43
+RET CALL print, __var6
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __var6 = __core.f(43)
+return __core.print(__var6)
 
 ********************************************************************************
 
