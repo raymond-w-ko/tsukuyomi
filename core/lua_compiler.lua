@@ -168,6 +168,7 @@ function tsukuyomi.compile_to_lua(ir_list)
         if i < #insn.args then emit(', ') end
       end
       emit(')')
+      indent = indent + 1
     elseif insn.op == 'ENDFUNC' then
       emit('end')
       pop_frame(stack, fn_arg_symbols)
@@ -183,11 +184,6 @@ function tsukuyomi.compile_to_lua(ir_list)
       end
       table.insert(lines, table.concat(line))
     end
-
-    if insn.op == 'FUNC' then
-      indent = indent + 1
-    end
-
     insn = insn.next
   end
 

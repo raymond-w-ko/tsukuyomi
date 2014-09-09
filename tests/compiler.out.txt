@@ -252,7 +252,7 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-VAR __var2 := DATA table: 0x2b78f058
+VAR __var2 := DATA table: 0x1956d470
 VAR __var1 := CALL second, __var2
 RET CALL print, __var1
 
@@ -273,7 +273,7 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-VAR __var4 := DATA table: 0x2b78f690
+VAR __var4 := DATA table: 0x1956e028
 VAR __var3 := CALL first, __var4
 RET CALL print, __var3
 
