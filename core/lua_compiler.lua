@@ -104,7 +104,7 @@ end
 function tsukuyomi.compile_to_lua(ir_list)
   local lines = {}
 
-  local indent_level = 0
+  local indent = 0
   local stack = {}
   local fn_arg_symbols = {}
 
@@ -169,28 +169,23 @@ function tsukuyomi.compile_to_lua(ir_list)
       end
       emit(')')
     elseif insn.op == 'ENDFUNC' then
-      table.insert(line, 'end')
-
+      emit('end')
       pop_frame(stack, fn_arg_symbols)
-
-      indent_level = indent_level - 1
-    elseif insn.op == 'LISP' then
-      table.insert(line, '-- ')
-      table.insert(line, tsukuyomi.print(insn.args[1]))
+      indent = indent - 1
     else
       print('unknown opcode: ' .. insn.op)
       assert(false)
     end
 
     if #line > 0 then
-      for i = 1, indent_level do
+      for i = 1, indent do
         table.insert(line, 1, '    ')
       end
       table.insert(lines, table.concat(line))
     end
 
     if insn.op == 'FUNC' then
-      indent_level = indent_level + 1
+      indent = indent + 1
     end
 
     insn = insn.next
