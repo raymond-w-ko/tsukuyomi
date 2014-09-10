@@ -144,7 +144,7 @@ function tsukuyomi.compile_to_lua(ir_list)
     elseif insn.op == 'PRIMITIVE' then
       emit(compile_string_or_symbol(insn.args[1], fn_arg_symbols, used_namespaces))
     elseif insn.op == 'RAW' then
-      table.insert(line, insn.args[1])
+      emit(insn.args[1])
     elseif insn.op == 'DATA' then
       emit(make_unique_data_var(data_bindings, insn.data_key))
     elseif insn.op == 'CALL' then

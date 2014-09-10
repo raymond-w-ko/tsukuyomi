@@ -252,7 +252,7 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-VAR __var2 := DATA table: 0x4181faa8
+VAR __var2 := DATA table: 0x1d5c3bd8
 VAR __var1 := CALL second, __var2
 RET CALL print, __var1
 
@@ -273,7 +273,7 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-VAR __var4 := DATA table: 0x41820760
+VAR __var4 := DATA table: 0x1d5c40b0
 VAR __var3 := CALL first, __var4
 RET CALL print, __var3
 
@@ -769,7 +769,4 @@ local __core = tsukuyomi.get_namespace("core")
 return __core.print(__core.c)
 
 ********************************************************************************
-
-compiling:
-(print [1 2 3 4])
 
