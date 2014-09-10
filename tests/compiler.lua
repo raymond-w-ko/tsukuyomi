@@ -107,6 +107,4 @@ test([[
 (def c (if true (if true "ketchup" "mustard") (if false "jam" "gravy")))
 (print c)
 
-(print [1 2 3 4])
-
 ]])

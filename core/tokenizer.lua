@@ -21,7 +21,6 @@ local kWhitespaces = {
 }
 
 -- splits Lisp source code as a raw input string into an Lua array of tokens suitable for parsing
--- TODO: somehow store line numbers with tokens
 function tsukuyomi.tokenize(text)
   local tokens = {}
   local token_line_numbers = {}

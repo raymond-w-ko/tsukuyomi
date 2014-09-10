@@ -20,7 +20,6 @@ require('tsukuyomi.core.ir_compiler')
 require('tsukuyomi.core.lua_compiler')
 require('tsukuyomi.core.compiler')
 
--- TODO: is there a better to pass quoted data?
 tsukuyomi._data = {}
 function tsukuyomi._get_data(key)
   local data = tsukuyomi._data[key]
