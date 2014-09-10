@@ -227,6 +227,8 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
       node.args = tsukuyomi.cons_to_lua_array(datum)
       table.insert(new_dirty_nodes, node)
     end
+  elseif tsukuyomi.is_array(datum) then
+    assert(false)
   else
     local primitive = compile_lua_primitive(datum)
     node.op = 'PRIMITIVE'
