@@ -78,9 +78,13 @@ local function symbol_to_lua(symbol, used_namespaces)
   return table.concat(code)
 end
 
+local kNilSymbol = tsukuyomi.create_symbol("nil")
+
 local function compile_string_or_symbol(datum, fn_arg_symbols, used_namespaces)
   if type(datum) == 'string' then
     return datum
+  elseif datum == kNilSymbol then
+    return 'nil'
   elseif tsukuyomi.is_symbol(datum) then
     local name = tsukuyomi.get_symbol_name(datum)
     if fn_arg_symbols[name] then
@@ -168,11 +172,18 @@ function tsukuyomi.compile_to_lua(ir_list)
         if i < #insn.args then emit(', ') end
       end
       emit(')')
-      indent = indent + 1
     elseif insn.op == 'ENDFUNC' then
       emit('end')
       pop_frame(stack, fn_arg_symbols)
       indent = indent - 1
+    elseif insn.op == 'IF' then
+      emit('if ', insn.args[1], ' then')
+    elseif insn.op == 'ELSE' then
+      indent = indent - 1
+      emit('else')
+    elseif insn.op == 'ENDIF' then
+      indent = indent - 1
+      emit('end')
     else
       print('unknown opcode: ' .. insn.op)
       assert(false)
@@ -184,6 +195,16 @@ function tsukuyomi.compile_to_lua(ir_list)
       end
       table.insert(lines, table.concat(line))
     end
+
+    -- indent change after line is generated
+    if insn.op == 'FUNC' then
+      indent = indent + 1
+    elseif insn.op == 'IF' then
+      indent = indent + 1
+    elseif insn.op == 'ELSE' then
+      indent = indent + 1
+    end
+
     insn = insn.next
   end
 

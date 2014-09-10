@@ -75,4 +75,36 @@ test([[
 
 (print (f 43))
 
+(if false (print "pepperoni"))
+(if nil (print "hoagie"))
+
+(if true
+  (print "pizza")
+  (print "hotdog"))
+
+(if false
+  (print "pizza")
+  (print "hotdog"))
+
+(if ((fn [] (+ 1 1)))
+  (print "pizza")
+  (print "hotdog"))
+
+(if ((fn [] nil))
+  (print "pizza")
+  (print "hotdog"))
+
+(if ((fn [] true))
+  ((fn [x] (print (+ 1 x))) 24)
+  (print "hotdog"))
+
+(def a (if true "mayo" "ketchup"))
+(def b (if false "horseradish" "wasabi"))
+
+(print a)
+(print b)
+
+(def c (if true (if true "ketchup" "mustard") (if false "jam" "gravy")))
+(print c)
+
 ]])

@@ -252,7 +252,7 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-VAR __var2 := DATA table: 0x1956d470
+VAR __var2 := DATA table: 0x1fdf21a8
 VAR __var1 := CALL second, __var2
 RET CALL print, __var1
 
@@ -273,7 +273,7 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-VAR __var4 := DATA table: 0x1956e028
+VAR __var4 := DATA table: 0x1fdf2d78
 VAR __var3 := CALL first, __var4
 RET CALL print, __var3
 
@@ -348,6 +348,425 @@ local __core = tsukuyomi.get_namespace("core")
 
 local __var6 = __core.f(43)
 return __core.print(__var6)
+
+********************************************************************************
+
+compiling:
+(if false (print "pepperoni"))
+
+IR:
+VAR __var7 := FUNC 
+VAR __var8 := PRIMITIVE false
+IF __var8
+RET CALL print, "pepperoni"
+ELSE 
+RET PRIMITIVE nil
+ENDIF 
+ENDFUNC 
+RET CALL __var7
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var7()
+    local __var8 = false
+    if __var8 then
+        return __core.print("pepperoni")
+    else
+        return nil
+    end
+end
+return __var7()
+
+********************************************************************************
+
+compiling:
+(if nil (print "hoagie"))
+
+IR:
+VAR __var9 := FUNC 
+VAR __var10 := PRIMITIVE nil
+IF __var10
+RET CALL print, "hoagie"
+ELSE 
+RET PRIMITIVE nil
+ENDIF 
+ENDFUNC 
+RET CALL __var9
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var9()
+    local __var10 = nil
+    if __var10 then
+        return __core.print("hoagie")
+    else
+        return nil
+    end
+end
+return __var9()
+
+********************************************************************************
+
+compiling:
+(if true (print "pizza") (print "hotdog"))
+
+IR:
+VAR __var11 := FUNC 
+VAR __var12 := PRIMITIVE true
+IF __var12
+RET CALL print, "pizza"
+ELSE 
+RET CALL print, "hotdog"
+ENDIF 
+ENDFUNC 
+RET CALL __var11
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var11()
+    local __var12 = true
+    if __var12 then
+        return __core.print("pizza")
+    else
+        return __core.print("hotdog")
+    end
+end
+return __var11()
+
+********************************************************************************
+
+compiling:
+(if false (print "pizza") (print "hotdog"))
+
+IR:
+VAR __var13 := FUNC 
+VAR __var14 := PRIMITIVE false
+IF __var14
+RET CALL print, "pizza"
+ELSE 
+RET CALL print, "hotdog"
+ENDIF 
+ENDFUNC 
+RET CALL __var13
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var13()
+    local __var14 = false
+    if __var14 then
+        return __core.print("pizza")
+    else
+        return __core.print("hotdog")
+    end
+end
+return __var13()
+
+********************************************************************************
+
+compiling:
+(if ((fn [] (+ 1 1))) (print "pizza") (print "hotdog"))
+
+IR:
+VAR __var15 := FUNC 
+VAR __var17 := FUNC 
+RET CALL +, 1, 1
+ENDFUNC 
+VAR __var16 := CALL __var17
+IF __var16
+RET CALL print, "pizza"
+ELSE 
+RET CALL print, "hotdog"
+ENDIF 
+ENDFUNC 
+RET CALL __var15
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var15()
+    local function __var17()
+        return __core.__PLUS__(1, 1)
+    end
+    local __var16 = __var17()
+    if __var16 then
+        return __core.print("pizza")
+    else
+        return __core.print("hotdog")
+    end
+end
+return __var15()
+
+********************************************************************************
+
+compiling:
+(if ((fn [] nil)) (print "pizza") (print "hotdog"))
+
+IR:
+VAR __var18 := FUNC 
+VAR __var20 := FUNC 
+RET PRIMITIVE nil
+ENDFUNC 
+VAR __var19 := CALL __var20
+IF __var19
+RET CALL print, "pizza"
+ELSE 
+RET CALL print, "hotdog"
+ENDIF 
+ENDFUNC 
+RET CALL __var18
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var18()
+    local function __var20()
+        return nil
+    end
+    local __var19 = __var20()
+    if __var19 then
+        return __core.print("pizza")
+    else
+        return __core.print("hotdog")
+    end
+end
+return __var18()
+
+********************************************************************************
+
+compiling:
+(if ((fn [] true)) ((fn [x] (print (+ 1 x))) 24) (print "hotdog"))
+
+IR:
+VAR __var21 := FUNC 
+VAR __var24 := FUNC 
+RET PRIMITIVE true
+ENDFUNC 
+VAR __var22 := CALL __var24
+IF __var22
+VAR __var23 := FUNC x
+VAR __var25 := CALL +, 1, x
+RET CALL print, __var25
+ENDFUNC 
+RET CALL __var23, 24
+ELSE 
+RET CALL print, "hotdog"
+ENDIF 
+ENDFUNC 
+RET CALL __var21
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var21()
+    local function __var24()
+        return true
+    end
+    local __var22 = __var24()
+    if __var22 then
+        local function __var23(x)
+            local __var25 = __core.__PLUS__(1, x)
+            return __core.print(__var25)
+        end
+        return __var23(24)
+    else
+        return __core.print("hotdog")
+    end
+end
+return __var21()
+
+********************************************************************************
+
+compiling:
+(def a (if true "mayo" "ketchup"))
+
+IR:
+VAR __var26 := FUNC 
+VAR __var27 := PRIMITIVE true
+IF __var27
+RET PRIMITIVE "mayo"
+ELSE 
+RET PRIMITIVE "ketchup"
+ENDIF 
+ENDFUNC 
+DEFSYM a := CALL __var26
+RET PRIMITIVE true
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var26()
+    local __var27 = true
+    if __var27 then
+        return "mayo"
+    else
+        return "ketchup"
+    end
+end
+__core.a = __var26()
+return true
+
+********************************************************************************
+
+compiling:
+(def b (if false "horseradish" "wasabi"))
+
+IR:
+VAR __var28 := FUNC 
+VAR __var29 := PRIMITIVE false
+IF __var29
+RET PRIMITIVE "horseradish"
+ELSE 
+RET PRIMITIVE "wasabi"
+ENDIF 
+ENDFUNC 
+DEFSYM b := CALL __var28
+RET PRIMITIVE true
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var28()
+    local __var29 = false
+    if __var29 then
+        return "horseradish"
+    else
+        return "wasabi"
+    end
+end
+__core.b = __var28()
+return true
+
+********************************************************************************
+
+compiling:
+(print a)
+
+IR:
+RET CALL print, a
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+return __core.print(__core.a)
+
+********************************************************************************
+
+compiling:
+(print b)
+
+IR:
+RET CALL print, b
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+return __core.print(__core.b)
+
+********************************************************************************
+
+compiling:
+(def c (if true (if true "ketchup" "mustard") (if false "jam" "gravy")))
+
+IR:
+VAR __var30 := FUNC 
+VAR __var31 := PRIMITIVE true
+IF __var31
+VAR __var32 := FUNC 
+VAR __var33 := PRIMITIVE true
+IF __var33
+RET PRIMITIVE "ketchup"
+ELSE 
+RET PRIMITIVE "mustard"
+ENDIF 
+ENDFUNC 
+RET CALL __var32
+ELSE 
+VAR __var34 := FUNC 
+VAR __var35 := PRIMITIVE false
+IF __var35
+RET PRIMITIVE "jam"
+ELSE 
+RET PRIMITIVE "gravy"
+ENDIF 
+ENDFUNC 
+RET CALL __var34
+ENDIF 
+ENDFUNC 
+DEFSYM c := CALL __var30
+RET PRIMITIVE true
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local function __var30()
+    local __var31 = true
+    if __var31 then
+        local function __var32()
+            local __var33 = true
+            if __var33 then
+                return "ketchup"
+            else
+                return "mustard"
+            end
+        end
+        return __var32()
+    else
+        local function __var34()
+            local __var35 = false
+            if __var35 then
+                return "jam"
+            else
+                return "gravy"
+            end
+        end
+        return __var34()
+    end
+end
+__core.c = __var30()
+return true
+
+********************************************************************************
+
+compiling:
+(print c)
+
+IR:
+RET CALL print, c
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+return __core.print(__core.c)
 
 ********************************************************************************
 

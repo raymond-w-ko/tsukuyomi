@@ -6,6 +6,7 @@ local kDefSymbol = tsukuyomi.create_symbol('def')
 local kIfSymbol = tsukuyomi.create_symbol('if')
 local kFnSymbol = tsukuyomi.create_symbol('fn')
 local kRawSymbol = tsukuyomi.create_symbol('_raw_')
+local kNilSymbol = tsukuyomi.create_symbol("nil")
 
 local var_counter = -1
 local function make_unique_var_name()
@@ -120,8 +121,65 @@ special_forms[kQuoteSymbol] = function(node, datum, new_dirty_nodes)
 end
 
 special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
-  -- TODO: implement this
-  assert(false)
+  local orig_node = node
+
+  local func_node = tsukuyomi.ll_new_node('FUNC')
+  func_node.args = {}
+  local func_name = make_unique_var_name()
+  func_node.var_name = func_name
+  tsukuyomi.ll_insert_before(orig_node, func_node)
+  node = func_node
+
+  local test = datum
+  assert(test[1] ~= nil)
+  local var_test_node = tsukuyomi.ll_new_node('VAR')
+  table.insert(new_dirty_nodes, var_test_node)
+  local var_name = make_unique_var_name()
+  var_test_node.args = {var_name, test[1]}
+  tsukuyomi.ll_insert_after(node, var_test_node)
+  node = var_test_node
+
+  local if_node = tsukuyomi.ll_new_node('IF')
+  if_node.args = { var_name }
+  tsukuyomi.ll_insert_after(node, if_node)
+  node = if_node
+
+  local then_cell = test[2]
+  assert(then_cell)
+  local then_node = tsukuyomi.ll_new_node('LISP')
+  table.insert(new_dirty_nodes, then_node)
+  then_node.args = { then_cell[1] }
+  then_node.is_return = true
+  tsukuyomi.ll_insert_after(node, then_node)
+  node = then_node
+
+  local else_keyword_node = tsukuyomi.ll_new_node('ELSE')
+  tsukuyomi.ll_insert_after(node, else_keyword_node)
+  node = else_keyword_node
+
+  local else_cell = then_cell[2]
+  local else_node
+  if else_cell then
+    else_node = tsukuyomi.ll_new_node('LISP')
+    else_node.args = { else_cell[1] }
+    table.insert(new_dirty_nodes, else_node)
+  else
+    else_node = tsukuyomi.ll_new_node('PRIMITIVE')
+    else_node.args = { kNilSymbol }
+  end
+  else_node.is_return = true
+  tsukuyomi.ll_insert_after(node, else_node)
+  node = else_node
+
+  local end_node = tsukuyomi.ll_new_node('ENDIF')
+  tsukuyomi.ll_insert_after(node, end_node)
+  node = end_node
+  local end_func = tsukuyomi.ll_new_node('ENDFUNC')
+  tsukuyomi.ll_insert_after(node, end_func)
+
+  node = orig_node
+  node.op = 'CALL'
+  node.args = { func_name }
 end
 
 special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
