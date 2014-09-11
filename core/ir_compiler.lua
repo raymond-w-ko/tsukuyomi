@@ -7,6 +7,7 @@ local kIfSymbol = tsukuyomi.create_symbol('if')
 local kFnSymbol = tsukuyomi.create_symbol('fn')
 local kRawSymbol = tsukuyomi.create_symbol('_raw_')
 local kNilSymbol = tsukuyomi.create_symbol("nil")
+local kLetSymbol = tsukuyomi.create_symbol("let")
 
 local var_counter = -1
 local function make_unique_var_name(desc)
@@ -224,6 +225,18 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
 
   local end_func_node = tsukuyomi.ll_new_node('ENDFUNC')
   tsukuyomi.ll_insert_after(node, end_func_node)
+end
+
+special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
+  local bindings = datum[1]
+  assert(bindings and tsukuyomi.is_array(bindings))
+
+  local exprs = datum[2]
+  while exprs and exprs[1] do
+    exprs = exprs[2]
+  end
+
+  assert(false)
 end
 
 op_dispatch = {}
