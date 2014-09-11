@@ -127,7 +127,7 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
 
   local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR')
   local ret_var_name = make_unique_var_name('if_ret')
-  ret_var_node.args = {ret_var_name}
+  ret_var_node.args = { ret_var_name }
   tsukuyomi.ll_insert_before(orig_node, ret_var_node)
   node = ret_var_node
 
@@ -189,6 +189,80 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   node.args = { ret_var_name }
 end
 
+special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
+  local orig_node = node
+
+  local bindings = datum[1]
+  assert(bindings and tsukuyomi.is_array(bindings) and (#bindings % 2 == 0))
+  local exprs = datum[2]
+
+  local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR')
+  local ret_var_name = make_unique_var_name('let_ret')
+  ret_var_node.args = { ret_var_name }
+  tsukuyomi.ll_insert_before(orig_node, ret_var_node)
+  node = ret_var_node
+
+  local fence = tsukuyomi.ll_new_node('VARFENCE')
+  tsukuyomi.ll_insert_after(node, fence)
+  node = fence
+
+  local letframe = tsukuyomi.ll_new_node('LETFRAME')
+  tsukuyomi.ll_insert_after(node, letframe)
+  node = letframe
+
+  local i = 1
+  local new_local_vars = {}
+  while i <= #bindings do
+    local var_symbol = bindings[i]
+    local var_name = tsukuyomi.get_symbol_name(var_symbol)
+    table.insert(new_local_vars, var_name)
+    local form = bindings[i + 1]
+
+    local lisp_node = tsukuyomi.ll_new_node('LISP')
+    lisp_node.args = { form }
+    lisp_node.new_lvar_name = var_name
+    table.insert(new_dirty_nodes, lisp_node)
+    tsukuyomi.ll_insert_after(node, lisp_node)
+    node = lisp_node
+
+    i = i + 2
+  end
+  letframe.args = new_local_vars
+
+  while exprs and exprs[1] do
+    local fence = tsukuyomi.ll_new_node('VARFENCE')
+    tsukuyomi.ll_insert_after(node, fence)
+    node = fence
+
+    local lisp_node = tsukuyomi.ll_new_node('LISP')
+    lisp_node.args = { exprs[1] }
+    if exprs[2] == nil then
+      lisp_node.set_var_name = ret_var_name
+    end
+    table.insert(new_dirty_nodes, lisp_node)
+    tsukuyomi.ll_insert_after(node, lisp_node)
+    node = lisp_node
+
+    exprs = exprs[2]
+
+    local endfence = tsukuyomi.ll_new_node('ENDVARFENCE')
+    tsukuyomi.ll_insert_after(node, endfence)
+    node = endfence
+  end
+
+  local endletframe = tsukuyomi.ll_new_node('ENDLETFRAME')
+  tsukuyomi.ll_insert_after(node, endletframe)
+  node = endletframe
+
+  local endfence = tsukuyomi.ll_new_node('ENDVARFENCE')
+  tsukuyomi.ll_insert_after(node, endfence)
+  node = endfence
+
+  node = orig_node
+  node.op = 'PRIMITIVE'
+  node.args = { ret_var_name }
+end
+
 special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
   -- (fn [arg0 arg1] (body))
   node.op = 'FUNC'
@@ -225,18 +299,6 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
 
   local end_func_node = tsukuyomi.ll_new_node('ENDFUNC')
   tsukuyomi.ll_insert_after(node, end_func_node)
-end
-
-special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
-  local bindings = datum[1]
-  assert(bindings and tsukuyomi.is_array(bindings))
-
-  local exprs = datum[2]
-  while exprs and exprs[1] do
-    exprs = exprs[2]
-  end
-
-  assert(false)
 end
 
 op_dispatch = {}

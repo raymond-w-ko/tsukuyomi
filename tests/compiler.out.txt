@@ -272,7 +272,7 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-VAR __arg_2 := DATA table: 0x1a594058
+VAR __arg_2 := DATA table: 0x06a14578
 VAR __arg_1 := CALL second, __arg_2
 RET CALL print, __arg_1
 
@@ -293,7 +293,7 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-VAR __arg_4 := DATA table: 0x1a5945b0
+VAR __arg_4 := DATA table: 0x06a14ab0
 VAR __arg_3 := CALL first, __arg_4
 RET CALL print, __arg_3
 
@@ -871,4 +871,61 @@ return true
 
 compiling:
 (def f3 (fn [x] (let [x 1 y x] y)))
+
+IR:
+DEFSYM f3 := FUNC x
+VARFENCE 
+EMPTYVAR __let_ret_36
+VARFENCE 
+LETFRAME x, y
+VAR x := PRIMITIVE 1
+VAR y := PRIMITIVE x
+VARFENCE 
+PRIMITIVE y
+ENDVARFENCE 
+ENDLETFRAME 
+ENDVARFENCE 
+RET PRIMITIVE __let_ret_36
+ENDVARFENCE 
+ENDFUNC 
+RET PRIMITIVE true
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+function __core.f3(x)
+    do
+        local __let_ret_36
+        do
+            local x = 1
+            local y = x
+            do
+                __let_ret_36 = y
+            end
+        end
+        return __let_ret_36
+    end
+end
+return true
+
+********************************************************************************
+
+compiling:
+(print (f3 42))
+
+IR:
+VAR __arg_37 := CALL f3, 42
+RET CALL print, __arg_37
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __arg_37 = __core.f3(42)
+return __core.print(__arg_37)
+
+********************************************************************************
 

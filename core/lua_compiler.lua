@@ -180,6 +180,14 @@ function tsukuyomi.compile_to_lua(ir_list)
       emit('end')
       pop_frame(stack, fn_arg_symbols)
       indent = indent - 1
+    elseif insn.op == 'LETFRAME' then
+      push_new_frame(stack)
+      for i = 1, #insn.args do
+        local arg_name = insn.args[i]
+        add_arg_to_frame(stack, arg_name, fn_arg_symbols)
+      end
+    elseif insn.op == 'ENDLETFRAME' then
+      pop_frame(stack, fn_arg_symbols)
     elseif insn.op == 'IF' then
       emit('if ', insn.args[1], ' then')
     elseif insn.op == 'ELSE' then
