@@ -123,12 +123,11 @@ end
 special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
-  local func_node = tsukuyomi.ll_new_node('FUNC')
-  func_node.args = {}
-  local func_name = make_unique_var_name()
-  func_node.var_name = func_name
-  tsukuyomi.ll_insert_before(orig_node, func_node)
-  node = func_node
+  local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR')
+  local ret_var_name = make_unique_var_name()
+  ret_var_node.args = {ret_var_name}
+  tsukuyomi.ll_insert_before(orig_node, ret_var_node)
+  node = ret_var_node
 
   local test = datum
   assert(test[1] ~= nil)
@@ -149,7 +148,7 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   local then_node = tsukuyomi.ll_new_node('LISP')
   table.insert(new_dirty_nodes, then_node)
   then_node.args = { then_cell[1] }
-  then_node.is_return = true
+  then_node.set_var_name = ret_var_name
   tsukuyomi.ll_insert_after(node, then_node)
   node = then_node
 
@@ -167,19 +166,17 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
     else_node = tsukuyomi.ll_new_node('PRIMITIVE')
     else_node.args = { kNilSymbol }
   end
-  else_node.is_return = true
+  else_node.set_var_name = ret_var_name
   tsukuyomi.ll_insert_after(node, else_node)
   node = else_node
 
   local end_node = tsukuyomi.ll_new_node('ENDIF')
   tsukuyomi.ll_insert_after(node, end_node)
   node = end_node
-  local end_func = tsukuyomi.ll_new_node('ENDFUNC')
-  tsukuyomi.ll_insert_after(node, end_func)
 
   node = orig_node
-  node.op = 'CALL'
-  node.args = { func_name }
+  node.op = 'PRIMITIVE'
+  node.args = { ret_var_name }
 end
 
 special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
@@ -255,7 +252,7 @@ end
 
 op_dispatch['VAR'] = function(node, new_dirty_nodes)
   node.op = 'LISP'
-  node.var_name = node.args[1]
+  node.new_lvar_name = node.args[1]
   node.args[1] = node.args[2]
   node.args[2] = nil
   table.insert(new_dirty_nodes, node)
@@ -273,7 +270,8 @@ end
 --    ['args'] = { arg0, arg1, arg2 },
 -- }
 -- optional fields are:
--- var_name
+-- new_lvar_name
+-- set_var_name
 -- define_symbol
 -- is_return
 function tsukuyomi.compile_to_ir(head_node)
@@ -313,9 +311,9 @@ function tsukuyomi._debug_ir(node)
       table.insert(line, 'RET ')
     end
 
-    if node.var_name then
+    if node.new_lvar_name then
       table.insert(line, 'VAR ')
-      table.insert(line, node.var_name)
+      table.insert(line, node.new_lvar_name)
       table.insert(line, ' := ')
     elseif node.define_symbol then
       table.insert(line, 'DEFSYM ')

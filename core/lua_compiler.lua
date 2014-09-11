@@ -127,8 +127,10 @@ function tsukuyomi.compile_to_lua(ir_list)
 
     -- IR instructions can be tagged in the following fashion to signal
     -- variable definition, or returning
-    if insn.var_name and insn.op ~= 'FUNC' then
-      emit('local ', insn.var_name, ' = ')
+    if insn.new_lvar_name and insn.op ~= 'FUNC' then
+      emit('local ', insn.new_lvar_name, ' = ')
+    elseif insn.set_var_name then
+      emit(insn.set_var_name, ' = ')
     elseif insn.define_symbol and insn.op ~= 'FUNC' then
       emit(symbol_to_lua(insn.define_symbol, used_namespaces), " = ")
     elseif insn.is_return then
@@ -137,6 +139,8 @@ function tsukuyomi.compile_to_lua(ir_list)
 
     if insn.op == 'NOP' then
       -- pass
+    elseif insn.op == 'EMPTYVAR' then
+      emit('local ', insn.args[1])
     elseif insn.op == 'NS' then
       emit('tsukuyomi.set_active_namespace("')
       emit(tsukuyomi.get_symbol_name(insn.args[1]))
@@ -159,10 +163,10 @@ function tsukuyomi.compile_to_lua(ir_list)
       end
       emit( ')')
     elseif insn.op == 'FUNC' then
-      if insn.var_name then emit('local ') end
+      if insn.new_lvar_name then emit('local ') end
       emit('function ')
       if insn.define_symbol then emit(symbol_to_lua(insn.define_symbol, used_namespaces))
-      elseif insn.var_name then emit(insn.var_name) end
+      elseif insn.new_lvar_name then emit(insn.new_lvar_name) end
       emit('(')
       push_new_frame(stack)
       for i = 1, #insn.args do

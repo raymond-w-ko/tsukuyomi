@@ -1,6 +1,6 @@
 package.path=package.path..';./?/init.lua;./?.lua'
 
---require('jit.v').start()
+require('jit.v').start()
 --require('jit.dump').start()
 
 require('tsukuyomi.thirdparty.strict')
