@@ -55,7 +55,7 @@ end
 -- that it doesn't get accidentally called
 function convert_ns_to_lua(ns)
   -- TODO: SO much here to make it safe
-  return '__' .. ns
+  return '__' .. to_lua_identifier(ns)
 end
 
 local function symbol_to_lua(symbol, used_namespaces)
@@ -188,6 +188,11 @@ function tsukuyomi.compile_to_lua(ir_list)
     elseif insn.op == 'ENDIF' then
       indent = indent - 1
       emit('end')
+    elseif insn.op == 'VARFENCE' then
+      emit('do')
+    elseif insn.op == 'ENDVARFENCE' then
+      emit('end')
+      indent = indent - 1
     else
       print('unknown opcode: ' .. insn.op)
       assert(false)
@@ -206,6 +211,8 @@ function tsukuyomi.compile_to_lua(ir_list)
     elseif insn.op == 'IF' then
       indent = indent + 1
     elseif insn.op == 'ELSE' then
+      indent = indent + 1
+    elseif insn.op == 'VARFENCE' then
       indent = indent + 1
     end
 

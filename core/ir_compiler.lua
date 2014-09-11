@@ -9,9 +9,10 @@ local kRawSymbol = tsukuyomi.create_symbol('_raw_')
 local kNilSymbol = tsukuyomi.create_symbol("nil")
 
 local var_counter = -1
-local function make_unique_var_name()
+local function make_unique_var_name(desc)
+  desc = desc or 'var'
   var_counter = var_counter + 1
-  return '__var' .. tostring(var_counter)
+  return '__' .. desc .. '_' .. tostring(var_counter)
 end
 
 local data_key_counter = -1
@@ -124,16 +125,20 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR')
-  local ret_var_name = make_unique_var_name()
+  local ret_var_name = make_unique_var_name('if_ret')
   ret_var_node.args = {ret_var_name}
   tsukuyomi.ll_insert_before(orig_node, ret_var_node)
   node = ret_var_node
+
+  local fence = tsukuyomi.ll_new_node('VARFENCE')
+  tsukuyomi.ll_insert_after(node, fence)
+  node = fence
 
   local test = datum
   assert(test[1] ~= nil)
   local var_test_node = tsukuyomi.ll_new_node('VAR')
   table.insert(new_dirty_nodes, var_test_node)
-  local var_name = make_unique_var_name()
+  local var_name = make_unique_var_name('cond')
   var_test_node.args = {var_name, test[1]}
   tsukuyomi.ll_insert_after(node, var_test_node)
   node = var_test_node
@@ -174,6 +179,10 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   tsukuyomi.ll_insert_after(node, end_node)
   node = end_node
 
+  local endfence = tsukuyomi.ll_new_node('ENDVARFENCE')
+  tsukuyomi.ll_insert_after(node, endfence)
+  node = endfence
+
   node = orig_node
   node.op = 'PRIMITIVE'
   node.args = { ret_var_name }
@@ -193,6 +202,10 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
             
   local body = datum[2]
   while body and body[1] do
+    local fence = tsukuyomi.ll_new_node('VARFENCE')
+    tsukuyomi.ll_insert_after(node, fence)
+    node = fence
+
     local lisp_node = tsukuyomi.ll_new_node('LISP')
     table.insert(new_dirty_nodes, lisp_node)
     lisp_node.args = { body[1] }
@@ -203,6 +216,10 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
 
     node = lisp_node
     body = body[2]
+
+    local endfence = tsukuyomi.ll_new_node('ENDVARFENCE')
+    tsukuyomi.ll_insert_after(node, endfence)
+    node = endfence
   end
 
   local end_func_node = tsukuyomi.ll_new_node('ENDFUNC')
@@ -242,7 +259,7 @@ op_dispatch['CALL'] = function(node, new_dirty_nodes)
       local var_node = tsukuyomi.ll_new_node('VAR')
       table.insert(new_dirty_nodes, var_node)
 
-      local var_name = make_unique_var_name()
+      local var_name = make_unique_var_name('arg')
       var_node.args = {var_name, args[i]}
       args[i] = var_name
       tsukuyomi.ll_insert_before(node, var_node)

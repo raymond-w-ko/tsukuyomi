@@ -107,4 +107,9 @@ test([[
 (def c (if true (if true "ketchup" "mustard") (if false "jam" "gravy")))
 (print c)
 
+(def f2
+  (fn []
+    (+ 1 1)
+    (+ 2 2)))
+
 ]])
