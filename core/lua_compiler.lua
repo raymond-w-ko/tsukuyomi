@@ -116,15 +116,14 @@ function tsukuyomi.compile_to_lua(ir_list)
   local data_bindings = {}
 
   local insn = ir_list
-  while insn do
-    local line = {}
-    local function emit(...)
-      local t = {...}
-      for _, text in ipairs(t) do
-        table.insert(line, text)
-      end
+  local line = {}
+  local function emit(...)
+    local t = {...}
+    for _, text in ipairs(t) do
+      table.insert(line, text)
     end
-
+  end
+  while insn do
     -- IR instructions can be tagged in the following fashion to signal
     -- variable definition, or returning
     if insn.new_lvar_name and insn.op ~= 'FUNC' then
@@ -211,6 +210,7 @@ function tsukuyomi.compile_to_lua(ir_list)
         table.insert(line, 1, '    ')
       end
       table.insert(lines, table.concat(line))
+      line = {}
     end
 
     -- indent change after line is generated

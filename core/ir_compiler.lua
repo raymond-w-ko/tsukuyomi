@@ -86,27 +86,21 @@ special_forms[kNsSymbol] = function(node, datum, new_dirty_nodes)
 end
 
 special_forms[kDefSymbol] = function(node, datum, new_dirty_nodes)
-  -- (define symbol datum)
-  table.insert(new_dirty_nodes, node)
-  node.op = 'LISP'
-  local symbol = datum[1]
-  node.define_symbol = symbol
-
-  node.args[1] = datum[2][1]
-  node.args[2] = nil
+  -- (def symbol datum)
+  local defnode = tsukuyomi.ll_new_node('LISP')
+  table.insert(new_dirty_nodes, defnode)
+  defnode.op = 'LISP'
+  defnode.define_symbol = datum[1]
+  defnode.args = { datum[2][1] }
+  tsukuyomi.ll_insert_before(node, defnode)
 
   -- it's not possible to get a return value on an assignment, to just add a
   -- dummy instruction after it
   -- TODO: figure out what the sensible dummy return value is
-  if node.is_return then
-    node.is_return = false
-
-    local new_node = tsukuyomi.ll_new_node('LISP')
-    new_node.args = { true }
-    tsukuyomi.ll_insert_after(node, new_node)
-    new_node.is_return = true
-    table.insert(new_dirty_nodes, new_node)
-  end
+  -- TODO: can we even have something like a Clojure Var?
+  node.op = 'LISP'
+  node.args = { true }
+  table.insert(new_dirty_nodes, node)
 end
 
 special_forms[kRawSymbol] = function(node, datum, new_dirty_nodes)
@@ -402,12 +396,17 @@ function tsukuyomi._debug_ir(node)
     if node.is_return then
       table.insert(line, 'RET ')
     end
-
     if node.new_lvar_name then
-      table.insert(line, 'VAR ')
+      table.insert(line, 'NEWLVAR ')
       table.insert(line, node.new_lvar_name)
       table.insert(line, ' := ')
-    elseif node.define_symbol then
+    end
+    if node.set_var_name then
+      table.insert(line, 'VAR ')
+      table.insert(line, node.set_var_name)
+      table.insert(line, ' := ')
+    end
+    if node.define_symbol then
       table.insert(line, 'DEFSYM ')
       table.insert(line, tostring(node.define_symbol))
       table.insert(line, ' := ')

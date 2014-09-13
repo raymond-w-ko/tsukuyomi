@@ -227,13 +227,54 @@ return true
 ********************************************************************************
 
 compiling:
+(let [_cons (_raw_ "tsukuyomi.create_cell")] (def cons (fn [item coll] (_cons item coll))))
+
+IR:
+EMPTYVAR __let_ret_0
+VARFENCE 
+LETFRAME _cons
+NEWLVAR _cons := RAW tsukuyomi.create_cell
+VARFENCE 
+DEFSYM cons := FUNC item, coll
+VARFENCE 
+RET CALL _cons, item, coll
+ENDVARFENCE 
+ENDFUNC 
+VAR __let_ret_0 := PRIMITIVE true
+ENDVARFENCE 
+ENDLETFRAME 
+ENDVARFENCE 
+RET PRIMITIVE __let_ret_0
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __let_ret_0
+do
+    local _cons = tsukuyomi.create_cell
+    do
+        function __core.cons(item, coll)
+            do
+                return _cons(item, coll)
+            end
+        end
+        __let_ret_0 = true
+    end
+end
+return __let_ret_0
+
+********************************************************************************
+
+compiling:
 (def second (fn [coll] (first (rest coll))))
 
 IR:
 DEFSYM second := FUNC coll
 VARFENCE 
-VAR __arg_0 := CALL rest, coll
-RET CALL first, __arg_0
+NEWLVAR __arg_1 := CALL rest, coll
+RET CALL first, __arg_1
 ENDVARFENCE 
 ENDFUNC 
 RET PRIMITIVE true
@@ -245,8 +286,8 @@ local __core = tsukuyomi.get_namespace("core")
 
 function __core.second(coll)
     do
-        local __arg_0 = __core.rest(coll)
-        return __core.first(__arg_0)
+        local __arg_1 = __core.rest(coll)
+        return __core.first(__arg_1)
     end
 end
 return true
@@ -272,9 +313,9 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-VAR __arg_2 := DATA table: 0x06a14578
-VAR __arg_1 := CALL second, __arg_2
-RET CALL print, __arg_1
+NEWLVAR __arg_3 := DATA table: 0x352a2d40
+NEWLVAR __arg_2 := CALL second, __arg_3
+RET CALL print, __arg_2
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -283,9 +324,9 @@ local __core = tsukuyomi.get_namespace("core")
 
 local __data0 = tsukuyomi._get_data(0)
 
-local __arg_2 = __data0
-local __arg_1 = __core.second(__arg_2)
-return __core.print(__arg_1)
+local __arg_3 = __data0
+local __arg_2 = __core.second(__arg_3)
+return __core.print(__arg_2)
 
 ********************************************************************************
 
@@ -293,9 +334,9 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-VAR __arg_4 := DATA table: 0x06a14ab0
-VAR __arg_3 := CALL first, __arg_4
-RET CALL print, __arg_3
+NEWLVAR __arg_5 := DATA table: 0x352a31c0
+NEWLVAR __arg_4 := CALL first, __arg_5
+RET CALL print, __arg_4
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -304,9 +345,55 @@ local __core = tsukuyomi.get_namespace("core")
 
 local __data1 = tsukuyomi._get_data(1)
 
-local __arg_4 = __data1
-local __arg_3 = __core.first(__arg_4)
-return __core.print(__arg_3)
+local __arg_5 = __data1
+local __arg_4 = __core.first(__arg_5)
+return __core.print(__arg_4)
+
+********************************************************************************
+
+compiling:
+(print (first (cons 9 (cons 8 (cons 7 nil)))))
+
+IR:
+NEWLVAR __arg_9 := CALL cons, 7, nil
+NEWLVAR __arg_8 := CALL cons, 8, __arg_9
+NEWLVAR __arg_7 := CALL cons, 9, __arg_8
+NEWLVAR __arg_6 := CALL first, __arg_7
+RET CALL print, __arg_6
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __arg_9 = __core.cons(7, nil)
+local __arg_8 = __core.cons(8, __arg_9)
+local __arg_7 = __core.cons(9, __arg_8)
+local __arg_6 = __core.first(__arg_7)
+return __core.print(__arg_6)
+
+********************************************************************************
+
+compiling:
+(print (second (cons 9 (cons 8 (cons 7 nil)))))
+
+IR:
+NEWLVAR __arg_13 := CALL cons, 7, nil
+NEWLVAR __arg_12 := CALL cons, 8, __arg_13
+NEWLVAR __arg_11 := CALL cons, 9, __arg_12
+NEWLVAR __arg_10 := CALL second, __arg_11
+RET CALL print, __arg_10
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __arg_13 = __core.cons(7, nil)
+local __arg_12 = __core.cons(8, __arg_13)
+local __arg_11 = __core.cons(9, __arg_12)
+local __arg_10 = __core.second(__arg_11)
+return __core.print(__arg_10)
 
 ********************************************************************************
 
@@ -333,12 +420,12 @@ compiling:
 IR:
 DEFSYM f := FUNC foo
 VARFENCE 
-VAR __arg_5 := FUNC bar
+NEWLVAR __arg_14 := FUNC bar
 VARFENCE 
 RET CALL +, foo, bar
 ENDVARFENCE 
 ENDFUNC 
-RET CALL __arg_5, 42
+RET CALL __arg_14, 42
 ENDVARFENCE 
 ENDFUNC 
 RET PRIMITIVE true
@@ -350,12 +437,12 @@ local __core = tsukuyomi.get_namespace("core")
 
 function __core.f(foo)
     do
-        local function __arg_5(bar)
+        local function __arg_14(bar)
             do
                 return __core.__PLUS__(foo, bar)
             end
         end
-        return __arg_5(42)
+        return __arg_14(42)
     end
 end
 return true
@@ -366,16 +453,16 @@ compiling:
 (print (f 43))
 
 IR:
-VAR __arg_6 := CALL f, 43
-RET CALL print, __arg_6
+NEWLVAR __arg_15 := CALL f, 43
+RET CALL print, __arg_15
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
 local __core = tsukuyomi.get_namespace("core")
 
-local __arg_6 = __core.f(43)
-return __core.print(__arg_6)
+local __arg_15 = __core.f(43)
+return __core.print(__arg_15)
 
 ********************************************************************************
 
@@ -383,32 +470,32 @@ compiling:
 (if false (print "pepperoni"))
 
 IR:
-EMPTYVAR __if_ret_7
+EMPTYVAR __if_ret_16
 VARFENCE 
-VAR __cond_8 := PRIMITIVE false
-IF __cond_8
-CALL print, "pepperoni"
+NEWLVAR __cond_17 := PRIMITIVE false
+IF __cond_17
+VAR __if_ret_16 := CALL print, "pepperoni"
 ELSE 
-PRIMITIVE nil
+VAR __if_ret_16 := PRIMITIVE nil
 ENDIF 
 ENDVARFENCE 
-RET PRIMITIVE __if_ret_7
+RET PRIMITIVE __if_ret_16
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
 local __core = tsukuyomi.get_namespace("core")
 
-local __if_ret_7
+local __if_ret_16
 do
-    local __cond_8 = false
-    if __cond_8 then
-        __if_ret_7 = __core.print("pepperoni")
+    local __cond_17 = false
+    if __cond_17 then
+        __if_ret_16 = __core.print("pepperoni")
     else
-        __if_ret_7 = nil
+        __if_ret_16 = nil
     end
 end
-return __if_ret_7
+return __if_ret_16
 
 ********************************************************************************
 
@@ -416,160 +503,13 @@ compiling:
 (if nil (print "hoagie"))
 
 IR:
-EMPTYVAR __if_ret_9
-VARFENCE 
-VAR __cond_10 := PRIMITIVE nil
-IF __cond_10
-CALL print, "hoagie"
-ELSE 
-PRIMITIVE nil
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_9
-
-Lua source code:
-local tsukuyomi = tsukuyomi
-
-local __core = tsukuyomi.get_namespace("core")
-
-local __if_ret_9
-do
-    local __cond_10 = nil
-    if __cond_10 then
-        __if_ret_9 = __core.print("hoagie")
-    else
-        __if_ret_9 = nil
-    end
-end
-return __if_ret_9
-
-********************************************************************************
-
-compiling:
-(if true (print "pizza") (print "hotdog"))
-
-IR:
-EMPTYVAR __if_ret_11
-VARFENCE 
-VAR __cond_12 := PRIMITIVE true
-IF __cond_12
-CALL print, "pizza"
-ELSE 
-CALL print, "hotdog"
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_11
-
-Lua source code:
-local tsukuyomi = tsukuyomi
-
-local __core = tsukuyomi.get_namespace("core")
-
-local __if_ret_11
-do
-    local __cond_12 = true
-    if __cond_12 then
-        __if_ret_11 = __core.print("pizza")
-    else
-        __if_ret_11 = __core.print("hotdog")
-    end
-end
-return __if_ret_11
-
-********************************************************************************
-
-compiling:
-(if false (print "pizza") (print "hotdog"))
-
-IR:
-EMPTYVAR __if_ret_13
-VARFENCE 
-VAR __cond_14 := PRIMITIVE false
-IF __cond_14
-CALL print, "pizza"
-ELSE 
-CALL print, "hotdog"
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_13
-
-Lua source code:
-local tsukuyomi = tsukuyomi
-
-local __core = tsukuyomi.get_namespace("core")
-
-local __if_ret_13
-do
-    local __cond_14 = false
-    if __cond_14 then
-        __if_ret_13 = __core.print("pizza")
-    else
-        __if_ret_13 = __core.print("hotdog")
-    end
-end
-return __if_ret_13
-
-********************************************************************************
-
-compiling:
-(if ((fn [] (+ 1 1))) (print "pizza") (print "hotdog"))
-
-IR:
-EMPTYVAR __if_ret_15
-VARFENCE 
-VAR __arg_17 := FUNC 
-VARFENCE 
-RET CALL +, 1, 1
-ENDVARFENCE 
-ENDFUNC 
-VAR __cond_16 := CALL __arg_17
-IF __cond_16
-CALL print, "pizza"
-ELSE 
-CALL print, "hotdog"
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_15
-
-Lua source code:
-local tsukuyomi = tsukuyomi
-
-local __core = tsukuyomi.get_namespace("core")
-
-local __if_ret_15
-do
-    local function __arg_17()
-        do
-            return __core.__PLUS__(1, 1)
-        end
-    end
-    local __cond_16 = __arg_17()
-    if __cond_16 then
-        __if_ret_15 = __core.print("pizza")
-    else
-        __if_ret_15 = __core.print("hotdog")
-    end
-end
-return __if_ret_15
-
-********************************************************************************
-
-compiling:
-(if ((fn [] nil)) (print "pizza") (print "hotdog"))
-
-IR:
 EMPTYVAR __if_ret_18
 VARFENCE 
-VAR __arg_20 := FUNC 
-VARFENCE 
-RET PRIMITIVE nil
-ENDVARFENCE 
-ENDFUNC 
-VAR __cond_19 := CALL __arg_20
+NEWLVAR __cond_19 := PRIMITIVE nil
 IF __cond_19
-CALL print, "pizza"
+VAR __if_ret_18 := CALL print, "hoagie"
 ELSE 
-CALL print, "hotdog"
+VAR __if_ret_18 := PRIMITIVE nil
 ENDIF 
 ENDVARFENCE 
 RET PRIMITIVE __if_ret_18
@@ -581,16 +521,11 @@ local __core = tsukuyomi.get_namespace("core")
 
 local __if_ret_18
 do
-    local function __arg_20()
-        do
-            return nil
-        end
-    end
-    local __cond_19 = __arg_20()
+    local __cond_19 = nil
     if __cond_19 then
-        __if_ret_18 = __core.print("pizza")
+        __if_ret_18 = __core.print("hoagie")
     else
-        __if_ret_18 = __core.print("hotdog")
+        __if_ret_18 = nil
     end
 end
 return __if_ret_18
@@ -598,57 +533,209 @@ return __if_ret_18
 ********************************************************************************
 
 compiling:
-(if ((fn [] true)) ((fn [x] (print (+ 1 x))) 24) (print "hotdog"))
+(if true (print "pizza") (print "hotdog"))
 
 IR:
-EMPTYVAR __if_ret_21
+EMPTYVAR __if_ret_20
 VARFENCE 
-VAR __arg_24 := FUNC 
-VARFENCE 
-RET PRIMITIVE true
-ENDVARFENCE 
-ENDFUNC 
-VAR __cond_22 := CALL __arg_24
-IF __cond_22
-VAR __arg_23 := FUNC x
-VARFENCE 
-VAR __arg_25 := CALL +, 1, x
-RET CALL print, __arg_25
-ENDVARFENCE 
-ENDFUNC 
-CALL __arg_23, 24
+NEWLVAR __cond_21 := PRIMITIVE true
+IF __cond_21
+VAR __if_ret_20 := CALL print, "pizza"
 ELSE 
-CALL print, "hotdog"
+VAR __if_ret_20 := CALL print, "hotdog"
 ENDIF 
 ENDVARFENCE 
-RET PRIMITIVE __if_ret_21
+RET PRIMITIVE __if_ret_20
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
 local __core = tsukuyomi.get_namespace("core")
 
-local __if_ret_21
+local __if_ret_20
 do
-    local function __arg_24()
+    local __cond_21 = true
+    if __cond_21 then
+        __if_ret_20 = __core.print("pizza")
+    else
+        __if_ret_20 = __core.print("hotdog")
+    end
+end
+return __if_ret_20
+
+********************************************************************************
+
+compiling:
+(if false (print "pizza") (print "hotdog"))
+
+IR:
+EMPTYVAR __if_ret_22
+VARFENCE 
+NEWLVAR __cond_23 := PRIMITIVE false
+IF __cond_23
+VAR __if_ret_22 := CALL print, "pizza"
+ELSE 
+VAR __if_ret_22 := CALL print, "hotdog"
+ENDIF 
+ENDVARFENCE 
+RET PRIMITIVE __if_ret_22
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __if_ret_22
+do
+    local __cond_23 = false
+    if __cond_23 then
+        __if_ret_22 = __core.print("pizza")
+    else
+        __if_ret_22 = __core.print("hotdog")
+    end
+end
+return __if_ret_22
+
+********************************************************************************
+
+compiling:
+(if ((fn [] (+ 1 1))) (print "pizza") (print "hotdog"))
+
+IR:
+EMPTYVAR __if_ret_24
+VARFENCE 
+NEWLVAR __arg_26 := FUNC 
+VARFENCE 
+RET CALL +, 1, 1
+ENDVARFENCE 
+ENDFUNC 
+NEWLVAR __cond_25 := CALL __arg_26
+IF __cond_25
+VAR __if_ret_24 := CALL print, "pizza"
+ELSE 
+VAR __if_ret_24 := CALL print, "hotdog"
+ENDIF 
+ENDVARFENCE 
+RET PRIMITIVE __if_ret_24
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __if_ret_24
+do
+    local function __arg_26()
+        do
+            return __core.__PLUS__(1, 1)
+        end
+    end
+    local __cond_25 = __arg_26()
+    if __cond_25 then
+        __if_ret_24 = __core.print("pizza")
+    else
+        __if_ret_24 = __core.print("hotdog")
+    end
+end
+return __if_ret_24
+
+********************************************************************************
+
+compiling:
+(if ((fn [] nil)) (print "pizza") (print "hotdog"))
+
+IR:
+EMPTYVAR __if_ret_27
+VARFENCE 
+NEWLVAR __arg_29 := FUNC 
+VARFENCE 
+RET PRIMITIVE nil
+ENDVARFENCE 
+ENDFUNC 
+NEWLVAR __cond_28 := CALL __arg_29
+IF __cond_28
+VAR __if_ret_27 := CALL print, "pizza"
+ELSE 
+VAR __if_ret_27 := CALL print, "hotdog"
+ENDIF 
+ENDVARFENCE 
+RET PRIMITIVE __if_ret_27
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __if_ret_27
+do
+    local function __arg_29()
+        do
+            return nil
+        end
+    end
+    local __cond_28 = __arg_29()
+    if __cond_28 then
+        __if_ret_27 = __core.print("pizza")
+    else
+        __if_ret_27 = __core.print("hotdog")
+    end
+end
+return __if_ret_27
+
+********************************************************************************
+
+compiling:
+(if ((fn [] true)) ((fn [x] (print (+ 1 x))) 24) (print "hotdog"))
+
+IR:
+EMPTYVAR __if_ret_30
+VARFENCE 
+NEWLVAR __arg_33 := FUNC 
+VARFENCE 
+RET PRIMITIVE true
+ENDVARFENCE 
+ENDFUNC 
+NEWLVAR __cond_31 := CALL __arg_33
+IF __cond_31
+NEWLVAR __arg_32 := FUNC x
+VARFENCE 
+NEWLVAR __arg_34 := CALL +, 1, x
+RET CALL print, __arg_34
+ENDVARFENCE 
+ENDFUNC 
+VAR __if_ret_30 := CALL __arg_32, 24
+ELSE 
+VAR __if_ret_30 := CALL print, "hotdog"
+ENDIF 
+ENDVARFENCE 
+RET PRIMITIVE __if_ret_30
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __core = tsukuyomi.get_namespace("core")
+
+local __if_ret_30
+do
+    local function __arg_33()
         do
             return true
         end
     end
-    local __cond_22 = __arg_24()
-    if __cond_22 then
-        local function __arg_23(x)
+    local __cond_31 = __arg_33()
+    if __cond_31 then
+        local function __arg_32(x)
             do
-                local __arg_25 = __core.__PLUS__(1, x)
-                return __core.print(__arg_25)
+                local __arg_34 = __core.__PLUS__(1, x)
+                return __core.print(__arg_34)
             end
         end
-        __if_ret_21 = __arg_23(24)
+        __if_ret_30 = __arg_32(24)
     else
-        __if_ret_21 = __core.print("hotdog")
+        __if_ret_30 = __core.print("hotdog")
     end
 end
-return __if_ret_21
+return __if_ret_30
 
 ********************************************************************************
 
@@ -656,16 +743,16 @@ compiling:
 (def a (if true "mayo" "ketchup"))
 
 IR:
-EMPTYVAR __if_ret_26
+EMPTYVAR __if_ret_35
 VARFENCE 
-VAR __cond_27 := PRIMITIVE true
-IF __cond_27
-PRIMITIVE "mayo"
+NEWLVAR __cond_36 := PRIMITIVE true
+IF __cond_36
+VAR __if_ret_35 := PRIMITIVE "mayo"
 ELSE 
-PRIMITIVE "ketchup"
+VAR __if_ret_35 := PRIMITIVE "ketchup"
 ENDIF 
 ENDVARFENCE 
-DEFSYM a := PRIMITIVE __if_ret_26
+DEFSYM a := PRIMITIVE __if_ret_35
 RET PRIMITIVE true
 
 Lua source code:
@@ -673,16 +760,16 @@ local tsukuyomi = tsukuyomi
 
 local __core = tsukuyomi.get_namespace("core")
 
-local __if_ret_26
+local __if_ret_35
 do
-    local __cond_27 = true
-    if __cond_27 then
-        __if_ret_26 = "mayo"
+    local __cond_36 = true
+    if __cond_36 then
+        __if_ret_35 = "mayo"
     else
-        __if_ret_26 = "ketchup"
+        __if_ret_35 = "ketchup"
     end
 end
-__core.a = __if_ret_26
+__core.a = __if_ret_35
 return true
 
 ********************************************************************************
@@ -691,16 +778,16 @@ compiling:
 (def b (if false "horseradish" "wasabi"))
 
 IR:
-EMPTYVAR __if_ret_28
+EMPTYVAR __if_ret_37
 VARFENCE 
-VAR __cond_29 := PRIMITIVE false
-IF __cond_29
-PRIMITIVE "horseradish"
+NEWLVAR __cond_38 := PRIMITIVE false
+IF __cond_38
+VAR __if_ret_37 := PRIMITIVE "horseradish"
 ELSE 
-PRIMITIVE "wasabi"
+VAR __if_ret_37 := PRIMITIVE "wasabi"
 ENDIF 
 ENDVARFENCE 
-DEFSYM b := PRIMITIVE __if_ret_28
+DEFSYM b := PRIMITIVE __if_ret_37
 RET PRIMITIVE true
 
 Lua source code:
@@ -708,16 +795,16 @@ local tsukuyomi = tsukuyomi
 
 local __core = tsukuyomi.get_namespace("core")
 
-local __if_ret_28
+local __if_ret_37
 do
-    local __cond_29 = false
-    if __cond_29 then
-        __if_ret_28 = "horseradish"
+    local __cond_38 = false
+    if __cond_38 then
+        __if_ret_37 = "horseradish"
     else
-        __if_ret_28 = "wasabi"
+        __if_ret_37 = "wasabi"
     end
 end
-__core.b = __if_ret_28
+__core.b = __if_ret_37
 return true
 
 ********************************************************************************
@@ -756,34 +843,34 @@ compiling:
 (def c (if true (if true "ketchup" "mustard") (if false "jam" "gravy")))
 
 IR:
-EMPTYVAR __if_ret_30
+EMPTYVAR __if_ret_39
 VARFENCE 
-VAR __cond_31 := PRIMITIVE true
-IF __cond_31
-EMPTYVAR __if_ret_32
+NEWLVAR __cond_40 := PRIMITIVE true
+IF __cond_40
+EMPTYVAR __if_ret_41
 VARFENCE 
-VAR __cond_33 := PRIMITIVE true
-IF __cond_33
-PRIMITIVE "ketchup"
+NEWLVAR __cond_42 := PRIMITIVE true
+IF __cond_42
+VAR __if_ret_41 := PRIMITIVE "ketchup"
 ELSE 
-PRIMITIVE "mustard"
+VAR __if_ret_41 := PRIMITIVE "mustard"
 ENDIF 
 ENDVARFENCE 
-PRIMITIVE __if_ret_32
+VAR __if_ret_39 := PRIMITIVE __if_ret_41
 ELSE 
-EMPTYVAR __if_ret_34
+EMPTYVAR __if_ret_43
 VARFENCE 
-VAR __cond_35 := PRIMITIVE false
-IF __cond_35
-PRIMITIVE "jam"
+NEWLVAR __cond_44 := PRIMITIVE false
+IF __cond_44
+VAR __if_ret_43 := PRIMITIVE "jam"
 ELSE 
-PRIMITIVE "gravy"
+VAR __if_ret_43 := PRIMITIVE "gravy"
 ENDIF 
 ENDVARFENCE 
-PRIMITIVE __if_ret_34
+VAR __if_ret_39 := PRIMITIVE __if_ret_43
 ENDIF 
 ENDVARFENCE 
-DEFSYM c := PRIMITIVE __if_ret_30
+DEFSYM c := PRIMITIVE __if_ret_39
 RET PRIMITIVE true
 
 Lua source code:
@@ -791,34 +878,34 @@ local tsukuyomi = tsukuyomi
 
 local __core = tsukuyomi.get_namespace("core")
 
-local __if_ret_30
+local __if_ret_39
 do
-    local __cond_31 = true
-    if __cond_31 then
-        local __if_ret_32
+    local __cond_40 = true
+    if __cond_40 then
+        local __if_ret_41
         do
-            local __cond_33 = true
-            if __cond_33 then
-                __if_ret_32 = "ketchup"
+            local __cond_42 = true
+            if __cond_42 then
+                __if_ret_41 = "ketchup"
             else
-                __if_ret_32 = "mustard"
+                __if_ret_41 = "mustard"
             end
         end
-        __if_ret_30 = __if_ret_32
+        __if_ret_39 = __if_ret_41
     else
-        local __if_ret_34
+        local __if_ret_43
         do
-            local __cond_35 = false
-            if __cond_35 then
-                __if_ret_34 = "jam"
+            local __cond_44 = false
+            if __cond_44 then
+                __if_ret_43 = "jam"
             else
-                __if_ret_34 = "gravy"
+                __if_ret_43 = "gravy"
             end
         end
-        __if_ret_30 = __if_ret_34
+        __if_ret_39 = __if_ret_43
     end
 end
-__core.c = __if_ret_30
+__core.c = __if_ret_39
 return true
 
 ********************************************************************************
@@ -875,17 +962,17 @@ compiling:
 IR:
 DEFSYM f3 := FUNC x
 VARFENCE 
-EMPTYVAR __let_ret_36
+EMPTYVAR __let_ret_45
 VARFENCE 
 LETFRAME x, y
-VAR x := PRIMITIVE 1
-VAR y := PRIMITIVE x
+NEWLVAR x := PRIMITIVE 1
+NEWLVAR y := PRIMITIVE x
 VARFENCE 
-PRIMITIVE y
+VAR __let_ret_45 := PRIMITIVE y
 ENDVARFENCE 
 ENDLETFRAME 
 ENDVARFENCE 
-RET PRIMITIVE __let_ret_36
+RET PRIMITIVE __let_ret_45
 ENDVARFENCE 
 ENDFUNC 
 RET PRIMITIVE true
@@ -897,15 +984,15 @@ local __core = tsukuyomi.get_namespace("core")
 
 function __core.f3(x)
     do
-        local __let_ret_36
+        local __let_ret_45
         do
             local x = 1
             local y = x
             do
-                __let_ret_36 = y
+                __let_ret_45 = y
             end
         end
-        return __let_ret_36
+        return __let_ret_45
     end
 end
 return true
@@ -916,16 +1003,16 @@ compiling:
 (print (f3 42))
 
 IR:
-VAR __arg_37 := CALL f3, 42
-RET CALL print, __arg_37
+NEWLVAR __arg_46 := CALL f3, 42
+RET CALL print, __arg_46
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
 local __core = tsukuyomi.get_namespace("core")
 
-local __arg_37 = __core.f3(42)
-return __core.print(__arg_37)
+local __arg_46 = __core.f3(42)
+return __core.print(__arg_46)
 
 ********************************************************************************
 

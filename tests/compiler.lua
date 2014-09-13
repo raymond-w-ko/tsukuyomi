@@ -60,6 +60,10 @@ test([[
   (fn [cell]
     (_raw_ "cell[2]")))
 
+(let [_cons (_raw_ "tsukuyomi.create_cell")]
+  (def cons (fn [item coll]
+     (_cons item coll))))
+
 (def second
   (fn [coll]
     (first (rest coll))))
@@ -67,6 +71,8 @@ test([[
 (print "asdf")
 (print (second '(42 43)))
 (print (first '(3 4 5)))
+(print (first (cons 9 (cons 8 (cons 7 nil)))))
+(print (second (cons 9 (cons 8 (cons 7 nil)))))
 
 (def user/test "lisp")
 
