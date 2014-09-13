@@ -1,4 +1,5 @@
 local M = {}
+-- support strict.lua
 if _G['global'] then
   global('tsukuyomi')
 end
