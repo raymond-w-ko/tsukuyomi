@@ -1,3 +1,5 @@
+local M = {}
+
 --[[
    Author: Julio Manuel Fernandez-Diaz
    Date:   January 12, 2007
@@ -27,7 +29,7 @@
       name is the name of the table (optional)
       indent is a first indentation (optional).
 --]]
-function table.show(t, name, indent)
+function M.show(t, name, indent)
    local cart     -- a container
    local autoref  -- for self references
 
@@ -105,27 +107,30 @@ function table.show(t, name, indent)
 end
 
 -- http://lua-users.org/wiki/SplitJoin
-function string:split(sSeparator, nMax, bRegexp)
+function M.split(str, sSeparator, nMax, bRegexp)
   assert(sSeparator ~= '')
   assert(nMax == nil or nMax >= 1)
 
   local aRecord = {}
 
-  if self:len() > 0 then
+  if str:len() > 0 then
     local bPlain = not bRegexp
     nMax = nMax or -1
 
-    local nField=1 nStart=1
-    local nFirst,nLast = self:find(sSeparator, nStart, bPlain)
+    local nField=1
+    local nStart=1
+    local nFirst,nLast = str:find(sSeparator, nStart, bPlain)
     while nFirst and nMax ~= 0 do
-      aRecord[nField] = self:sub(nStart, nFirst-1)
+      aRecord[nField] = str:sub(nStart, nFirst-1)
       nField = nField+1
       nStart = nLast+1
-      nFirst,nLast = self:find(sSeparator, nStart, bPlain)
+      nFirst,nLast = str:find(sSeparator, nStart, bPlain)
       nMax = nMax-1
     end
-    aRecord[nField] = self:sub(nStart)
+    aRecord[nField] = str:sub(nStart)
   end
 
   return aRecord
 end
+
+return M
