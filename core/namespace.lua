@@ -1,6 +1,8 @@
 local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
 
+-- namespaces are just a series of table starting from the global table
+-- therefore tsukuyomi.core == _G.tsukuyomi.core == _G["tsukuyomi"]["core"]
 function tsukuyomi.get_namespace(ns)
   local tokens = util.split(ns, '.')
   assert(#tokens >= 1)

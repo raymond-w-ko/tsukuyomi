@@ -8,11 +8,5 @@ function tsukuyomi.create_cell(first, rest)
 end
 
 function tsukuyomi.is_cons_cell(datum)
-  if type(datum) ~= 'table' then
-    return false
-  end
-  if getmetatable(datum) ~= kCellTag then
-    return false
-  end
-  return true
+  return getmetatable(datum) == kCellTag
 end
