@@ -5,7 +5,6 @@ if _G.__STRICT then
 end
 tsukuyomi = M
 
-require('tsukuyomi.core.util')
 require('tsukuyomi.core.linked_list')
 require('tsukuyomi.core.symbol')
 require('tsukuyomi.core.cons_cell')
