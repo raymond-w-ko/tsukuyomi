@@ -1,7 +1,6 @@
 -- special forms
 local kNsSymbol = tsukuyomi.create_symbol('ns')
 local kQuoteSymbol = tsukuyomi.create_symbol('quote')
-local kSetSymbol = tsukuyomi.create_symbol('set!')
 local kDefSymbol = tsukuyomi.create_symbol('def')
 local kIfSymbol = tsukuyomi.create_symbol('if')
 local kFnSymbol = tsukuyomi.create_symbol('fn')
@@ -66,7 +65,7 @@ end
 -- dispatch tables to compile down input
 
 -- used to implement dispatch based on the first / car of a cons cell
-special_forms = {}
+local special_forms = {}
 
 special_forms[kNsSymbol] = function(node, datum, new_dirty_nodes)
   node.op = 'NS'
@@ -295,7 +294,7 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
   tsukuyomi.ll_insert_after(node, end_func_node)
 end
 
-op_dispatch = {}
+local op_dispatch = {}
 
 op_dispatch['LISP'] = function(node, new_dirty_nodes)
   local datum = node.args[1]
