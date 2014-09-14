@@ -1,6 +1,6 @@
 local M = {}
 -- support strict.lua
-if _G['global'] then
+if _G.__STRICT then
   global('tsukuyomi')
 end
 tsukuyomi = M
