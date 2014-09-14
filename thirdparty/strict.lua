@@ -8,24 +8,20 @@ end
 __STRICT = true
 mt.__declared = {}
 
+function global(...)
+   for _, v in ipairs{...} do mt.__declared[v] = true end
+end
+
 mt.__newindex = function (t, n, v)
   if __STRICT and not mt.__declared[n] then
-    local w = debug.getinfo(2, "S").what
-    if w ~= "main" and w ~= "C" then
-      error("assign to undeclared variable '"..n.."'", 2)
-    end
-    mt.__declared[n] = true
+    error("assign to undeclared variable '"..n.."'", 2)
   end
   rawset(t, n, v)
 end
   
 mt.__index = function (t, n)
-  if not mt.__declared[n] and debug.getinfo(2, "S").what ~= "C" then
+  if not mt.__declared[n] then
     error("variable '"..n.."' is not declared", 2)
   end
   return rawget(t, n)
-end
-
-function global(...)
-   for _, v in ipairs{...} do mt.__declared[v] = true end
 end
