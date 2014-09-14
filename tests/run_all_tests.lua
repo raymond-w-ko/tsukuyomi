@@ -13,6 +13,12 @@ require('tsukuyomi.tests.tokenizer')
 require('tsukuyomi.tests.reader')
 require('tsukuyomi.tests.compiler')
 
+print('********************************************************************************')
+print('global table dump')
+for k, v in pairs(_G) do
+  print(tostring(k))
+end
+
 --[[
 local input = io.open('tsukuyomi/tests/window.el', 'r')
 local text = input:read('*all')
