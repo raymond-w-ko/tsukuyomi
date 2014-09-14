@@ -295,6 +295,46 @@ return true
 ********************************************************************************
 
 compiling:
+(def test1 (fn [] (print "foobar")))
+
+IR:
+DEFSYM test1 := FUNC 
+VARFENCE 
+RET CALL print, "foobar"
+ENDVARFENCE 
+ENDFUNC 
+RET PRIMITIVE true
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
+
+__tsukuyomi__DOT__core["test1"] = function ()
+	do
+		return __tsukuyomi__DOT__core["print"]("foobar")
+	end
+end
+return true
+
+********************************************************************************
+
+compiling:
+(test1)
+
+IR:
+RET CALL test1
+
+Lua source code:
+local tsukuyomi = tsukuyomi
+
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
+
+return __tsukuyomi__DOT__core["test1"]()
+
+********************************************************************************
+
+compiling:
 (print "asdf")
 
 IR:
@@ -313,7 +353,7 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-NEWLVAR __arg_3 := DATA table: 0x030e32d8
+NEWLVAR __arg_3 := DATA table: 0x2deeac60
 NEWLVAR __arg_2 := CALL second, __arg_3
 RET CALL print, __arg_2
 
@@ -334,7 +374,7 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-NEWLVAR __arg_5 := DATA table: 0x030e3710
+NEWLVAR __arg_5 := DATA table: 0x2deed1a8
 NEWLVAR __arg_4 := CALL first, __arg_5
 RET CALL print, __arg_4
 

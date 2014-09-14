@@ -3,8 +3,14 @@ local tsukuyomi = tsukuyomi
 local function test(text)
   local datum = tsukuyomi.read(text)
   while datum and datum[1] do
+    local info
+    if datum[1][1] == tsukuyomi.create_symbol('def') then
+      local symbol_name = tsukuyomi.get_symbol_name(datum[1][2][1])
+      local ns = tsukuyomi.core['*ns*'][symbol_name]
+      info =  ns .. '/' .. symbol_name
+    end
     local code = tsukuyomi.compile(datum[1])
-    local chunk, err = loadstring(code, 'asdf')
+    local chunk, err = loadstring(code, info)
     if err then
       print(err)
       assert(chunk)
@@ -46,7 +52,9 @@ test([[
 
 (def print
   (fn [obj]
-    (_raw_ "print(tostring(obj))")))
+    (_raw_ "print(tostring(obj))")
+    ;(_raw_ "assert(false)")
+    ))
 
 (def +
   (fn [x y]
@@ -67,6 +75,9 @@ test([[
 (def second
   (fn [coll]
     (first (rest coll))))
+
+(def test1 (fn [] (print "foobar")))
+(test1)
 
 (print "asdf")
 (print (second '(42 43)))
