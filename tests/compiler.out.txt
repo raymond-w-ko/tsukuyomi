@@ -1,29 +1,29 @@
 compiling:
-(ns core)
+(ns tsukuyomi.core)
 
 IR:
-NS core
+NS tsukuyomi.core
 RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-tsukuyomi.set_active_namespace("core"); 
+tsukuyomi.set_active_namespace("tsukuyomi.core"); 
 return true
 
 ********************************************************************************
 
 compiling:
-(ns core)
+(ns tsukuyomi.core)
 
 IR:
-NS core
+NS tsukuyomi.core
 RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-tsukuyomi.set_active_namespace("core"); 
+tsukuyomi.set_active_namespace("tsukuyomi.core"); 
 return true
 
 ********************************************************************************
@@ -38,24 +38,24 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-__core.z2ljr2jlslfl3jf = 1
+__tsukuyomi__DOT__core.z2ljr2jlslfl3jf = 1
 return true
 
 ********************************************************************************
 
 compiling:
-(ns core)
+(ns tsukuyomi.core)
 
 IR:
-NS core
+NS tsukuyomi.core
 RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-tsukuyomi.set_active_namespace("core"); 
+tsukuyomi.set_active_namespace("tsukuyomi.core"); 
 return true
 
 ********************************************************************************
@@ -70,9 +70,9 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-__core.a = 3
+__tsukuyomi__DOT__core.a = 3
 return true
 
 ********************************************************************************
@@ -87,9 +87,9 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-__core.b = 4
+__tsukuyomi__DOT__core.b = 4
 return true
 
 ********************************************************************************
@@ -104,24 +104,24 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-__core.b = __core.a
+__tsukuyomi__DOT__core.b = __tsukuyomi__DOT__core.a
 return true
 
 ********************************************************************************
 
 compiling:
-(ns core)
+(ns tsukuyomi.core)
 
 IR:
-NS core
+NS tsukuyomi.core
 RET PRIMITIVE true
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-tsukuyomi.set_active_namespace("core"); 
+tsukuyomi.set_active_namespace("tsukuyomi.core"); 
 return true
 
 ********************************************************************************
@@ -140,9 +140,9 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __core.print(obj)
+function __tsukuyomi__DOT__core.print(obj)
     do
         return print(tostring(obj))
     end
@@ -165,9 +165,9 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __core.__PLUS__(x, y)
+function __tsukuyomi__DOT__core.__PLUS__(x, y)
     do
         return x + y
     end
@@ -190,9 +190,9 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __core.first(cell)
+function __tsukuyomi__DOT__core.first(cell)
     do
         return cell[1]
     end
@@ -215,9 +215,9 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __core.rest(cell)
+function __tsukuyomi__DOT__core.rest(cell)
     do
         return cell[2]
     end
@@ -249,13 +249,13 @@ RET PRIMITIVE __let_ret_0
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __let_ret_0
 do
     local _cons = tsukuyomi.create_cell
     do
-        function __core.cons(item, coll)
+        function __tsukuyomi__DOT__core.cons(item, coll)
             do
                 return _cons(item, coll)
             end
@@ -282,12 +282,12 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __core.second(coll)
+function __tsukuyomi__DOT__core.second(coll)
     do
-        local __arg_1 = __core.rest(coll)
-        return __core.first(__arg_1)
+        local __arg_1 = __tsukuyomi__DOT__core.rest(coll)
+        return __tsukuyomi__DOT__core.first(__arg_1)
     end
 end
 return true
@@ -303,9 +303,9 @@ RET CALL print, "asdf"
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-return __core.print("asdf")
+return __tsukuyomi__DOT__core.print("asdf")
 
 ********************************************************************************
 
@@ -313,20 +313,20 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-NEWLVAR __arg_3 := DATA table: 0x352a2d40
+NEWLVAR __arg_3 := DATA table: 0x33124938
 NEWLVAR __arg_2 := CALL second, __arg_3
 RET CALL print, __arg_2
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __data0 = tsukuyomi._get_data(0)
 
 local __arg_3 = __data0
-local __arg_2 = __core.second(__arg_3)
-return __core.print(__arg_2)
+local __arg_2 = __tsukuyomi__DOT__core.second(__arg_3)
+return __tsukuyomi__DOT__core.print(__arg_2)
 
 ********************************************************************************
 
@@ -334,20 +334,20 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-NEWLVAR __arg_5 := DATA table: 0x352a31c0
+NEWLVAR __arg_5 := DATA table: 0x33124dd8
 NEWLVAR __arg_4 := CALL first, __arg_5
 RET CALL print, __arg_4
 
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __data1 = tsukuyomi._get_data(1)
 
 local __arg_5 = __data1
-local __arg_4 = __core.first(__arg_5)
-return __core.print(__arg_4)
+local __arg_4 = __tsukuyomi__DOT__core.first(__arg_5)
+return __tsukuyomi__DOT__core.print(__arg_4)
 
 ********************************************************************************
 
@@ -364,13 +364,13 @@ RET CALL print, __arg_6
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-local __arg_9 = __core.cons(7, nil)
-local __arg_8 = __core.cons(8, __arg_9)
-local __arg_7 = __core.cons(9, __arg_8)
-local __arg_6 = __core.first(__arg_7)
-return __core.print(__arg_6)
+local __arg_9 = __tsukuyomi__DOT__core.cons(7, nil)
+local __arg_8 = __tsukuyomi__DOT__core.cons(8, __arg_9)
+local __arg_7 = __tsukuyomi__DOT__core.cons(9, __arg_8)
+local __arg_6 = __tsukuyomi__DOT__core.first(__arg_7)
+return __tsukuyomi__DOT__core.print(__arg_6)
 
 ********************************************************************************
 
@@ -387,13 +387,13 @@ RET CALL print, __arg_10
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-local __arg_13 = __core.cons(7, nil)
-local __arg_12 = __core.cons(8, __arg_13)
-local __arg_11 = __core.cons(9, __arg_12)
-local __arg_10 = __core.second(__arg_11)
-return __core.print(__arg_10)
+local __arg_13 = __tsukuyomi__DOT__core.cons(7, nil)
+local __arg_12 = __tsukuyomi__DOT__core.cons(8, __arg_13)
+local __arg_11 = __tsukuyomi__DOT__core.cons(9, __arg_12)
+local __arg_10 = __tsukuyomi__DOT__core.second(__arg_11)
+return __tsukuyomi__DOT__core.print(__arg_10)
 
 ********************************************************************************
 
@@ -433,13 +433,13 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __core.f(foo)
+function __tsukuyomi__DOT__core.f(foo)
     do
         local function __arg_14(bar)
             do
-                return __core.__PLUS__(foo, bar)
+                return __tsukuyomi__DOT__core.__PLUS__(foo, bar)
             end
         end
         return __arg_14(42)
@@ -459,10 +459,10 @@ RET CALL print, __arg_15
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-local __arg_15 = __core.f(43)
-return __core.print(__arg_15)
+local __arg_15 = __tsukuyomi__DOT__core.f(43)
+return __tsukuyomi__DOT__core.print(__arg_15)
 
 ********************************************************************************
 
@@ -484,13 +484,13 @@ RET PRIMITIVE __if_ret_16
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_16
 do
     local __cond_17 = false
     if __cond_17 then
-        __if_ret_16 = __core.print("pepperoni")
+        __if_ret_16 = __tsukuyomi__DOT__core.print("pepperoni")
     else
         __if_ret_16 = nil
     end
@@ -517,13 +517,13 @@ RET PRIMITIVE __if_ret_18
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_18
 do
     local __cond_19 = nil
     if __cond_19 then
-        __if_ret_18 = __core.print("hoagie")
+        __if_ret_18 = __tsukuyomi__DOT__core.print("hoagie")
     else
         __if_ret_18 = nil
     end
@@ -550,15 +550,15 @@ RET PRIMITIVE __if_ret_20
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_20
 do
     local __cond_21 = true
     if __cond_21 then
-        __if_ret_20 = __core.print("pizza")
+        __if_ret_20 = __tsukuyomi__DOT__core.print("pizza")
     else
-        __if_ret_20 = __core.print("hotdog")
+        __if_ret_20 = __tsukuyomi__DOT__core.print("hotdog")
     end
 end
 return __if_ret_20
@@ -583,15 +583,15 @@ RET PRIMITIVE __if_ret_22
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_22
 do
     local __cond_23 = false
     if __cond_23 then
-        __if_ret_22 = __core.print("pizza")
+        __if_ret_22 = __tsukuyomi__DOT__core.print("pizza")
     else
-        __if_ret_22 = __core.print("hotdog")
+        __if_ret_22 = __tsukuyomi__DOT__core.print("hotdog")
     end
 end
 return __if_ret_22
@@ -621,20 +621,20 @@ RET PRIMITIVE __if_ret_24
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_24
 do
     local function __arg_26()
         do
-            return __core.__PLUS__(1, 1)
+            return __tsukuyomi__DOT__core.__PLUS__(1, 1)
         end
     end
     local __cond_25 = __arg_26()
     if __cond_25 then
-        __if_ret_24 = __core.print("pizza")
+        __if_ret_24 = __tsukuyomi__DOT__core.print("pizza")
     else
-        __if_ret_24 = __core.print("hotdog")
+        __if_ret_24 = __tsukuyomi__DOT__core.print("hotdog")
     end
 end
 return __if_ret_24
@@ -664,7 +664,7 @@ RET PRIMITIVE __if_ret_27
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_27
 do
@@ -675,9 +675,9 @@ do
     end
     local __cond_28 = __arg_29()
     if __cond_28 then
-        __if_ret_27 = __core.print("pizza")
+        __if_ret_27 = __tsukuyomi__DOT__core.print("pizza")
     else
-        __if_ret_27 = __core.print("hotdog")
+        __if_ret_27 = __tsukuyomi__DOT__core.print("hotdog")
     end
 end
 return __if_ret_27
@@ -713,7 +713,7 @@ RET PRIMITIVE __if_ret_30
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_30
 do
@@ -726,13 +726,13 @@ do
     if __cond_31 then
         local function __arg_32(x)
             do
-                local __arg_34 = __core.__PLUS__(1, x)
-                return __core.print(__arg_34)
+                local __arg_34 = __tsukuyomi__DOT__core.__PLUS__(1, x)
+                return __tsukuyomi__DOT__core.print(__arg_34)
             end
         end
         __if_ret_30 = __arg_32(24)
     else
-        __if_ret_30 = __core.print("hotdog")
+        __if_ret_30 = __tsukuyomi__DOT__core.print("hotdog")
     end
 end
 return __if_ret_30
@@ -758,7 +758,7 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_35
 do
@@ -769,7 +769,7 @@ do
         __if_ret_35 = "ketchup"
     end
 end
-__core.a = __if_ret_35
+__tsukuyomi__DOT__core.a = __if_ret_35
 return true
 
 ********************************************************************************
@@ -793,7 +793,7 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_37
 do
@@ -804,7 +804,7 @@ do
         __if_ret_37 = "wasabi"
     end
 end
-__core.b = __if_ret_37
+__tsukuyomi__DOT__core.b = __if_ret_37
 return true
 
 ********************************************************************************
@@ -818,9 +818,9 @@ RET CALL print, a
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-return __core.print(__core.a)
+return __tsukuyomi__DOT__core.print(__tsukuyomi__DOT__core.a)
 
 ********************************************************************************
 
@@ -833,9 +833,9 @@ RET CALL print, b
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-return __core.print(__core.b)
+return __tsukuyomi__DOT__core.print(__tsukuyomi__DOT__core.b)
 
 ********************************************************************************
 
@@ -876,7 +876,7 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_39
 do
@@ -905,7 +905,7 @@ do
         __if_ret_39 = __if_ret_43
     end
 end
-__core.c = __if_ret_39
+__tsukuyomi__DOT__core.c = __if_ret_39
 return true
 
 ********************************************************************************
@@ -919,9 +919,9 @@ RET CALL print, c
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-return __core.print(__core.c)
+return __tsukuyomi__DOT__core.print(__tsukuyomi__DOT__core.c)
 
 ********************************************************************************
 
@@ -942,14 +942,14 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __core.f2()
+function __tsukuyomi__DOT__core.f2()
     do
-        __core.__PLUS__(1, 1)
+        __tsukuyomi__DOT__core.__PLUS__(1, 1)
     end
     do
-        return __core.__PLUS__(2, 2)
+        return __tsukuyomi__DOT__core.__PLUS__(2, 2)
     end
 end
 return true
@@ -980,9 +980,9 @@ RET PRIMITIVE true
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __core.f3(x)
+function __tsukuyomi__DOT__core.f3(x)
     do
         local __let_ret_45
         do
@@ -1009,10 +1009,10 @@ RET CALL print, __arg_46
 Lua source code:
 local tsukuyomi = tsukuyomi
 
-local __core = tsukuyomi.get_namespace("core")
+local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-local __arg_46 = __core.f3(42)
-return __core.print(__arg_46)
+local __arg_46 = __tsukuyomi__DOT__core.f3(42)
+return __tsukuyomi__DOT__core.print(__arg_46)
 
 ********************************************************************************
 

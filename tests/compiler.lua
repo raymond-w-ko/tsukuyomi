@@ -24,25 +24,25 @@ test([[
 
 -- 1 datum test
 test([[
-(ns core)
+(ns tsukuyomi.core)
 ]])
 
 -- 2 datum test
 test([[
-(ns core)
+(ns tsukuyomi.core)
 (def z2ljr2jlslfl3jf 1)
 ]])
 
 -- real test, 2+
 test([[
-(ns core)
+(ns tsukuyomi.core)
 (def a 3)
 (def b 4)
 (def b a)
 ]])
 
 test([[
-(ns core)
+(ns tsukuyomi.core)
 
 (def print
   (fn [obj]
