@@ -36,9 +36,11 @@ end
 
 local safe_char_map = {
   ['+'] = '__PLUS__',
-  ['-'] = '_MINUS__',
-  ['*'] = '__ASTERISK__',
+  ['-'] = '__SUB__',
+  ['*'] = '__MUL__',
   ['/'] = '__SLASH__',
+  ['.'] = '__DOT__',
+  ['?'] = '__QMARK__',
 }
 local function to_lua_identifier(lisp_name)
   local safe_var = {}
@@ -53,7 +55,7 @@ end
 
 -- convert Lisp namespace name to a valid Lua identifier, with some prefix so
 -- that it doesn't get accidentally called
-function convert_ns_to_lua(ns)
+local function convert_ns_to_lua(ns)
   -- TODO: SO much here to make it safe
   return '__' .. to_lua_identifier(ns)
 end
