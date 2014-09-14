@@ -31,6 +31,6 @@ function tsukuyomi.set_active_namespace(name)
     end
   end
   setmetatable(ns, mt)
-  tsukuyomi['*ns*'] = ns
+  tsukuyomi.get_namespace('tsukuyomi.core')['*ns*'] = ns
   return ns
 end

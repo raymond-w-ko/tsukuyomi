@@ -40,7 +40,7 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-__tsukuyomi__DOT__core.z2ljr2jlslfl3jf = 1
+__tsukuyomi__DOT__core["z2ljr2jlslfl3jf"] = 1
 return true
 
 ********************************************************************************
@@ -72,7 +72,7 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-__tsukuyomi__DOT__core.a = 3
+__tsukuyomi__DOT__core["a"] = 3
 return true
 
 ********************************************************************************
@@ -89,7 +89,7 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-__tsukuyomi__DOT__core.b = 4
+__tsukuyomi__DOT__core["b"] = 4
 return true
 
 ********************************************************************************
@@ -106,7 +106,7 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-__tsukuyomi__DOT__core.b = __tsukuyomi__DOT__core.a
+__tsukuyomi__DOT__core["b"] = __tsukuyomi__DOT__core["a"]
 return true
 
 ********************************************************************************
@@ -142,10 +142,10 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __tsukuyomi__DOT__core.print(obj)
-    do
-        return print(tostring(obj))
-    end
+__tsukuyomi__DOT__core["print"] = function (obj)
+	do
+		return print(tostring(obj))
+	end
 end
 return true
 
@@ -167,10 +167,10 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __tsukuyomi__DOT__core.__PLUS__(x, y)
-    do
-        return x + y
-    end
+__tsukuyomi__DOT__core["+"] = function (x, y)
+	do
+		return x + y
+	end
 end
 return true
 
@@ -192,10 +192,10 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __tsukuyomi__DOT__core.first(cell)
-    do
-        return cell[1]
-    end
+__tsukuyomi__DOT__core["first"] = function (cell)
+	do
+		return cell[1]
+	end
 end
 return true
 
@@ -217,10 +217,10 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __tsukuyomi__DOT__core.rest(cell)
-    do
-        return cell[2]
-    end
+__tsukuyomi__DOT__core["rest"] = function (cell)
+	do
+		return cell[2]
+	end
 end
 return true
 
@@ -253,15 +253,15 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __let_ret_0
 do
-    local _cons = tsukuyomi.create_cell
-    do
-        function __tsukuyomi__DOT__core.cons(item, coll)
-            do
-                return _cons(item, coll)
-            end
-        end
-        __let_ret_0 = true
-    end
+	local _cons = tsukuyomi.create_cell
+	do
+		__tsukuyomi__DOT__core["cons"] = function (item, coll)
+			do
+				return _cons(item, coll)
+			end
+		end
+		__let_ret_0 = true
+	end
 end
 return __let_ret_0
 
@@ -284,11 +284,11 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __tsukuyomi__DOT__core.second(coll)
-    do
-        local __arg_1 = __tsukuyomi__DOT__core.rest(coll)
-        return __tsukuyomi__DOT__core.first(__arg_1)
-    end
+__tsukuyomi__DOT__core["second"] = function (coll)
+	do
+		local __arg_1 = __tsukuyomi__DOT__core["rest"](coll)
+		return __tsukuyomi__DOT__core["first"](__arg_1)
+	end
 end
 return true
 
@@ -305,7 +305,7 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-return __tsukuyomi__DOT__core.print("asdf")
+return __tsukuyomi__DOT__core["print"]("asdf")
 
 ********************************************************************************
 
@@ -313,7 +313,7 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-NEWLVAR __arg_3 := DATA table: 0x33124938
+NEWLVAR __arg_3 := DATA table: 0x030e32d8
 NEWLVAR __arg_2 := CALL second, __arg_3
 RET CALL print, __arg_2
 
@@ -325,8 +325,8 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 local __data0 = tsukuyomi._get_data(0)
 
 local __arg_3 = __data0
-local __arg_2 = __tsukuyomi__DOT__core.second(__arg_3)
-return __tsukuyomi__DOT__core.print(__arg_2)
+local __arg_2 = __tsukuyomi__DOT__core["second"](__arg_3)
+return __tsukuyomi__DOT__core["print"](__arg_2)
 
 ********************************************************************************
 
@@ -334,7 +334,7 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-NEWLVAR __arg_5 := DATA table: 0x33124dd8
+NEWLVAR __arg_5 := DATA table: 0x030e3710
 NEWLVAR __arg_4 := CALL first, __arg_5
 RET CALL print, __arg_4
 
@@ -346,8 +346,8 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 local __data1 = tsukuyomi._get_data(1)
 
 local __arg_5 = __data1
-local __arg_4 = __tsukuyomi__DOT__core.first(__arg_5)
-return __tsukuyomi__DOT__core.print(__arg_4)
+local __arg_4 = __tsukuyomi__DOT__core["first"](__arg_5)
+return __tsukuyomi__DOT__core["print"](__arg_4)
 
 ********************************************************************************
 
@@ -366,11 +366,11 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-local __arg_9 = __tsukuyomi__DOT__core.cons(7, nil)
-local __arg_8 = __tsukuyomi__DOT__core.cons(8, __arg_9)
-local __arg_7 = __tsukuyomi__DOT__core.cons(9, __arg_8)
-local __arg_6 = __tsukuyomi__DOT__core.first(__arg_7)
-return __tsukuyomi__DOT__core.print(__arg_6)
+local __arg_9 = __tsukuyomi__DOT__core["cons"](7, nil)
+local __arg_8 = __tsukuyomi__DOT__core["cons"](8, __arg_9)
+local __arg_7 = __tsukuyomi__DOT__core["cons"](9, __arg_8)
+local __arg_6 = __tsukuyomi__DOT__core["first"](__arg_7)
+return __tsukuyomi__DOT__core["print"](__arg_6)
 
 ********************************************************************************
 
@@ -389,11 +389,11 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-local __arg_13 = __tsukuyomi__DOT__core.cons(7, nil)
-local __arg_12 = __tsukuyomi__DOT__core.cons(8, __arg_13)
-local __arg_11 = __tsukuyomi__DOT__core.cons(9, __arg_12)
-local __arg_10 = __tsukuyomi__DOT__core.second(__arg_11)
-return __tsukuyomi__DOT__core.print(__arg_10)
+local __arg_13 = __tsukuyomi__DOT__core["cons"](7, nil)
+local __arg_12 = __tsukuyomi__DOT__core["cons"](8, __arg_13)
+local __arg_11 = __tsukuyomi__DOT__core["cons"](9, __arg_12)
+local __arg_10 = __tsukuyomi__DOT__core["second"](__arg_11)
+return __tsukuyomi__DOT__core["print"](__arg_10)
 
 ********************************************************************************
 
@@ -409,16 +409,16 @@ local tsukuyomi = tsukuyomi
 
 local __user = tsukuyomi.get_namespace("user")
 
-__user.test = "lisp"
+__user["test"] = "lisp"
 return true
 
 ********************************************************************************
 
 compiling:
-(def f (fn [foo] ((fn [bar] (+ foo bar)) 42)))
+(def f? (fn [foo] ((fn [bar] (+ foo bar)) 42)))
 
 IR:
-DEFSYM f := FUNC foo
+DEFSYM f? := FUNC foo
 VARFENCE 
 NEWLVAR __arg_14 := FUNC bar
 VARFENCE 
@@ -435,25 +435,25 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __tsukuyomi__DOT__core.f(foo)
-    do
-        local function __arg_14(bar)
-            do
-                return __tsukuyomi__DOT__core.__PLUS__(foo, bar)
-            end
-        end
-        return __arg_14(42)
-    end
+__tsukuyomi__DOT__core["f?"] = function (foo)
+	do
+		local function __arg_14(bar)
+			do
+				return __tsukuyomi__DOT__core["+"](foo, bar)
+			end
+		end
+		return __arg_14(42)
+	end
 end
 return true
 
 ********************************************************************************
 
 compiling:
-(print (f 43))
+(print (f? 43))
 
 IR:
-NEWLVAR __arg_15 := CALL f, 43
+NEWLVAR __arg_15 := CALL f?, 43
 RET CALL print, __arg_15
 
 Lua source code:
@@ -461,8 +461,8 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-local __arg_15 = __tsukuyomi__DOT__core.f(43)
-return __tsukuyomi__DOT__core.print(__arg_15)
+local __arg_15 = __tsukuyomi__DOT__core["f?"](43)
+return __tsukuyomi__DOT__core["print"](__arg_15)
 
 ********************************************************************************
 
@@ -488,12 +488,12 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_16
 do
-    local __cond_17 = false
-    if __cond_17 then
-        __if_ret_16 = __tsukuyomi__DOT__core.print("pepperoni")
-    else
-        __if_ret_16 = nil
-    end
+	local __cond_17 = false
+	if __cond_17 then
+		__if_ret_16 = __tsukuyomi__DOT__core["print"]("pepperoni")
+	else
+		__if_ret_16 = nil
+	end
 end
 return __if_ret_16
 
@@ -521,12 +521,12 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_18
 do
-    local __cond_19 = nil
-    if __cond_19 then
-        __if_ret_18 = __tsukuyomi__DOT__core.print("hoagie")
-    else
-        __if_ret_18 = nil
-    end
+	local __cond_19 = nil
+	if __cond_19 then
+		__if_ret_18 = __tsukuyomi__DOT__core["print"]("hoagie")
+	else
+		__if_ret_18 = nil
+	end
 end
 return __if_ret_18
 
@@ -554,12 +554,12 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_20
 do
-    local __cond_21 = true
-    if __cond_21 then
-        __if_ret_20 = __tsukuyomi__DOT__core.print("pizza")
-    else
-        __if_ret_20 = __tsukuyomi__DOT__core.print("hotdog")
-    end
+	local __cond_21 = true
+	if __cond_21 then
+		__if_ret_20 = __tsukuyomi__DOT__core["print"]("pizza")
+	else
+		__if_ret_20 = __tsukuyomi__DOT__core["print"]("hotdog")
+	end
 end
 return __if_ret_20
 
@@ -587,12 +587,12 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_22
 do
-    local __cond_23 = false
-    if __cond_23 then
-        __if_ret_22 = __tsukuyomi__DOT__core.print("pizza")
-    else
-        __if_ret_22 = __tsukuyomi__DOT__core.print("hotdog")
-    end
+	local __cond_23 = false
+	if __cond_23 then
+		__if_ret_22 = __tsukuyomi__DOT__core["print"]("pizza")
+	else
+		__if_ret_22 = __tsukuyomi__DOT__core["print"]("hotdog")
+	end
 end
 return __if_ret_22
 
@@ -625,17 +625,17 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_24
 do
-    local function __arg_26()
-        do
-            return __tsukuyomi__DOT__core.__PLUS__(1, 1)
-        end
-    end
-    local __cond_25 = __arg_26()
-    if __cond_25 then
-        __if_ret_24 = __tsukuyomi__DOT__core.print("pizza")
-    else
-        __if_ret_24 = __tsukuyomi__DOT__core.print("hotdog")
-    end
+	local function __arg_26()
+		do
+			return __tsukuyomi__DOT__core["+"](1, 1)
+		end
+	end
+	local __cond_25 = __arg_26()
+	if __cond_25 then
+		__if_ret_24 = __tsukuyomi__DOT__core["print"]("pizza")
+	else
+		__if_ret_24 = __tsukuyomi__DOT__core["print"]("hotdog")
+	end
 end
 return __if_ret_24
 
@@ -668,17 +668,17 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_27
 do
-    local function __arg_29()
-        do
-            return nil
-        end
-    end
-    local __cond_28 = __arg_29()
-    if __cond_28 then
-        __if_ret_27 = __tsukuyomi__DOT__core.print("pizza")
-    else
-        __if_ret_27 = __tsukuyomi__DOT__core.print("hotdog")
-    end
+	local function __arg_29()
+		do
+			return nil
+		end
+	end
+	local __cond_28 = __arg_29()
+	if __cond_28 then
+		__if_ret_27 = __tsukuyomi__DOT__core["print"]("pizza")
+	else
+		__if_ret_27 = __tsukuyomi__DOT__core["print"]("hotdog")
+	end
 end
 return __if_ret_27
 
@@ -717,23 +717,23 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_30
 do
-    local function __arg_33()
-        do
-            return true
-        end
-    end
-    local __cond_31 = __arg_33()
-    if __cond_31 then
-        local function __arg_32(x)
-            do
-                local __arg_34 = __tsukuyomi__DOT__core.__PLUS__(1, x)
-                return __tsukuyomi__DOT__core.print(__arg_34)
-            end
-        end
-        __if_ret_30 = __arg_32(24)
-    else
-        __if_ret_30 = __tsukuyomi__DOT__core.print("hotdog")
-    end
+	local function __arg_33()
+		do
+			return true
+		end
+	end
+	local __cond_31 = __arg_33()
+	if __cond_31 then
+		local function __arg_32(x)
+			do
+				local __arg_34 = __tsukuyomi__DOT__core["+"](1, x)
+				return __tsukuyomi__DOT__core["print"](__arg_34)
+			end
+		end
+		__if_ret_30 = __arg_32(24)
+	else
+		__if_ret_30 = __tsukuyomi__DOT__core["print"]("hotdog")
+	end
 end
 return __if_ret_30
 
@@ -762,14 +762,14 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_35
 do
-    local __cond_36 = true
-    if __cond_36 then
-        __if_ret_35 = "mayo"
-    else
-        __if_ret_35 = "ketchup"
-    end
+	local __cond_36 = true
+	if __cond_36 then
+		__if_ret_35 = "mayo"
+	else
+		__if_ret_35 = "ketchup"
+	end
 end
-__tsukuyomi__DOT__core.a = __if_ret_35
+__tsukuyomi__DOT__core["a"] = __if_ret_35
 return true
 
 ********************************************************************************
@@ -797,14 +797,14 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_37
 do
-    local __cond_38 = false
-    if __cond_38 then
-        __if_ret_37 = "horseradish"
-    else
-        __if_ret_37 = "wasabi"
-    end
+	local __cond_38 = false
+	if __cond_38 then
+		__if_ret_37 = "horseradish"
+	else
+		__if_ret_37 = "wasabi"
+	end
 end
-__tsukuyomi__DOT__core.b = __if_ret_37
+__tsukuyomi__DOT__core["b"] = __if_ret_37
 return true
 
 ********************************************************************************
@@ -820,7 +820,7 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-return __tsukuyomi__DOT__core.print(__tsukuyomi__DOT__core.a)
+return __tsukuyomi__DOT__core["print"](__tsukuyomi__DOT__core["a"])
 
 ********************************************************************************
 
@@ -835,7 +835,7 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-return __tsukuyomi__DOT__core.print(__tsukuyomi__DOT__core.b)
+return __tsukuyomi__DOT__core["print"](__tsukuyomi__DOT__core["b"])
 
 ********************************************************************************
 
@@ -880,32 +880,32 @@ local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
 local __if_ret_39
 do
-    local __cond_40 = true
-    if __cond_40 then
-        local __if_ret_41
-        do
-            local __cond_42 = true
-            if __cond_42 then
-                __if_ret_41 = "ketchup"
-            else
-                __if_ret_41 = "mustard"
-            end
-        end
-        __if_ret_39 = __if_ret_41
-    else
-        local __if_ret_43
-        do
-            local __cond_44 = false
-            if __cond_44 then
-                __if_ret_43 = "jam"
-            else
-                __if_ret_43 = "gravy"
-            end
-        end
-        __if_ret_39 = __if_ret_43
-    end
+	local __cond_40 = true
+	if __cond_40 then
+		local __if_ret_41
+		do
+			local __cond_42 = true
+			if __cond_42 then
+				__if_ret_41 = "ketchup"
+			else
+				__if_ret_41 = "mustard"
+			end
+		end
+		__if_ret_39 = __if_ret_41
+	else
+		local __if_ret_43
+		do
+			local __cond_44 = false
+			if __cond_44 then
+				__if_ret_43 = "jam"
+			else
+				__if_ret_43 = "gravy"
+			end
+		end
+		__if_ret_39 = __if_ret_43
+	end
 end
-__tsukuyomi__DOT__core.c = __if_ret_39
+__tsukuyomi__DOT__core["c"] = __if_ret_39
 return true
 
 ********************************************************************************
@@ -921,7 +921,7 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-return __tsukuyomi__DOT__core.print(__tsukuyomi__DOT__core.c)
+return __tsukuyomi__DOT__core["print"](__tsukuyomi__DOT__core["c"])
 
 ********************************************************************************
 
@@ -944,13 +944,13 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __tsukuyomi__DOT__core.f2()
-    do
-        __tsukuyomi__DOT__core.__PLUS__(1, 1)
-    end
-    do
-        return __tsukuyomi__DOT__core.__PLUS__(2, 2)
-    end
+__tsukuyomi__DOT__core["f2"] = function ()
+	do
+		__tsukuyomi__DOT__core["+"](1, 1)
+	end
+	do
+		return __tsukuyomi__DOT__core["+"](2, 2)
+	end
 end
 return true
 
@@ -982,18 +982,18 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-function __tsukuyomi__DOT__core.f3(x)
-    do
-        local __let_ret_45
-        do
-            local x = 1
-            local y = x
-            do
-                __let_ret_45 = y
-            end
-        end
-        return __let_ret_45
-    end
+__tsukuyomi__DOT__core["f3"] = function (x)
+	do
+		local __let_ret_45
+		do
+			local x = 1
+			local y = x
+			do
+				__let_ret_45 = y
+			end
+		end
+		return __let_ret_45
+	end
 end
 return true
 
@@ -1011,8 +1011,8 @@ local tsukuyomi = tsukuyomi
 
 local __tsukuyomi__DOT__core = tsukuyomi.get_namespace("tsukuyomi.core")
 
-local __arg_46 = __tsukuyomi__DOT__core.f3(42)
-return __tsukuyomi__DOT__core.print(__arg_46)
+local __arg_46 = __tsukuyomi__DOT__core["f3"](42)
+return __tsukuyomi__DOT__core["print"](__arg_46)
 
 ********************************************************************************
 

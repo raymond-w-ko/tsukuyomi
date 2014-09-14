@@ -76,10 +76,10 @@ test([[
 
 (def user/test "lisp")
 
-(def f (fn [foo]
+(def f? (fn [foo]
   ((fn [bar] (+ foo bar)) 42)))
 
-(print (f 43))
+(print (f? 43))
 
 (if false (print "pepperoni"))
 (if nil (print "hoagie"))

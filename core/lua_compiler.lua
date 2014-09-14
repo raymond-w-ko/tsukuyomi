@@ -56,10 +56,10 @@ end
 -- convert Lisp namespace name to a valid Lua identifier, with some prefix so
 -- that it doesn't get accidentally called
 local function convert_ns_to_lua(ns)
-  -- TODO: SO much here to make it safe
   return '__' .. to_lua_identifier(ns)
 end
 
+local tsukuyomi_core_ns = tsukuyomi.get_namespace('tsukuyomi.core')
 local function symbol_to_lua(symbol, used_namespaces)
   local code = {}
 
@@ -69,13 +69,14 @@ local function symbol_to_lua(symbol, used_namespaces)
     table.insert(code, convert_ns_to_lua(namespace))
     used_namespaces[namespace] = true
   else
-    local active_ns = tsukuyomi['*ns*'][symbol]
+    local active_ns = tsukuyomi_core_ns['*ns*'][symbol]
     table.insert(code, convert_ns_to_lua(active_ns))
     used_namespaces[active_ns] = true
   end
 
-  table.insert(code, '.')
-  table.insert(code, to_lua_identifier(name))
+  table.insert(code, '["')
+  table.insert(code, name)
+  table.insert(code, '"]')
 
   return table.concat(code)
 end
@@ -132,7 +133,7 @@ function tsukuyomi.compile_to_lua(ir_list)
       emit('local ', insn.new_lvar_name, ' = ')
     elseif insn.set_var_name then
       emit(insn.set_var_name, ' = ')
-    elseif insn.define_symbol and insn.op ~= 'FUNC' then
+    elseif insn.define_symbol then
       emit(symbol_to_lua(insn.define_symbol, used_namespaces), " = ")
     elseif insn.is_return then
       emit('return ')
@@ -166,8 +167,7 @@ function tsukuyomi.compile_to_lua(ir_list)
     elseif insn.op == 'FUNC' then
       if insn.new_lvar_name then emit('local ') end
       emit('function ')
-      if insn.define_symbol then emit(symbol_to_lua(insn.define_symbol, used_namespaces))
-      elseif insn.new_lvar_name then emit(insn.new_lvar_name) end
+      if insn.new_lvar_name then emit(insn.new_lvar_name) end
       emit('(')
       push_new_frame(stack)
       for i = 1, #insn.args do
@@ -209,7 +209,7 @@ function tsukuyomi.compile_to_lua(ir_list)
 
     if #line > 0 then
       for i = 1, indent do
-        table.insert(line, 1, '    ')
+        table.insert(line, 1, '\t')
       end
       table.insert(lines, table.concat(line))
       line = {}
