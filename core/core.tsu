@@ -1,0 +1,13 @@
+(ns tsukuyomi.core)
+
+(def first
+  (fn [cons_cell]
+    _raw_ "cons_cell[0]"))
+
+(def rest
+  (fn [cons_cell]
+    _raw_ "cons_cell[1]"))
+
+(def second
+  (fn [cell]
+    (first (rest cell))))
