@@ -19,7 +19,8 @@ function tsukuyomi.get_namespace(ns)
   return t
 end
 
-function tsukuyomi.set_active_namespace(name)
+-- the namespace argument is just a string like "tsukuyomi.core"
+function tsukuyomi.set_active_namespace(namespace)
   -- TODO: mimic clojure / python and have a way to import symbols from other namespaces
   -- so you import math / other libraries
   local ns = {}
@@ -27,7 +28,7 @@ function tsukuyomi.set_active_namespace(name)
   function mt.__index(t, symbol_name)
     local imported_ns = rawget(t, symbol_name)
     if imported_ns == nil then
-      return name
+      return namespace
     else
       return imported_ns
     end
