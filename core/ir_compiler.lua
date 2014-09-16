@@ -25,11 +25,10 @@ local function is_lua_primitive(datum)
   -- actual primitive types
   if type(datum) == 'string' or type(datum) == 'number' or type(datum) == 'boolean' then
     return true
-  end
-
-  -- this isn't a true Lua primitive, but it's intent is that it is just a variable name
-  -- referring to something
-  if tsukuyomi.is_symbol(datum) then
+  elseif tsukuyomi.is_symbol(datum) then
+    -- this isn't a true Lua primitive, but it's intent is that it is just a
+    -- variable name referring to something like a Lua variable, so pretend
+    -- that it is
     return true
   end
 
@@ -39,13 +38,9 @@ end
 local function compile_lua_primitive(datum)
   if type(datum) == 'number' or type(datum) == 'boolean' then
     return tostring(datum)
-  end
-
-  if type(datum) == 'string' then
+  elseif type(datum) == 'string' then
     return '"'..datum..'"'
-  end
-
-  if tsukuyomi.is_symbol(datum) then
+  elseif tsukuyomi.is_symbol(datum) then
     -- we can't do symbol binding here since we don't know if the symbol is
     -- referring to a variable in a namespace or a lambda function argument
     -- variable

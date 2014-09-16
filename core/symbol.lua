@@ -49,11 +49,9 @@ function tsukuyomi.get_symbol_namespace(symbol)
 end
 
 function tsukuyomi.is_symbol(datum)
-  if type(datum) ~= 'table' then
-    return false
-  end
   if getmetatable(datum) ~= kSymbolTag then
     return false
+  else
+    return true
   end
-  return true
 end
