@@ -1,12 +1,12 @@
 -- special forms
-local kNsSymbol = tsukuyomi.create_symbol('ns')
-local kQuoteSymbol = tsukuyomi.create_symbol('quote')
-local kDefSymbol = tsukuyomi.create_symbol('def')
-local kIfSymbol = tsukuyomi.create_symbol('if')
-local kFnSymbol = tsukuyomi.create_symbol('fn')
-local kRawSymbol = tsukuyomi.create_symbol('_raw_')
-local kNilSymbol = tsukuyomi.create_symbol("nil")
-local kLetSymbol = tsukuyomi.create_symbol("let")
+local kNsSymbol = tsukuyomi.get_symbol('ns')
+local kQuoteSymbol = tsukuyomi.get_symbol('quote')
+local kDefSymbol = tsukuyomi.get_symbol('def')
+local kIfSymbol = tsukuyomi.get_symbol('if')
+local kFnSymbol = tsukuyomi.get_symbol('fn')
+local kRawSymbol = tsukuyomi.get_symbol('_raw_')
+local kNilSymbol = tsukuyomi.get_symbol("nil")
+local kLetSymbol = tsukuyomi.get_symbol("let")
 
 local var_counter = -1
 local function make_unique_var_name(desc)

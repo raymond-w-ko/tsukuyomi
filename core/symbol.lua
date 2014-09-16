@@ -18,7 +18,7 @@ end
 local kSymbolCache = {}
 setmetatable(kSymbolCache, {__mode = 'kv'})
 
-function tsukuyomi.create_symbol(name, namespace)
+function tsukuyomi.get_symbol(name, namespace)
   local key
   if namespace then
     key = namespace .. '/' .. name

@@ -81,7 +81,7 @@ local function symbol_to_lua(symbol, used_namespaces)
   return table.concat(code)
 end
 
-local kNilSymbol = tsukuyomi.create_symbol("nil")
+local kNilSymbol = tsukuyomi.get_symbol("nil")
 
 local function compile_string_or_symbol(datum, fn_arg_symbols, used_namespaces)
   if type(datum) == 'string' then

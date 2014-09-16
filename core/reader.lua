@@ -14,9 +14,9 @@ local kDigits = {
 }
 
 local kReaderMacros = {
-  ["'"] = tsukuyomi.create_symbol('quote'),
+  ["'"] = tsukuyomi.get_symbol('quote'),
   -- TODO: should I use Clojure macros or old-school Lisp macros ???
-  ['`'] = tsukuyomi.create_symbol('syntax-quote'),
+  ['`'] = tsukuyomi.get_symbol('syntax-quote'),
 }
 
 local function convert_token_to_atom(token)
@@ -46,7 +46,7 @@ local function convert_token_to_atom(token)
     else
       name = token
     end
-    local symbol = tsukuyomi.create_symbol(name, namespace)
+    local symbol = tsukuyomi.get_symbol(name, namespace)
     atom = symbol
   end
 
