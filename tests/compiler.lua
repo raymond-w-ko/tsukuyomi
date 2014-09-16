@@ -5,7 +5,7 @@ local function test(text)
   while datum and datum[1] do
     local info
     if datum[1][1] == tsukuyomi.get_symbol('def') then
-      local symbol_name = tsukuyomi.get_symbol_name(datum[1][2][1])
+      local symbol_name = datum[1][2][1].name
       local ns = tsukuyomi.core['*ns*'][symbol_name]
       info =  ns .. '/' .. symbol_name
     end

@@ -1,5 +1,9 @@
 -- use metatable tagging to mark a Lua table as a Lisp symbol
-local kSymbolTag = {}
+local kSymbolTag = {
+  __newindex = function(t, k)
+    assert(false)
+  end
+}
 
 -- print the Lisp name
 -- since we use metatable tagging, might as well make it useful
@@ -38,14 +42,6 @@ function tsukuyomi.get_symbol(name, namespace)
 
   kSymbolCache[key] = symbol
   return symbol
-end
-
-function tsukuyomi.get_symbol_name(symbol)
-  return symbol.name
-end
-
-function tsukuyomi.get_symbol_namespace(symbol)
-  return symbol.namespace
 end
 
 function tsukuyomi.is_symbol(datum)

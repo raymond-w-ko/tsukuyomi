@@ -202,7 +202,7 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
   local new_local_vars = {}
   while i <= #bindings do
     local var_symbol = bindings[i]
-    local var_name = tsukuyomi.get_symbol_name(var_symbol)
+    local var_name = var_symbol.name
     table.insert(new_local_vars, var_name)
     local form = bindings[i + 1]
 

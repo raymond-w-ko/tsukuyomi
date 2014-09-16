@@ -63,8 +63,8 @@ local tsukuyomi_core_ns = tsukuyomi.get_namespace('tsukuyomi.core')
 local function symbol_to_lua(symbol, used_namespaces)
   local code = {}
 
-  local namespace = tsukuyomi.get_symbol_namespace(symbol)
-  local name = tsukuyomi.get_symbol_name(symbol)
+  local namespace = symbol.namespace
+  local name = symbol.name
   if namespace then
     table.insert(code, convert_ns_to_lua(namespace))
     used_namespaces[namespace] = true
@@ -89,7 +89,7 @@ local function compile_string_or_symbol(datum, fn_arg_symbols, used_namespaces)
   elseif datum == kNilSymbol then
     return 'nil'
   elseif tsukuyomi.is_symbol(datum) then
-    local name = tsukuyomi.get_symbol_name(datum)
+    local name = datum.name
     if fn_arg_symbols[name] then
       return name
     else
@@ -145,7 +145,7 @@ function tsukuyomi.compile_to_lua(ir_list)
       emit('local ', insn.args[1])
     elseif insn.op == 'NS' then
       emit('tsukuyomi.set_active_namespace("')
-      emit(tsukuyomi.get_symbol_name(insn.args[1]))
+      emit(insn.args[1].name)
       emit('"); ')
     elseif insn.op == 'PRIMITIVE' then
       emit(compile_string_or_symbol(insn.args[1], fn_arg_symbols, used_namespaces))
