@@ -353,7 +353,11 @@ end
 -- set_var_name
 -- define_symbol
 -- is_return
-function tsukuyomi.compile_to_ir(head_node)
+function tsukuyomi.compile_to_ir(datum)
+  local head_node = tsukuyomi.ll_new_node('LISP')
+  head_node.args = { datum }
+  head_node.is_return = true
+
   -- prepare input nodes by marking them all as dirty
   local dirty_nodes = {}
   local node = head_node
