@@ -127,7 +127,7 @@ return true
 ********************************************************************************
 
 compiling:
-(def print (fn [obj] (_raw_ "print(tostring(obj))")))
+(def print (fn [obj] (_emit_ "print(tostring(obj))")))
 
 IR:
 DEFSYM print := FUNC obj
@@ -152,7 +152,7 @@ return true
 ********************************************************************************
 
 compiling:
-(def + (fn [x y] (_raw_ "x + y")))
+(def + (fn [x y] (_emit_ "x + y")))
 
 IR:
 DEFSYM + := FUNC x, y
@@ -177,7 +177,7 @@ return true
 ********************************************************************************
 
 compiling:
-(def first (fn [cell] (_raw_ "cell[1]")))
+(def first (fn [cell] (_emit_ "cell[1]")))
 
 IR:
 DEFSYM first := FUNC cell
@@ -202,7 +202,7 @@ return true
 ********************************************************************************
 
 compiling:
-(def rest (fn [cell] (_raw_ "cell[2]")))
+(def rest (fn [cell] (_emit_ "cell[2]")))
 
 IR:
 DEFSYM rest := FUNC cell
@@ -227,7 +227,7 @@ return true
 ********************************************************************************
 
 compiling:
-(let [_cons (_raw_ "tsukuyomi.create_cell")] (def cons (fn [item coll] (_cons item coll))))
+(let [_cons (_emit_ "tsukuyomi.create_cell")] (def cons (fn [item coll] (_cons item coll))))
 
 IR:
 EMPTYVAR __let_ret_0

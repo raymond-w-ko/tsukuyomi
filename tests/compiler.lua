@@ -52,23 +52,23 @@ test([[
 
 (def print
   (fn [obj]
-    (_raw_ "print(tostring(obj))")
-    ;(_raw_ "assert(false)")
+    (_emit_ "print(tostring(obj))")
+    ;(_emit_ "assert(false)")
     ))
 
 (def +
   (fn [x y]
-    (_raw_ "x + y")))
+    (_emit_ "x + y")))
 
 (def first
   (fn [cell]
-    (_raw_ "cell[1]")))
+    (_emit_ "cell[1]")))
 
 (def rest
   (fn [cell]
-    (_raw_ "cell[2]")))
+    (_emit_ "cell[2]")))
 
-(let [_cons (_raw_ "tsukuyomi.create_cell")]
+(let [_cons (_emit_ "tsukuyomi.create_cell")]
   (def cons (fn [item coll]
      (_cons item coll))))
 

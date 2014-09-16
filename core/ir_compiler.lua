@@ -4,7 +4,7 @@ local kQuoteSymbol = tsukuyomi.get_symbol('quote')
 local kDefSymbol = tsukuyomi.get_symbol('def')
 local kIfSymbol = tsukuyomi.get_symbol('if')
 local kFnSymbol = tsukuyomi.get_symbol('fn')
-local kRawSymbol = tsukuyomi.get_symbol('_raw_')
+local kEmitSymbol = tsukuyomi.get_symbol('_emit_')
 local kNilSymbol = tsukuyomi.get_symbol("nil")
 local kLetSymbol = tsukuyomi.get_symbol("let")
 
@@ -97,7 +97,7 @@ special_forms[kDefSymbol] = function(node, datum, new_dirty_nodes)
   table.insert(new_dirty_nodes, node)
 end
 
-special_forms[kRawSymbol] = function(node, datum, new_dirty_nodes)
+special_forms[kEmitSymbol] = function(node, datum, new_dirty_nodes)
   node.op = 'RAW'
   local inline = datum[1]
   assert(type(inline) == 'string')
