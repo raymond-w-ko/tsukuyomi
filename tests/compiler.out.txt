@@ -353,7 +353,7 @@ compiling:
 (print (second (quote (42 43))))
 
 IR:
-NEWLVAR __arg_3 := DATA table: 0x2cef7d08
+NEWLVAR __arg_3 := DATA table: 0x0a7c7b18
 NEWLVAR __arg_2 := CALL second, __arg_3
 RET CALL print, __arg_2
 
@@ -374,7 +374,7 @@ compiling:
 (print (first (quote (3 4 5))))
 
 IR:
-NEWLVAR __arg_5 := DATA table: 0x2cef8260
+NEWLVAR __arg_5 := DATA table: 0x0a7c8060
 NEWLVAR __arg_4 := CALL first, __arg_5
 RET CALL print, __arg_4
 

@@ -333,14 +333,13 @@ end
 op_dispatch['VAR'] = function(node, new_dirty_nodes)
   node.op = 'LISP'
   node.new_lvar_name = node.args[1]
-  node.args[1] = node.args[2]
-  node.args[2] = nil
+  node.args = { node.args[2] }
   table.insert(new_dirty_nodes, node)
 end
 
 -- given a doubly linked list, iteratively process each node until each node
 -- has been "cleaned". processing a node usually expands / creates more nodes
--- around it, as lisp is being broken into elementary operations.
+-- around it, as the Lisp is being broken into elementary operations.
 --
 -- by default nodes are dirty, until it has been processed through once.
 --
