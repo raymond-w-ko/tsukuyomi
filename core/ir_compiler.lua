@@ -125,7 +125,7 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
 
   local test = datum
   assert(test[1] ~= nil)
-  local var_test_node = tsukuyomi.ll_new_node('VAR')
+  local var_test_node = tsukuyomi.ll_new_node('NEWLVAR')
   table.insert(new_dirty_nodes, var_test_node)
   local var_name = make_unique_var_name('cond')
   var_test_node.args = {var_name, test[1]}
@@ -319,7 +319,7 @@ op_dispatch['CALL'] = function(node, new_dirty_nodes)
     if is_lua_primitive(args[i]) then
       args[i] = compile_lua_primitive(args[i])
     else
-      local var_node = tsukuyomi.ll_new_node('VAR')
+      local var_node = tsukuyomi.ll_new_node('NEWLVAR')
       table.insert(new_dirty_nodes, var_node)
 
       local var_name = make_unique_var_name('arg')
@@ -330,10 +330,10 @@ op_dispatch['CALL'] = function(node, new_dirty_nodes)
   end
 end
 
-op_dispatch['VAR'] = function(node, new_dirty_nodes)
+op_dispatch['NEWLVAR'] = function(node, new_dirty_nodes)
   node.op = 'LISP'
   node.new_lvar_name = node.args[1]
-  node.args = { node.args[2] }
+  node.args = {node.args[2]}
   table.insert(new_dirty_nodes, node)
 end
 
@@ -395,7 +395,7 @@ function tsukuyomi._debug_ir(node)
       table.insert(line, ' := ')
     end
     if node.set_var_name then
-      table.insert(line, 'VAR ')
+      table.insert(line, 'SETVAR ')
       table.insert(line, node.set_var_name)
       table.insert(line, ' := ')
     end

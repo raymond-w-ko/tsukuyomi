@@ -80,8 +80,8 @@ test([[
 (test1)
 
 (print "asdf")
-(print (second '(42 43)))
-(print (first '(3 4 5)))
+;(print (second '(42 43)))
+;(print (first '(3 4 5)))
 (print (first (cons 9 (cons 8 (cons 7 nil)))))
 (print (second (cons 9 (cons 8 (cons 7 nil)))))
 
