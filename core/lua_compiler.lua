@@ -1,8 +1,8 @@
 local safe_char_map = {
-  ['+'] = '__PLUS__',
+  ['+'] = '__ADD__',
   ['-'] = '__SUB__',
   ['*'] = '__MUL__',
-  ['/'] = '__SLASH__',
+  ['/'] = '__DIV__',
   ['.'] = '__DOT__',
   ['?'] = '__QMARK__',
 }
@@ -73,7 +73,6 @@ function tsukuyomi.compile_to_lua(ir_list)
   local lines = {}
 
   local indent = 0
-
   local used_namespaces = {}
   local data_bindings = {}
 
