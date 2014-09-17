@@ -3,9 +3,13 @@
 --
 -- so far, just used for IR list, so that is why ll_new_node accepts op
 --------------------------------------------------------------------------------
-function tsukuyomi.ll_new_node(op)
+function tsukuyomi.ll_new_node(op, env)
+  assert(op)
+  assert(env)
+
   local node = {}
   node.op = op
+  node.environment = env
   return node
 end
 

@@ -2,8 +2,8 @@ compiling:
 (ns tsukuyomi.core)
 
 IR:
-NS tsukuyomi.core
-RET PRIMITIVE true
+NS tsukuyomi.core				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -17,8 +17,8 @@ compiling:
 (ns tsukuyomi.core)
 
 IR:
-NS tsukuyomi.core
-RET PRIMITIVE true
+NS tsukuyomi.core				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -32,8 +32,8 @@ compiling:
 (def z2ljr2jlslfl3jf 1)
 
 IR:
-DEFSYM z2ljr2jlslfl3jf := PRIMITIVE 1
-RET PRIMITIVE true
+DEFSYM z2ljr2jlslfl3jf := PRIMITIVE 1				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -49,8 +49,8 @@ compiling:
 (ns tsukuyomi.core)
 
 IR:
-NS tsukuyomi.core
-RET PRIMITIVE true
+NS tsukuyomi.core				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -64,8 +64,8 @@ compiling:
 (def a 3)
 
 IR:
-DEFSYM a := PRIMITIVE 3
-RET PRIMITIVE true
+DEFSYM a := PRIMITIVE 3				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -81,8 +81,8 @@ compiling:
 (def b 4)
 
 IR:
-DEFSYM b := PRIMITIVE 4
-RET PRIMITIVE true
+DEFSYM b := PRIMITIVE 4				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -98,8 +98,8 @@ compiling:
 (def b a)
 
 IR:
-DEFSYM b := PRIMITIVE a
-RET PRIMITIVE true
+DEFSYM b := PRIMITIVE a				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -115,8 +115,8 @@ compiling:
 (ns tsukuyomi.core)
 
 IR:
-NS tsukuyomi.core
-RET PRIMITIVE true
+NS tsukuyomi.core				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -130,12 +130,12 @@ compiling:
 (def print (fn [obj] (_emit_ "print(tostring(obj))")))
 
 IR:
-DEFSYM print := FUNC obj
-VARFENCE 
-RET RAW print(tostring(obj))
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM print := FUNC obj				ENV: ( obj ) ( )
+VARFENCE 				ENV: ( obj ) ( )
+RET RAW print(tostring(obj))				ENV: ( obj ) ( )
+ENDVARFENCE 				ENV: ( obj ) ( )
+ENDFUNC 				ENV: ( obj ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -155,12 +155,12 @@ compiling:
 (def + (fn [x y] (_emit_ "x + y")))
 
 IR:
-DEFSYM + := FUNC x, y
-VARFENCE 
-RET RAW x + y
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM + := FUNC x, y				ENV: ( y x ) ( )
+VARFENCE 				ENV: ( y x ) ( )
+RET RAW x + y				ENV: ( y x ) ( )
+ENDVARFENCE 				ENV: ( y x ) ( )
+ENDFUNC 				ENV: ( y x ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -180,12 +180,12 @@ compiling:
 (def first (fn [cell] (_emit_ "cell[1]")))
 
 IR:
-DEFSYM first := FUNC cell
-VARFENCE 
-RET RAW cell[1]
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM first := FUNC cell				ENV: ( cell ) ( )
+VARFENCE 				ENV: ( cell ) ( )
+RET RAW cell[1]				ENV: ( cell ) ( )
+ENDVARFENCE 				ENV: ( cell ) ( )
+ENDFUNC 				ENV: ( cell ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -205,12 +205,12 @@ compiling:
 (def rest (fn [cell] (_emit_ "cell[2]")))
 
 IR:
-DEFSYM rest := FUNC cell
-VARFENCE 
-RET RAW cell[2]
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM rest := FUNC cell				ENV: ( cell ) ( )
+VARFENCE 				ENV: ( cell ) ( )
+RET RAW cell[2]				ENV: ( cell ) ( )
+ENDVARFENCE 				ENV: ( cell ) ( )
+ENDFUNC 				ENV: ( cell ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -230,21 +230,19 @@ compiling:
 (let [_cons (_emit_ "tsukuyomi.create_cell")] (def cons (fn [item coll] (_cons item coll))))
 
 IR:
-EMPTYVAR __let_ret_0
-VARFENCE 
-LETFRAME _cons
-NEWLVAR _cons := RAW tsukuyomi.create_cell
-VARFENCE 
-DEFSYM cons := FUNC item, coll
-VARFENCE 
-RET CALL _cons, item, coll
-ENDVARFENCE 
-ENDFUNC 
-SETVAR __let_ret_0 := PRIMITIVE true
-ENDVARFENCE 
-ENDLETFRAME 
-ENDVARFENCE 
-RET PRIMITIVE __let_ret_0
+EMPTYVAR __let_ret_0				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR _cons := RAW tsukuyomi.create_cell				ENV: ( _cons ) ( )
+VARFENCE 				ENV: ( _cons ) ( )
+DEFSYM cons := FUNC item, coll				ENV: ( item coll ) ( _cons ) ( )
+VARFENCE 				ENV: ( item coll ) ( _cons ) ( )
+RET CALL _cons, item, coll				ENV: ( item coll ) ( _cons ) ( )
+ENDVARFENCE 				ENV: ( item coll ) ( _cons ) ( )
+ENDFUNC 				ENV: ( item coll ) ( _cons ) ( )
+SETVAR __let_ret_0 := PRIMITIVE true				ENV: ( _cons ) ( )
+ENDVARFENCE 				ENV: ( _cons ) ( )
+ENDVARFENCE 				ENV: ( _cons ) ( )
+RET PRIMITIVE __let_ret_0				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -271,13 +269,13 @@ compiling:
 (def second (fn [coll] (first (rest coll))))
 
 IR:
-DEFSYM second := FUNC coll
-VARFENCE 
-NEWLVAR __arg_1 := CALL rest, coll
-RET CALL first, __arg_1
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM second := FUNC coll				ENV: ( coll ) ( )
+VARFENCE 				ENV: ( coll ) ( )
+NEWLVAR __arg_1 := CALL rest, coll				ENV: ( coll ) ( )
+RET CALL first, __arg_1				ENV: ( coll ) ( )
+ENDVARFENCE 				ENV: ( coll ) ( )
+ENDFUNC 				ENV: ( coll ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -298,12 +296,12 @@ compiling:
 (def test1 (fn [] (print "foobar")))
 
 IR:
-DEFSYM test1 := FUNC 
-VARFENCE 
-RET CALL print, "foobar"
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM test1 := FUNC 				ENV: ( ) ( )
+VARFENCE 				ENV: ( ) ( )
+RET CALL print, "foobar"				ENV: ( ) ( )
+ENDVARFENCE 				ENV: ( ) ( )
+ENDFUNC 				ENV: ( ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -323,7 +321,7 @@ compiling:
 (test1)
 
 IR:
-RET CALL test1
+RET CALL test1				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -338,7 +336,7 @@ compiling:
 (print "asdf")
 
 IR:
-RET CALL print, "asdf"
+RET CALL print, "asdf"				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -353,11 +351,11 @@ compiling:
 (print (first (cons 9 (cons 8 (cons 7 nil)))))
 
 IR:
-NEWLVAR __arg_5 := CALL cons, 7, nil
-NEWLVAR __arg_4 := CALL cons, 8, __arg_5
-NEWLVAR __arg_3 := CALL cons, 9, __arg_4
-NEWLVAR __arg_2 := CALL first, __arg_3
-RET CALL print, __arg_2
+NEWLVAR __arg_5 := CALL cons, 7, nil				ENV: ( )
+NEWLVAR __arg_4 := CALL cons, 8, __arg_5				ENV: ( )
+NEWLVAR __arg_3 := CALL cons, 9, __arg_4				ENV: ( )
+NEWLVAR __arg_2 := CALL first, __arg_3				ENV: ( )
+RET CALL print, __arg_2				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -376,11 +374,11 @@ compiling:
 (print (second (cons 9 (cons 8 (cons 7 nil)))))
 
 IR:
-NEWLVAR __arg_9 := CALL cons, 7, nil
-NEWLVAR __arg_8 := CALL cons, 8, __arg_9
-NEWLVAR __arg_7 := CALL cons, 9, __arg_8
-NEWLVAR __arg_6 := CALL second, __arg_7
-RET CALL print, __arg_6
+NEWLVAR __arg_9 := CALL cons, 7, nil				ENV: ( )
+NEWLVAR __arg_8 := CALL cons, 8, __arg_9				ENV: ( )
+NEWLVAR __arg_7 := CALL cons, 9, __arg_8				ENV: ( )
+NEWLVAR __arg_6 := CALL second, __arg_7				ENV: ( )
+RET CALL print, __arg_6				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -399,8 +397,8 @@ compiling:
 (def user/test "lisp")
 
 IR:
-DEFSYM user/test := PRIMITIVE "lisp"
-RET PRIMITIVE true
+DEFSYM user/test := PRIMITIVE "lisp"				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -416,17 +414,17 @@ compiling:
 (def f? (fn [foo] ((fn [bar] (+ foo bar)) 42)))
 
 IR:
-DEFSYM f? := FUNC foo
-VARFENCE 
-NEWLVAR __arg_10 := FUNC bar
-VARFENCE 
-RET CALL +, foo, bar
-ENDVARFENCE 
-ENDFUNC 
-RET CALL __arg_10, 42
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM f? := FUNC foo				ENV: ( foo ) ( )
+VARFENCE 				ENV: ( foo ) ( )
+NEWLVAR __arg_10 := FUNC bar				ENV: ( bar ) ( foo ) ( )
+VARFENCE 				ENV: ( bar ) ( foo ) ( )
+RET CALL +, foo, bar				ENV: ( bar ) ( foo ) ( )
+ENDVARFENCE 				ENV: ( bar ) ( foo ) ( )
+ENDFUNC 				ENV: ( bar ) ( foo ) ( )
+RET CALL __arg_10, 42				ENV: ( foo ) ( )
+ENDVARFENCE 				ENV: ( foo ) ( )
+ENDFUNC 				ENV: ( foo ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -451,8 +449,8 @@ compiling:
 (print (f? 43))
 
 IR:
-NEWLVAR __arg_11 := CALL f?, 43
-RET CALL print, __arg_11
+NEWLVAR __arg_11 := CALL f?, 43				ENV: ( )
+RET CALL print, __arg_11				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -468,16 +466,16 @@ compiling:
 (if false (print "pepperoni"))
 
 IR:
-EMPTYVAR __if_ret_12
-VARFENCE 
-NEWLVAR __cond_13 := PRIMITIVE false
-IF __cond_13
-SETVAR __if_ret_12 := CALL print, "pepperoni"
-ELSE 
-SETVAR __if_ret_12 := PRIMITIVE nil
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_12
+EMPTYVAR __if_ret_12				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_13 := PRIMITIVE false				ENV: ( )
+IF __cond_13				ENV: ( )
+SETVAR __if_ret_12 := CALL print, "pepperoni"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_12 := PRIMITIVE nil				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+RET PRIMITIVE __if_ret_12				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -501,16 +499,16 @@ compiling:
 (if nil (print "hoagie"))
 
 IR:
-EMPTYVAR __if_ret_14
-VARFENCE 
-NEWLVAR __cond_15 := PRIMITIVE nil
-IF __cond_15
-SETVAR __if_ret_14 := CALL print, "hoagie"
-ELSE 
-SETVAR __if_ret_14 := PRIMITIVE nil
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_14
+EMPTYVAR __if_ret_14				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_15 := PRIMITIVE nil				ENV: ( )
+IF __cond_15				ENV: ( )
+SETVAR __if_ret_14 := CALL print, "hoagie"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_14 := PRIMITIVE nil				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+RET PRIMITIVE __if_ret_14				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -534,16 +532,16 @@ compiling:
 (if true (print "pizza") (print "hotdog"))
 
 IR:
-EMPTYVAR __if_ret_16
-VARFENCE 
-NEWLVAR __cond_17 := PRIMITIVE true
-IF __cond_17
-SETVAR __if_ret_16 := CALL print, "pizza"
-ELSE 
-SETVAR __if_ret_16 := CALL print, "hotdog"
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_16
+EMPTYVAR __if_ret_16				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_17 := PRIMITIVE true				ENV: ( )
+IF __cond_17				ENV: ( )
+SETVAR __if_ret_16 := CALL print, "pizza"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_16 := CALL print, "hotdog"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+RET PRIMITIVE __if_ret_16				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -567,16 +565,16 @@ compiling:
 (if false (print "pizza") (print "hotdog"))
 
 IR:
-EMPTYVAR __if_ret_18
-VARFENCE 
-NEWLVAR __cond_19 := PRIMITIVE false
-IF __cond_19
-SETVAR __if_ret_18 := CALL print, "pizza"
-ELSE 
-SETVAR __if_ret_18 := CALL print, "hotdog"
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_18
+EMPTYVAR __if_ret_18				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_19 := PRIMITIVE false				ENV: ( )
+IF __cond_19				ENV: ( )
+SETVAR __if_ret_18 := CALL print, "pizza"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_18 := CALL print, "hotdog"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+RET PRIMITIVE __if_ret_18				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -600,21 +598,21 @@ compiling:
 (if ((fn [] (+ 1 1))) (print "pizza") (print "hotdog"))
 
 IR:
-EMPTYVAR __if_ret_20
-VARFENCE 
-NEWLVAR __arg_22 := FUNC 
-VARFENCE 
-RET CALL +, 1, 1
-ENDVARFENCE 
-ENDFUNC 
-NEWLVAR __cond_21 := CALL __arg_22
-IF __cond_21
-SETVAR __if_ret_20 := CALL print, "pizza"
-ELSE 
-SETVAR __if_ret_20 := CALL print, "hotdog"
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_20
+EMPTYVAR __if_ret_20				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __arg_22 := FUNC 				ENV: ( ) ( )
+VARFENCE 				ENV: ( ) ( )
+RET CALL +, 1, 1				ENV: ( ) ( )
+ENDVARFENCE 				ENV: ( ) ( )
+ENDFUNC 				ENV: ( ) ( )
+NEWLVAR __cond_21 := CALL __arg_22				ENV: ( )
+IF __cond_21				ENV: ( )
+SETVAR __if_ret_20 := CALL print, "pizza"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_20 := CALL print, "hotdog"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+RET PRIMITIVE __if_ret_20				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -643,21 +641,21 @@ compiling:
 (if ((fn [] nil)) (print "pizza") (print "hotdog"))
 
 IR:
-EMPTYVAR __if_ret_23
-VARFENCE 
-NEWLVAR __arg_25 := FUNC 
-VARFENCE 
-RET PRIMITIVE nil
-ENDVARFENCE 
-ENDFUNC 
-NEWLVAR __cond_24 := CALL __arg_25
-IF __cond_24
-SETVAR __if_ret_23 := CALL print, "pizza"
-ELSE 
-SETVAR __if_ret_23 := CALL print, "hotdog"
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_23
+EMPTYVAR __if_ret_23				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __arg_25 := FUNC 				ENV: ( ) ( )
+VARFENCE 				ENV: ( ) ( )
+RET PRIMITIVE nil				ENV: ( ) ( )
+ENDVARFENCE 				ENV: ( ) ( )
+ENDFUNC 				ENV: ( ) ( )
+NEWLVAR __cond_24 := CALL __arg_25				ENV: ( )
+IF __cond_24				ENV: ( )
+SETVAR __if_ret_23 := CALL print, "pizza"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_23 := CALL print, "hotdog"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+RET PRIMITIVE __if_ret_23				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -686,27 +684,27 @@ compiling:
 (if ((fn [] true)) ((fn [x] (print (+ 1 x))) 24) (print "hotdog"))
 
 IR:
-EMPTYVAR __if_ret_26
-VARFENCE 
-NEWLVAR __arg_29 := FUNC 
-VARFENCE 
-RET PRIMITIVE true
-ENDVARFENCE 
-ENDFUNC 
-NEWLVAR __cond_27 := CALL __arg_29
-IF __cond_27
-NEWLVAR __arg_28 := FUNC x
-VARFENCE 
-NEWLVAR __arg_30 := CALL +, 1, x
-RET CALL print, __arg_30
-ENDVARFENCE 
-ENDFUNC 
-SETVAR __if_ret_26 := CALL __arg_28, 24
-ELSE 
-SETVAR __if_ret_26 := CALL print, "hotdog"
-ENDIF 
-ENDVARFENCE 
-RET PRIMITIVE __if_ret_26
+EMPTYVAR __if_ret_26				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __arg_29 := FUNC 				ENV: ( ) ( )
+VARFENCE 				ENV: ( ) ( )
+RET PRIMITIVE true				ENV: ( ) ( )
+ENDVARFENCE 				ENV: ( ) ( )
+ENDFUNC 				ENV: ( ) ( )
+NEWLVAR __cond_27 := CALL __arg_29				ENV: ( )
+IF __cond_27				ENV: ( )
+NEWLVAR __arg_28 := FUNC x				ENV: ( x ) ( )
+VARFENCE 				ENV: ( x ) ( )
+NEWLVAR __arg_30 := CALL +, 1, x				ENV: ( x ) ( )
+RET CALL print, __arg_30				ENV: ( x ) ( )
+ENDVARFENCE 				ENV: ( x ) ( )
+ENDFUNC 				ENV: ( x ) ( )
+SETVAR __if_ret_26 := CALL __arg_28, 24				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_26 := CALL print, "hotdog"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+RET PRIMITIVE __if_ret_26				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -741,17 +739,17 @@ compiling:
 (def a (if true "mayo" "ketchup"))
 
 IR:
-EMPTYVAR __if_ret_31
-VARFENCE 
-NEWLVAR __cond_32 := PRIMITIVE true
-IF __cond_32
-SETVAR __if_ret_31 := PRIMITIVE "mayo"
-ELSE 
-SETVAR __if_ret_31 := PRIMITIVE "ketchup"
-ENDIF 
-ENDVARFENCE 
-DEFSYM a := PRIMITIVE __if_ret_31
-RET PRIMITIVE true
+EMPTYVAR __if_ret_31				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_32 := PRIMITIVE true				ENV: ( )
+IF __cond_32				ENV: ( )
+SETVAR __if_ret_31 := PRIMITIVE "mayo"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_31 := PRIMITIVE "ketchup"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+DEFSYM a := PRIMITIVE __if_ret_31				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -776,17 +774,17 @@ compiling:
 (def b (if false "horseradish" "wasabi"))
 
 IR:
-EMPTYVAR __if_ret_33
-VARFENCE 
-NEWLVAR __cond_34 := PRIMITIVE false
-IF __cond_34
-SETVAR __if_ret_33 := PRIMITIVE "horseradish"
-ELSE 
-SETVAR __if_ret_33 := PRIMITIVE "wasabi"
-ENDIF 
-ENDVARFENCE 
-DEFSYM b := PRIMITIVE __if_ret_33
-RET PRIMITIVE true
+EMPTYVAR __if_ret_33				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_34 := PRIMITIVE false				ENV: ( )
+IF __cond_34				ENV: ( )
+SETVAR __if_ret_33 := PRIMITIVE "horseradish"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_33 := PRIMITIVE "wasabi"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+DEFSYM b := PRIMITIVE __if_ret_33				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -811,7 +809,7 @@ compiling:
 (print a)
 
 IR:
-RET CALL print, a
+RET CALL print, a				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -826,7 +824,7 @@ compiling:
 (print b)
 
 IR:
-RET CALL print, b
+RET CALL print, b				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -841,35 +839,35 @@ compiling:
 (def c (if true (if true "ketchup" "mustard") (if false "jam" "gravy")))
 
 IR:
-EMPTYVAR __if_ret_35
-VARFENCE 
-NEWLVAR __cond_36 := PRIMITIVE true
-IF __cond_36
-EMPTYVAR __if_ret_37
-VARFENCE 
-NEWLVAR __cond_38 := PRIMITIVE true
-IF __cond_38
-SETVAR __if_ret_37 := PRIMITIVE "ketchup"
-ELSE 
-SETVAR __if_ret_37 := PRIMITIVE "mustard"
-ENDIF 
-ENDVARFENCE 
-SETVAR __if_ret_35 := PRIMITIVE __if_ret_37
-ELSE 
-EMPTYVAR __if_ret_39
-VARFENCE 
-NEWLVAR __cond_40 := PRIMITIVE false
-IF __cond_40
-SETVAR __if_ret_39 := PRIMITIVE "jam"
-ELSE 
-SETVAR __if_ret_39 := PRIMITIVE "gravy"
-ENDIF 
-ENDVARFENCE 
-SETVAR __if_ret_35 := PRIMITIVE __if_ret_39
-ENDIF 
-ENDVARFENCE 
-DEFSYM c := PRIMITIVE __if_ret_35
-RET PRIMITIVE true
+EMPTYVAR __if_ret_35				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_36 := PRIMITIVE true				ENV: ( )
+IF __cond_36				ENV: ( )
+EMPTYVAR __if_ret_37				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_38 := PRIMITIVE true				ENV: ( )
+IF __cond_38				ENV: ( )
+SETVAR __if_ret_37 := PRIMITIVE "ketchup"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_37 := PRIMITIVE "mustard"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+SETVAR __if_ret_35 := PRIMITIVE __if_ret_37				ENV: ( )
+ELSE 				ENV: ( )
+EMPTYVAR __if_ret_39				ENV: ( )
+VARFENCE 				ENV: ( )
+NEWLVAR __cond_40 := PRIMITIVE false				ENV: ( )
+IF __cond_40				ENV: ( )
+SETVAR __if_ret_39 := PRIMITIVE "jam"				ENV: ( )
+ELSE 				ENV: ( )
+SETVAR __if_ret_39 := PRIMITIVE "gravy"				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+SETVAR __if_ret_35 := PRIMITIVE __if_ret_39				ENV: ( )
+ENDIF 				ENV: ( )
+ENDVARFENCE 				ENV: ( )
+DEFSYM c := PRIMITIVE __if_ret_35				ENV: ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -912,7 +910,7 @@ compiling:
 (print c)
 
 IR:
-RET CALL print, c
+RET CALL print, c				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -927,15 +925,15 @@ compiling:
 (def f2 (fn [] (+ 1 1) (+ 2 2)))
 
 IR:
-DEFSYM f2 := FUNC 
-VARFENCE 
-CALL +, 1, 1
-ENDVARFENCE 
-VARFENCE 
-RET CALL +, 2, 2
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM f2 := FUNC 				ENV: ( ) ( )
+VARFENCE 				ENV: ( ) ( )
+CALL +, 1, 1				ENV: ( ) ( )
+ENDVARFENCE 				ENV: ( ) ( )
+VARFENCE 				ENV: ( ) ( )
+RET CALL +, 2, 2				ENV: ( ) ( )
+ENDVARFENCE 				ENV: ( ) ( )
+ENDFUNC 				ENV: ( ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -958,22 +956,20 @@ compiling:
 (def f3 (fn [x] (let [x 1 y x] y)))
 
 IR:
-DEFSYM f3 := FUNC x
-VARFENCE 
-EMPTYVAR __let_ret_41
-VARFENCE 
-LETFRAME x, y
-NEWLVAR x := PRIMITIVE 1
-NEWLVAR y := PRIMITIVE x
-VARFENCE 
-SETVAR __let_ret_41 := PRIMITIVE y
-ENDVARFENCE 
-ENDLETFRAME 
-ENDVARFENCE 
-RET PRIMITIVE __let_ret_41
-ENDVARFENCE 
-ENDFUNC 
-RET PRIMITIVE true
+DEFSYM f3 := FUNC x				ENV: ( x ) ( )
+VARFENCE 				ENV: ( x ) ( )
+EMPTYVAR __let_ret_41				ENV: ( x ) ( )
+VARFENCE 				ENV: ( x ) ( )
+NEWLVAR x := PRIMITIVE 1				ENV: ( x ) ( x ) ( )
+NEWLVAR y := PRIMITIVE x				ENV: ( y ) ( x ) ( x ) ( )
+VARFENCE 				ENV: ( y ) ( x ) ( x ) ( )
+SETVAR __let_ret_41 := PRIMITIVE y				ENV: ( y ) ( x ) ( x ) ( )
+ENDVARFENCE 				ENV: ( y ) ( x ) ( x ) ( )
+ENDVARFENCE 				ENV: ( y ) ( x ) ( x ) ( )
+RET PRIMITIVE __let_ret_41				ENV: ( x ) ( )
+ENDVARFENCE 				ENV: ( x ) ( )
+ENDFUNC 				ENV: ( x ) ( )
+RET PRIMITIVE true				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi
@@ -1001,8 +997,8 @@ compiling:
 (print (f3 42))
 
 IR:
-NEWLVAR __arg_42 := CALL f3, 42
-RET CALL print, __arg_42
+NEWLVAR __arg_42 := CALL f3, 42				ENV: ( )
+RET CALL print, __arg_42				ENV: ( )
 
 Lua source code:
 local tsukuyomi = tsukuyomi

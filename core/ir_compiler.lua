@@ -8,6 +8,8 @@ local kEmitSymbol = tsukuyomi.get_symbol('_emit_')
 local kNilSymbol = tsukuyomi.get_symbol("nil")
 local kLetSymbol = tsukuyomi.get_symbol("let")
 
+--------------------------------------------------------------------------------
+
 local var_counter = -1
 local function make_unique_var_name(desc)
   desc = desc or 'var'
@@ -20,6 +22,8 @@ local function make_unique_data_key()
   data_key_counter = data_key_counter + 1
   return data_key_counter
 end
+
+--------------------------------------------------------------------------------
 
 local function is_lua_primitive(datum)
   -- actual primitive types
@@ -57,31 +61,95 @@ local function compile_lua_primitive(datum)
   assert(false)
 end
 
+--------------------------------------------------------------------------------
+
+-- these set of function are used to maintain the lexical stack of symbols
+-- introduced that are actually bound to lambdas instead of resolving to
+-- something inside a namespace
+--
+-- like
+--   (ns core)
+--   (def a 1)
+--   ((lambda [a b c] a) 2)
+--
+-- the "a" in "print a" would NOT bind to core/a, but the "a" of the lambda argument
+-- e.g. this would print 2 instead of 1
+
+-- mapping of variable name to number of time mentioned in enclosing functions
+local EnvironmentMetatable = {}
+EnvironmentMetatable.__index = EnvironmentMetatable
+
+local function create_environment()
+  local env = setmetatable({symbols = {}}, EnvironmentMetatable)
+  return env
+end
+
+function EnvironmentMetatable:extend_with(symbols)
+  local newenv = create_environment()
+  for i = 1, #symbols do
+    newenv.symbols[symbols[i]] = true
+  end
+  newenv.parent = self
+  return newenv
+end
+
+function EnvironmentMetatable:has_symbol(symbol)
+  if self.symbols[symbol] then
+    return true
+  end
+
+  if self.parent then
+    return self.parent:has_symbol(symbol)
+  else
+    return false
+  end
+end
+
+function EnvironmentMetatable:__tostring()
+  local t = {'ENV:'}
+  local env = self
+
+  while env do
+    table.insert(t, '(')
+    for symbol, _ in pairs(env.symbols) do
+      assert(tsukuyomi.is_symbol(symbol))
+      table.insert(t, symbol.name)
+    end
+    table.insert(t, ')')
+    env = env.parent
+  end
+
+  return table.concat(t, ' ')
+end
+
+--------------------------------------------------------------------------------
+
 -- dispatch tables to compile down input
 
 -- used to implement dispatch based on the first / car of a cons cell
 local special_forms = {}
 
+-- TODO: support other namespaces via require
+-- TODO: check for symbol collision in namespaces
 special_forms[kNsSymbol] = function(node, datum, new_dirty_nodes)
   node.op = 'NS'
-  node.args = { datum[1] }
+  node.args = {datum[1]}
 
-  -- TODO: support other namespaces via require
-  -- TODO: check for symbol collision in namespaces
+  -- TODO: see if it makes sense to return anything here other than a dummy value
   if node.is_return then
     node.is_return = false
 
-    local new_node = tsukuyomi.ll_new_node('LISP')
-    new_node.args = { true }
-    tsukuyomi.ll_insert_after(node, new_node)
-    new_node.is_return = true
-    table.insert(new_dirty_nodes, new_node)
+    local dummy_return = tsukuyomi.ll_new_node('LISP', node.environment)
+    dummy_return.args = { true }
+    tsukuyomi.ll_insert_after(node, dummy_return)
+    dummy_return.is_return = true
+    table.insert(new_dirty_nodes, dummy_return)
   end
 end
 
 special_forms[kDefSymbol] = function(node, datum, new_dirty_nodes)
   -- (def symbol datum)
-  local defnode = tsukuyomi.ll_new_node('LISP')
+  local defnode = tsukuyomi.ll_new_node('LISP', node.environment)
   table.insert(new_dirty_nodes, defnode)
   defnode.op = 'LISP'
   defnode.define_symbol = datum[1]
@@ -93,7 +161,7 @@ special_forms[kDefSymbol] = function(node, datum, new_dirty_nodes)
   -- TODO: figure out what the sensible dummy return value is
   -- TODO: can we even have something like a Clojure Var?
   node.op = 'LISP'
-  node.args = { true }
+  node.args = {true}
   table.insert(new_dirty_nodes, node)
 end
 
@@ -101,7 +169,7 @@ special_forms[kEmitSymbol] = function(node, datum, new_dirty_nodes)
   node.op = 'RAW'
   local inline = datum[1]
   assert(type(inline) == 'string')
-  node.args = { inline }
+  node.args = {inline}
 end
 
 special_forms[kQuoteSymbol] = function(node, datum, new_dirty_nodes)
@@ -113,62 +181,62 @@ end
 special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
-  local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR')
+  local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR', orig_node.environment)
   local ret_var_name = make_unique_var_name('if_ret')
   ret_var_node.args = { ret_var_name }
   tsukuyomi.ll_insert_before(orig_node, ret_var_node)
   node = ret_var_node
 
-  local fence = tsukuyomi.ll_new_node('VARFENCE')
+  local fence = tsukuyomi.ll_new_node('VARFENCE', orig_node.environment)
   tsukuyomi.ll_insert_after(node, fence)
   node = fence
 
   local test = datum
   assert(test[1] ~= nil)
-  local var_test_node = tsukuyomi.ll_new_node('NEWLVAR')
+  local var_test_node = tsukuyomi.ll_new_node('NEWLVAR', orig_node.environment)
   table.insert(new_dirty_nodes, var_test_node)
   local var_name = make_unique_var_name('cond')
   var_test_node.args = {var_name, test[1]}
   tsukuyomi.ll_insert_after(node, var_test_node)
   node = var_test_node
 
-  local if_node = tsukuyomi.ll_new_node('IF')
+  local if_node = tsukuyomi.ll_new_node('IF', orig_node.environment)
   if_node.args = { var_name }
   tsukuyomi.ll_insert_after(node, if_node)
   node = if_node
 
   local then_cell = test[2]
   assert(then_cell)
-  local then_node = tsukuyomi.ll_new_node('LISP')
+  local then_node = tsukuyomi.ll_new_node('LISP', orig_node.environment)
   table.insert(new_dirty_nodes, then_node)
   then_node.args = { then_cell[1] }
   then_node.set_var_name = ret_var_name
   tsukuyomi.ll_insert_after(node, then_node)
   node = then_node
 
-  local else_keyword_node = tsukuyomi.ll_new_node('ELSE')
+  local else_keyword_node = tsukuyomi.ll_new_node('ELSE', orig_node.environment)
   tsukuyomi.ll_insert_after(node, else_keyword_node)
   node = else_keyword_node
 
   local else_cell = then_cell[2]
   local else_node
   if else_cell then
-    else_node = tsukuyomi.ll_new_node('LISP')
+    else_node = tsukuyomi.ll_new_node('LISP', orig_node.environment)
     else_node.args = { else_cell[1] }
     table.insert(new_dirty_nodes, else_node)
   else
-    else_node = tsukuyomi.ll_new_node('PRIMITIVE')
+    else_node = tsukuyomi.ll_new_node('PRIMITIVE', orig_node.environment)
     else_node.args = { kNilSymbol }
   end
   else_node.set_var_name = ret_var_name
   tsukuyomi.ll_insert_after(node, else_node)
   node = else_node
 
-  local end_node = tsukuyomi.ll_new_node('ENDIF')
+  local end_node = tsukuyomi.ll_new_node('ENDIF', orig_node.environment)
   tsukuyomi.ll_insert_after(node, end_node)
   node = end_node
 
-  local endfence = tsukuyomi.ll_new_node('ENDVARFENCE')
+  local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', orig_node.environment)
   tsukuyomi.ll_insert_after(node, endfence)
   node = endfence
 
@@ -184,29 +252,26 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
   assert(bindings and tsukuyomi.is_array(bindings) and (#bindings % 2 == 0))
   local exprs = datum[2]
 
-  local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR')
+  local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR', orig_node.environment)
   local ret_var_name = make_unique_var_name('let_ret')
   ret_var_node.args = { ret_var_name }
   tsukuyomi.ll_insert_before(orig_node, ret_var_node)
   node = ret_var_node
 
-  local fence = tsukuyomi.ll_new_node('VARFENCE')
+  local fence = tsukuyomi.ll_new_node('VARFENCE', orig_node.environment)
   tsukuyomi.ll_insert_after(node, fence)
   node = fence
 
-  local letframe = tsukuyomi.ll_new_node('LETFRAME')
-  tsukuyomi.ll_insert_after(node, letframe)
-  node = letframe
-
+  local extended_environment = orig_node.environment
   local i = 1
-  local new_local_vars = {}
   while i <= #bindings do
+    -- TODO: support destructuring
     local var_symbol = bindings[i]
     local var_name = var_symbol.name
-    table.insert(new_local_vars, var_name)
-    local form = bindings[i + 1]
+    extended_environment = extended_environment:extend_with({var_symbol})
 
-    local lisp_node = tsukuyomi.ll_new_node('LISP')
+    local form = bindings[i + 1]
+    local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
     lisp_node.args = { form }
     lisp_node.new_lvar_name = var_name
     table.insert(new_dirty_nodes, lisp_node)
@@ -215,14 +280,13 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
 
     i = i + 2
   end
-  letframe.args = new_local_vars
 
   while exprs and exprs[1] do
-    local fence = tsukuyomi.ll_new_node('VARFENCE')
+    local fence = tsukuyomi.ll_new_node('VARFENCE', extended_environment)
     tsukuyomi.ll_insert_after(node, fence)
     node = fence
 
-    local lisp_node = tsukuyomi.ll_new_node('LISP')
+    local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
     lisp_node.args = { exprs[1] }
     if exprs[2] == nil then
       lisp_node.set_var_name = ret_var_name
@@ -233,16 +297,12 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
 
     exprs = exprs[2]
 
-    local endfence = tsukuyomi.ll_new_node('ENDVARFENCE')
+    local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', extended_environment)
     tsukuyomi.ll_insert_after(node, endfence)
     node = endfence
   end
 
-  local endletframe = tsukuyomi.ll_new_node('ENDLETFRAME')
-  tsukuyomi.ll_insert_after(node, endletframe)
-  node = endletframe
-
-  local endfence = tsukuyomi.ll_new_node('ENDVARFENCE')
+  local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', extended_environment)
   tsukuyomi.ll_insert_after(node, endfence)
   node = endfence
 
@@ -253,8 +313,11 @@ end
 
 special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
   -- (fn [arg0 arg1] (body))
+  local orig_node = node
   node.op = 'FUNC'
   node.args = datum[1]
+  local extended_environment = node.environment:extend_with(node.args)
+  node.environment = extended_environment
 
   -- convert function argument symbols to string
   -- TODO: will I or someone ever put namespace symbols here by accident?
@@ -265,11 +328,11 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
             
   local body = datum[2]
   while body and body[1] do
-    local fence = tsukuyomi.ll_new_node('VARFENCE')
+    local fence = tsukuyomi.ll_new_node('VARFENCE', extended_environment)
     tsukuyomi.ll_insert_after(node, fence)
     node = fence
 
-    local lisp_node = tsukuyomi.ll_new_node('LISP')
+    local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
     table.insert(new_dirty_nodes, lisp_node)
     lisp_node.args = { body[1] }
     if body[2] == nil then
@@ -280,12 +343,12 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
     node = lisp_node
     body = body[2]
 
-    local endfence = tsukuyomi.ll_new_node('ENDVARFENCE')
+    local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', extended_environment)
     tsukuyomi.ll_insert_after(node, endfence)
     node = endfence
   end
 
-  local end_func_node = tsukuyomi.ll_new_node('ENDFUNC')
+  local end_func_node = tsukuyomi.ll_new_node('ENDFUNC', extended_environment)
   tsukuyomi.ll_insert_after(node, end_func_node)
 end
 
@@ -319,7 +382,7 @@ op_dispatch['CALL'] = function(node, new_dirty_nodes)
     if is_lua_primitive(args[i]) then
       args[i] = compile_lua_primitive(args[i])
     else
-      local var_node = tsukuyomi.ll_new_node('NEWLVAR')
+      local var_node = tsukuyomi.ll_new_node('NEWLVAR', node.environment)
       table.insert(new_dirty_nodes, var_node)
 
       local var_name = make_unique_var_name('arg')
@@ -354,7 +417,7 @@ end
 -- define_symbol
 -- is_return
 function tsukuyomi.compile_to_ir(datum)
-  local head_node = tsukuyomi.ll_new_node('LISP')
+  local head_node = tsukuyomi.ll_new_node('LISP', create_environment())
   head_node.args = { datum }
   head_node.is_return = true
 
@@ -425,6 +488,10 @@ function tsukuyomi._debug_ir(node)
         end
       end
     end
+
+    table.insert(line, '\t\t\t\t')
+    assert(node.environment)
+    table.insert(line, tostring(node.environment))
 
     table.insert(lines, table.concat(line))
     node = node.next
