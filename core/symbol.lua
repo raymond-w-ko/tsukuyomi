@@ -18,8 +18,8 @@ end
 -- when we create symbols, we look at this cache first to see if it exists first
 --
 -- this way, we can use Lua == to check for symbol equality
-local kSymbolCache = {}
-setmetatable(kSymbolCache, {__mode = 'kv'})
+local symbol_cache = {}
+setmetatable(symbol_cache, {__mode = 'kv'})
 
 function tsukuyomi.get_symbol(name, namespace)
   local key
@@ -28,7 +28,7 @@ function tsukuyomi.get_symbol(name, namespace)
   else
     key = name
   end
-  local value = kSymbolCache[key]
+  local value = symbol_cache[key]
   if value then
     return value
   end
@@ -39,7 +39,7 @@ function tsukuyomi.get_symbol(name, namespace)
   }
   setmetatable(symbol, kSymbolTag)
 
-  kSymbolCache[key] = symbol
+  symbol_cache[key] = symbol
   return symbol
 end
 
