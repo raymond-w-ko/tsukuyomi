@@ -155,11 +155,11 @@ compiling:
 (def + (fn [x y] (_emit_ "x + y")))
 
 IR:
-DEFSYM + := FUNC x, y				ENV: ( x y ) ( )
-VARFENCE 				ENV: ( x y ) ( )
-RET RAW x + y				ENV: ( x y ) ( )
-ENDVARFENCE 				ENV: ( x y ) ( )
-ENDFUNC 				ENV: ( x y ) ( )
+DEFSYM + := FUNC x, y				ENV: ( y x ) ( )
+VARFENCE 				ENV: ( y x ) ( )
+RET RAW x + y				ENV: ( y x ) ( )
+ENDVARFENCE 				ENV: ( y x ) ( )
+ENDFUNC 				ENV: ( y x ) ( )
 RET PRIMITIVE true				ENV: ( )
 
 Lua source code:

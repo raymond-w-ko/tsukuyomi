@@ -8,11 +8,5 @@ function tsukuyomi.create_array()
 end
 
 function tsukuyomi.is_array(datum)
-  if type(datum) ~= 'table' then
-    return false
-  end
-  if getmetatable(datum) ~= kArrayTag then
-    return false
-  end
-  return true
+  return getmetatable(datum) == kArrayTag
 end
