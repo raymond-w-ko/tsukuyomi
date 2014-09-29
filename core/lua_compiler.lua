@@ -23,7 +23,7 @@ local function convert_ns_to_lua(ns)
   return '__' .. to_lua_identifier(ns)
 end
 
-local tsukuyomi_core_ns = tsukuyomi.get_namespace('tsukuyomi.core')
+local tsukuyomi_core_ns = tsukuyomi.get_namespace('tsukuyomi.core').space
 local function symbol_to_lua(symbol, used_namespaces)
   local code = {}
 
@@ -32,7 +32,7 @@ local function symbol_to_lua(symbol, used_namespaces)
     table.insert(code, convert_ns_to_lua(namespace))
     used_namespaces[namespace] = true
   else
-    local active_ns = tsukuyomi_core_ns['*ns*'][symbol]
+    local active_ns = tsukuyomi_core_ns['*ns*']:bind_symbol(symbol)
     table.insert(code, convert_ns_to_lua(active_ns))
     used_namespaces[active_ns] = true
   end
@@ -87,11 +87,11 @@ function tsukuyomi.compile_to_lua(ir_list)
   while insn do
     -- IR instructions can be tagged in the following fashion to signal
     -- variable definition, or returning
-    if insn.new_lvar_name and insn.op ~= 'FUNC' then
+    if insn.new_lvar_name and insn.op ~= 'FUNCBODY' then
       emit('local ', insn.new_lvar_name, ' = ')
     elseif insn.set_var_name then
       emit(insn.set_var_name, ' = ')
-    elseif insn.define_symbol then
+    elseif insn.define_symbol and insn.op ~= 'FUNCBODY' then
       emit(symbol_to_lua(insn.define_symbol, used_namespaces), " = ")
     elseif insn.is_return then
       emit('return ')
@@ -114,6 +114,8 @@ function tsukuyomi.compile_to_lua(ir_list)
     elseif insn.op == 'CALL' then
       local args = insn.args
       emit(compile_string_or_symbol(insn.args[1], insn.environment, used_namespaces))
+      local arity = #args - 1
+      emit('[', tostring(arity), ']')
       emit('(')
       for i = 2, #args do
         emit(compile_string_or_symbol(args[i], insn.environment, used_namespaces))
@@ -123,9 +125,17 @@ function tsukuyomi.compile_to_lua(ir_list)
       end
       emit( ')')
     elseif insn.op == 'FUNC' then
-      if insn.new_lvar_name then emit('local ') end
-      emit('function ')
-      if insn.new_lvar_name then emit(insn.new_lvar_name) end
+      emit('tsukuyomi.create_function()')
+    elseif insn.op == 'FUNCBODY' then
+      local arity = #insn.args
+      if insn.new_lvar_name then
+        emit(insn.new_lvar_name)
+        emit('[', tostring(arity), ']')
+      elseif insn.define_symbol then
+        emit(symbol_to_lua(insn.define_symbol, used_namespaces))
+        emit('[', tostring(arity), ']')
+      end
+      emit(' = function ')
       emit('(')
       for i = 1, #insn.args do
         local arg_name = insn.args[i]
@@ -133,9 +143,11 @@ function tsukuyomi.compile_to_lua(ir_list)
         if i < #insn.args then emit(', ') end
       end
       emit(')')
-    elseif insn.op == 'ENDFUNC' then
+    elseif insn.op == 'ENDFUNCBODY' then
       emit('end')
       indent = indent - 1
+    elseif insn.op == 'ENDFUNC' then
+      -- pass
     elseif insn.op == 'IF' then
       emit('if ', insn.args[1], ' then')
     elseif insn.op == 'ELSE' then
@@ -163,7 +175,7 @@ function tsukuyomi.compile_to_lua(ir_list)
     end
 
     -- indent change after line is generated
-    if insn.op == 'FUNC' then
+    if insn.op == 'FUNCBODY' then
       indent = indent + 1
     elseif insn.op == 'IF' then
       indent = indent + 1
@@ -188,7 +200,7 @@ function tsukuyomi.compile_to_lua(ir_list)
     local line = {}
     table.insert(line, 'local ')
     table.insert(line, convert_ns_to_lua(ns))
-    table.insert(line, ' = tsukuyomi.get_namespace("')
+    table.insert(line, ' = tsukuyomi.get_namespace_space("')
     table.insert(line, ns)
     table.insert(line, '")')
     table.insert(header, table.concat(line))

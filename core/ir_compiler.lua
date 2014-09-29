@@ -315,40 +315,71 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
   -- (fn [arg0 arg1] (body))
   local orig_node = node
   node.op = 'FUNC'
-  node.args = datum[1]
-  local extended_environment = node.environment:extend_with(node.args)
-  node.environment = extended_environment
+  node.args = nil
 
-  -- convert function argument symbols to string
-  -- TODO: will I or someone ever put namespace symbols here by accident?
-  -- is it even worth it to check?
-  for i = 1, #node.args do
-    node.args[i] = tostring(node.args[i])
-  end
-            
-  local body = datum[2]
-  while body and body[1] do
-    local fence = tsukuyomi.ll_new_node('VARFENCE', extended_environment)
-    tsukuyomi.ll_insert_after(node, fence)
-    node = fence
-
-    local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
-    table.insert(new_dirty_nodes, lisp_node)
-    lisp_node.args = { body[1] }
-    if body[2] == nil then
-      lisp_node.is_return = true
+  local bodies = {}
+  if tsukuyomi.is_cons_cell(datum:first()) then
+    -- this function has multiple aritys
+    while datum do
+      table.insert(bodies, datum:first())
+      datum = datum:rest()
     end
-    tsukuyomi.ll_insert_after(node, lisp_node)
-
-    node = lisp_node
-    body = body[2]
-
-    local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', extended_environment)
-    tsukuyomi.ll_insert_after(node, endfence)
-    node = endfence
+  elseif tsukuyomi.is_array(datum:first()) then
+    -- this function has only 1 arity
+    table.insert(bodies, datum)
+  else
+    assert(false)
   end
 
-  local end_func_node = tsukuyomi.ll_new_node('ENDFUNC', extended_environment)
+  for i = 1, #bodies do
+    local body = bodies[i]
+    local args = body:first()
+    local exprs = body:rest()
+
+    local extended_environment = orig_node.environment:extend_with(args)
+    local func_node = tsukuyomi.ll_new_node('FUNCBODY', extended_environment)
+    tsukuyomi.ll_insert_after(node, func_node)
+    node = func_node
+    node.args = {}
+    -- propagate what variable this function is suppose to live in
+    node.new_lvar_name = orig_node.new_lvar_name
+    node.define_symbol = orig_node.define_symbol
+
+    -- convert function argument symbols to string
+    -- TODO: will I or someone ever put explicit namespace symbols here by accident?
+    -- like (fn [foobar lol/wut] (+ foobar lol/wut))
+    -- is it even worth it to check?
+    for i = 1, #args do
+      node.args[i] = tostring(args[i])
+    end
+
+    while exprs and exprs[1] do
+      local fence = tsukuyomi.ll_new_node('VARFENCE', extended_environment)
+      tsukuyomi.ll_insert_after(node, fence)
+      node = fence
+
+      local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
+      table.insert(new_dirty_nodes, lisp_node)
+      lisp_node.args = { exprs[1] }
+      if exprs[2] == nil then
+        lisp_node.is_return = true
+      end
+      tsukuyomi.ll_insert_after(node, lisp_node)
+      node = lisp_node
+
+      local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', extended_environment)
+      tsukuyomi.ll_insert_after(node, endfence)
+      node = endfence
+
+      exprs = exprs[2]
+    end
+
+    local end_func_body_node = tsukuyomi.ll_new_node('ENDFUNCBODY', extended_environment)
+    tsukuyomi.ll_insert_after(node, end_func_body_node)
+    node = end_func_body_node
+  end
+
+  local end_func_node = tsukuyomi.ll_new_node('ENDFUNC', orig_node.environment)
   tsukuyomi.ll_insert_after(node, end_func_node)
 end
 
@@ -489,7 +520,7 @@ function tsukuyomi._debug_ir(node)
       end
     end
 
-    table.insert(line, '\t\t\t\t')
+    table.insert(line, '\t\t\t\t\t\t')
     assert(node.environment)
     table.insert(line, tostring(node.environment))
 
