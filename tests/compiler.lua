@@ -6,7 +6,7 @@ local function test(text)
     local info
     if datum[1][1] == tsukuyomi.get_symbol('def') then
       local symbol_name = datum[1][2][1].name
-      local ns = tsukuyomi.core['*ns*'][symbol_name]
+      local ns = tsukuyomi.core['*ns*']:bind_symbol(symbol_name)
       info =  ns .. '/' .. symbol_name
     end
     local code = tsukuyomi.compile(datum[1])
@@ -70,7 +70,7 @@ test([[
 
 (let [_cons (_emit_ "tsukuyomi.create_cell")]
   (def cons (fn [item coll]
-     (_cons item coll))))
+     (_emit_ "_cons(item, coll)"))))
 
 (def second
   (fn [coll]
@@ -137,4 +137,19 @@ test([[
 
 (print (f3 42))
 
+(def multifn
+  (fn
+    ([] "arity 0")
+    ([x] "arity 1")
+    ([x y] "arity 2")))
+
+(print (multifn))
+(print (multifn 1))
+(print (multifn 1 2))
+
 ]])
+
+print('vars in tsukuyomi core:')
+for k, v in pairs(tsukuyomi.core) do
+  print(k)
+end
