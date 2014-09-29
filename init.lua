@@ -10,6 +10,7 @@ require('tsukuyomi.core.symbol')
 require('tsukuyomi.core.cons_cell')
 require('tsukuyomi.core.array')
 require('tsukuyomi.core.namespace')
+require('tsukuyomi.core.function')
 
 require('tsukuyomi.core.printer')
 
