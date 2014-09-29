@@ -2,11 +2,16 @@
 
 (def first
   (fn [cons_cell]
-    _raw_ "cons_cell[0]"))
+    _emit_ "cons_cell[0]"))
 
 (def rest
   (fn [cons_cell]
-    _raw_ "cons_cell[1]"))
+    _emit_ "cons_cell[1]"))
+
+(let [_cons (_emit_ "tsukuyomi.create_cell")]
+  (def cons
+    (fn [item coll]
+      (_cons item coll))))
 
 (def second
   (fn [cell]
