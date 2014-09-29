@@ -1,5 +1,14 @@
 -- use metatable tagging to mark a Lua table as a Lisp cons cell AKA singly linked list
 local kCellTag = {}
+kCellTag.__index = kCellTag
+
+function kCellTag:first()
+  return self[1]
+end
+
+function kCellTag:rest()
+  return self[2]
+end
 
 function tsukuyomi.create_cell(first, rest)
   local cell = {first, rest}
