@@ -174,8 +174,7 @@ end
 
 special_forms[kQuoteSymbol] = function(node, datum, new_dirty_nodes)
   node.op = 'DATA'
-  node.data_key = make_unique_data_key()
-  tsukuyomi._data[node.data_key] = datum[1]
+  node.data_key = tsukuyomi.store_data(datum:first())
 end
 
 special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)

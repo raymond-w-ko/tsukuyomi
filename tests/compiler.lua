@@ -17,7 +17,7 @@ local function test(text)
     else
       chunk()
       -- check to make sure all data is consumed, dangling data is bad
-      for var, data in pairs(tsukuyomi._data) do assert(false) end
+      for var, data in pairs(tsukuyomi._data_store) do assert(false) end
     end
 
     datum = datum[2]
@@ -80,8 +80,8 @@ test([[
 (test1)
 
 (print "asdf")
-;(print (second '(42 43)))
-;(print (first '(3 4 5)))
+(print (second '(42 43)))
+(print (first '(3 4 5)))
 (print (first (cons 9 (cons 8 (cons 7 nil)))))
 (print (second (cons 9 (cons 8 (cons 7 nil)))))
 

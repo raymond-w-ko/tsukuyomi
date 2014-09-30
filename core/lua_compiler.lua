@@ -61,10 +61,8 @@ local function compile_string_or_symbol(datum, environment, used_namespaces)
   end
 end
 
-local data_var_counter = -1
 local function make_unique_data_var(data_bindings, data_key)
-  data_var_counter = data_var_counter + 1
-  local var_name = '__data' .. tostring(data_var_counter)
+  local var_name = '__data' .. tostring(data_key)
   data_bindings[var_name] = data_key
   return var_name
 end
@@ -216,7 +214,7 @@ function tsukuyomi.compile_to_lua(ir_list)
     local line = {}
     table.insert(line, 'local ')
     table.insert(line, data_var_name)
-    table.insert(line, ' = tsukuyomi._get_data(')
+    table.insert(line, ' = tsukuyomi.retrieve_data(')
     table.insert(line, data_key)
     table.insert(line, ')')
     table.insert(header, table.concat(line))
