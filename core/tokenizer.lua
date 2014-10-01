@@ -23,7 +23,10 @@ local kWhitespaces = {
 -- splits Lisp source code as a raw input string into an Lua array of tokens suitable for parsing
 function tsukuyomi.tokenize(text)
   local tokens = {}
+
   local token_line_numbers = {}
+  local next_line_number_slot = 1
+
   local symbol_buffer = {}
   local line_number = 1
   local in_comment = false
@@ -78,13 +81,17 @@ function tsukuyomi.tokenize(text)
 
     if not building_symbol and #symbol_buffer > 0 then
       table.insert(tokens, table.concat(symbol_buffer))
-      table.insert(token_line_numbers, line_number)
       symbol_buffer = {}
+
+      token_line_numbers[next_line_number_slot] = line_number
+      next_line_number_slot = next_line_number_slot + 1
     end
 
     if pending_token then
       table.insert(tokens, pending_token)
-      table.insert(token_line_numbers, line_number)
+
+      token_line_numbers[next_line_number_slot] = line_number
+      next_line_number_slot = next_line_number_slot + 1
     end
 
     i = i + 1
