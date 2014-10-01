@@ -43,23 +43,24 @@ function tsukuyomi.tokenize(text)
       in_comment = true
     elseif ch == '"' then
       -- string parsing, i.e. "some words" "some \"quoted\" words"
-      local string_buffer = {}
-      table.insert(string_buffer, ch)
+      local string_buffer = {nil, nil, nil, nil, nil, nil, nil}
+      local next_str_buf_slot = 1
+      string_buffer[next_str_buf_slot] = ch; next_str_buf_slot = next_str_buf_slot + 1
       local j = i + 1
       while j <= #text do
         local ch = text:sub(j, j)
         if ch == '"' then
-          table.insert(string_buffer, ch)
+          string_buffer[next_str_buf_slot] = ch; next_str_buf_slot = next_str_buf_slot + 1
 
           -- done, string_buffer == string
           pending_token = table.concat(string_buffer)
           i = j
           break
         elseif ch == '\\' then
-          table.insert(string_buffer, text:sub(j, j + 1))
+          string_buffer[next_str_buf_slot] = text:sub(j, j + 1); next_str_buf_slot = next_str_buf_slot + 1
           j = j + 1
         else
-          table.insert(string_buffer, ch)
+          string_buffer[next_str_buf_slot] = ch; next_str_buf_slot = next_str_buf_slot + 1
         end
         j = j + 1
       end
