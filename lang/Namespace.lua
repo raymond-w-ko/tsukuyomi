@@ -1,8 +1,9 @@
 local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
+local split = util.split
 
 local function create_or_get_space(name)
-  local tokens = util.split(name, '.')
+  local tokens = split(name, '.')
   assert(#tokens >= 1)
   -- support strict.lua
   if __STRICT then
@@ -38,7 +39,7 @@ end
 
 local namespace_cache = {}
 
-function tsukuyomi.get_namespace(name)
+function Namespace.GetNamespace(name)
   local ns
 
   if namespace_cache[name] then
@@ -51,13 +52,18 @@ function tsukuyomi.get_namespace(name)
   return ns
 end
 
-function tsukuyomi.get_namespace_space(name)
-  return tsukuyomi.get_namespace(name).space
+function Namespace.GetNamespaceSpace(name)
+  return Namespace.GetNamespace(name).space
 end
 
+local tsukuyomi_core = Namespace.GetNamespaceSpace('tsukuyomi.core')
+local tsukuyomi_lang = Namespace.GetNamespaceSpace('tsukuyomi.lang')
+
 -- the namespace argument is just a string like "tsukuyomi.core"
-function tsukuyomi.set_active_namespace(name)
-  local ns = tsukuyomi.get_namespace(name)
-  tsukuyomi.get_namespace('tsukuyomi.core').space['*ns*'] = ns
+function Namespace.SetActiveNamespace(name)
+  local ns = Namespace.GetNamespace(name)
+  tsukuyomi_core['*ns*'] = ns
   return ns
 end
+
+tsukuyomi_lang.Namespace = Namespace
