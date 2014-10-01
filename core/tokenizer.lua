@@ -6,6 +6,8 @@ local kDelimiters = {
 
   ["'"] = true,
 
+  [":"] = true,
+
   -- TODO: should I use Clojure macros or old-school Lisp macros ???
   -- elisp macro characters
   ["`"] = true,
