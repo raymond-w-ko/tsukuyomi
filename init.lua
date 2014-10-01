@@ -5,7 +5,12 @@ if _G.__STRICT then
 end
 tsukuyomi = M
 
-require('tsukuyomi.core.namespace')
+require('tsukuyomi.lang.Namespace')
+
+require('tsukuyomi.lang.PersistentList')
+require('tsukuyomi.lang.PersistentVector')
+require('tsukuyomi.lang.PersistentHashMap')
+
 require('tsukuyomi.core.linked_list')
 require('tsukuyomi.core.symbol')
 require('tsukuyomi.core.cons_cell')
