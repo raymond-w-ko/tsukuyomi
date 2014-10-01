@@ -8,6 +8,10 @@ PersistentList.__newindex = function()
   assert(false)
 end
 
+function PersistentList.is(datum)
+  return getmetatable(datum) == PersistentList
+end
+
 -- Since I only use LuaJIT so far, take advantage of the fact that all array
 -- parts have a 0 index part. Like when you have {"foo", "bar"}, you actually
 -- have an array part of size 3.
@@ -33,11 +37,12 @@ function PersistentList:count()
 end
 
 function PersistentList:cons(datum)
-  return PersistentList.new(obj, self, self[0] + 1)
+  return PersistentList.new(datum, self, self[0] + 1)
 end
 
 local EMPTY_LIST = {}
+PersistentList.EMPTY_LIST = EMPTY_LIST
 function EMPTY_LIST:cons(datum)
-  return PersistentList.new(obj, nil, 1)
+  return PersistentList.new(datum, nil, 1)
 end
 setmetatable(EMPTY_LIST, PersistentList)

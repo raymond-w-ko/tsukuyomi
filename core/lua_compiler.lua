@@ -1,3 +1,5 @@
+local tsukuyomi = tsukuyomi
+
 local safe_char_map = {
   ['+'] = '__ADD__',
   ['-'] = '__SUB__',
@@ -23,7 +25,7 @@ local function convert_ns_to_lua(ns)
   return '__' .. to_lua_identifier(ns)
 end
 
-local tsukuyomi_core_ns = tsukuyomi.get_namespace('tsukuyomi.core').space
+local tsukuyomi_core_ns = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
 local function symbol_to_lua(symbol, used_namespaces)
   local code = {}
 

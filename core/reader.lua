@@ -1,4 +1,5 @@
 local tsukuyomi = tsukuyomi
+local PersistentList = tsukuyomi.lang.PersistentList
 
 local kDigits = {
   ['0'] = true,
@@ -76,7 +77,7 @@ end
 -- {head_node, tail_node}
 -- head_node is necessary, when closing off a Lisp list via ')'
 local function new_linked_list(stack)
-  local cell = tsukuyomi.create_cell(nil, nil)
+  local cell = PersistentList.EMPTY_LIST
   local list = {
     ['head'] = cell,
     ['tail'] = cell,
@@ -122,9 +123,10 @@ function tsukuyomi.read(text)
 
     if token == '(' or token == '[' then
       local coll
-      if token == '(' then coll = new_linked_list(stack).head end
+      if token == '(' then coll = new_linked_list(stack) end
       if token == '[' then coll = new_array(stack) end
-      pending_macro_stack_of_coll[coll] = macro_stack
+      --pending_macro_stack_of_coll[coll] = macro_stack
+      pending_macro_stack_of_coll[coll] = nil
       macro_stack = {}
     elseif token == ')' or token == ']' then
       local coll = table.remove(stack)

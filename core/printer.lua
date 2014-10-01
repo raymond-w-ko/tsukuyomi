@@ -1,4 +1,5 @@
 local tsukuyomi = tsukuyomi
+local PersistentList = tsukuyomi.lang.PersistentList
 
 -- TODO: add indenting
 -- TODO: make not vulnerable to a stack overflow when printing cons cells
@@ -17,7 +18,7 @@ function tsukuyomi.print(datum)
       table.insert(items, tsukuyomi.print(datum[i]))
     end
     return '[' .. table.concat(items, ' ') .. ']'
-  elseif tsukuyomi.is_cons_cell(datum) then
+  elseif PersistentList.is(datum) then
     local items = {}
     while datum do
       if datum[1] ~= nil then
