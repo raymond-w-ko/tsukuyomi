@@ -23,11 +23,14 @@ local kWhitespaces = {
 -- splits Lisp source code as a raw input string into an Lua array of tokens suitable for parsing
 function tsukuyomi.tokenize(text)
   local tokens = {}
+  local next_token_slot = 1
 
   local token_line_numbers = {}
-  local next_line_number_slot = 1
+  local next_line_num_slot = 1
 
-  local symbol_buffer = {}
+  local symbol_buffer = {nil, nil, nil, nil, nil, nil, nil}
+  local next_symbol_buffer_slot = 1
+
   local line_number = 1
   local in_comment = false
 
@@ -76,22 +79,21 @@ function tsukuyomi.tokenize(text)
     else
       -- build symbol
       building_symbol = true
-      table.insert(symbol_buffer, ch)
+      symbol_buffer[next_symbol_buffer_slot] = ch; next_symbol_buffer_slot = next_symbol_buffer_slot + 1
     end
 
     if not building_symbol and #symbol_buffer > 0 then
-      table.insert(tokens, table.concat(symbol_buffer))
-      symbol_buffer = {}
+      tokens[next_token_slot] = table.concat(symbol_buffer); next_token_slot = next_token_slot + 1
+      symbol_buffer = {nil, nil, nil, nil, nil, nil, nil}
+      next_symbol_buffer_slot = 1
 
-      token_line_numbers[next_line_number_slot] = line_number
-      next_line_number_slot = next_line_number_slot + 1
+      token_line_numbers[next_line_num_slot] = line_number; next_line_num_slot = next_line_num_slot + 1
     end
 
     if pending_token then
-      table.insert(tokens, pending_token)
+      tokens[next_token_slot] = pending_token; next_token_slot = next_token_slot + 1
 
-      token_line_numbers[next_line_number_slot] = line_number
-      next_line_number_slot = next_line_number_slot + 1
+      token_line_numbers[next_line_num_slot] = line_number; next_line_num_slot = next_line_num_slot + 1
     end
 
     i = i + 1
