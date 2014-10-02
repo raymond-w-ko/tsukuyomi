@@ -7,9 +7,12 @@ tsukuyomi = M
 
 require('tsukuyomi.lang.Namespace')
 
+require('tsukuyomi.lang.PushbackReader')
+
 require('tsukuyomi.lang.PersistentList')
 require('tsukuyomi.lang.PersistentVector')
 require('tsukuyomi.lang.PersistentHashMap')
+
 
 require('tsukuyomi.core.linked_list')
 require('tsukuyomi.core.symbol')
