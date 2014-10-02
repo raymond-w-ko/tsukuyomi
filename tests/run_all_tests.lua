@@ -1,7 +1,7 @@
 package.path=package.path..';./?/init.lua;./?.lua'
 
 --jit.off()
-require('jit.v').start()
+--require('jit.v').start()
 --require('jit.dump').start()
 
 require('tsukuyomi.thirdparty.strict')
@@ -9,7 +9,7 @@ require('tsukuyomi.thirdparty.util')
 
 require('tsukuyomi')
 
-require('tsukuyomi.tests.tokenizer')
+--require('tsukuyomi.tests.tokenizer')
 require('tsukuyomi.tests.reader')
 require('tsukuyomi.tests.compiler')
 

@@ -1,8 +1,14 @@
 local tsukuyomi = tsukuyomi
+local PushbackReader = tsukuyomi.lang.PushbackReader
 
 local function test(text)
-  local data = tsukuyomi.read(text)
-  print(tsukuyomi.print(data))
+  local r = PushbackReader.new(text)
+
+  local datum = tsukuyomi.read(r)
+  while datum ~= nil do
+    print(tsukuyomi.print(datum))
+    datum = tsukuyomi.read(r) 
+  end
 end
 
 test([[

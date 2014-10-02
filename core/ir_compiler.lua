@@ -1,12 +1,15 @@
+local tsukuyomi = tsukuyomi
+local Symbol = tsukuyomi.lang.Symbol
+
 -- special forms
-local kNsSymbol = tsukuyomi.get_symbol('ns')
-local kQuoteSymbol = tsukuyomi.get_symbol('quote')
-local kDefSymbol = tsukuyomi.get_symbol('def')
-local kIfSymbol = tsukuyomi.get_symbol('if')
-local kFnSymbol = tsukuyomi.get_symbol('fn')
-local kEmitSymbol = tsukuyomi.get_symbol('_emit_')
-local kNilSymbol = tsukuyomi.get_symbol("nil")
-local kLetSymbol = tsukuyomi.get_symbol("let")
+local kNsSymbol = Symbol.intern('ns')
+local kQuoteSymbol = Symbol.intern('quote')
+local kDefSymbol = Symbol.intern('def')
+local kIfSymbol = Symbol.intern('if')
+local kFnSymbol = Symbol.intern('fn')
+local kEmitSymbol = Symbol.intern('_emit_')
+local kNilSymbol = Symbol.intern("nil")
+local kLetSymbol = Symbol.intern("let")
 
 --------------------------------------------------------------------------------
 

@@ -1,4 +1,5 @@
 local tsukuyomi = tsukuyomi
+local Symbol = tsukuyomi.lang.Symbol
 
 local safe_char_map = {
   ['+'] = '__ADD__',
@@ -46,7 +47,7 @@ local function symbol_to_lua(symbol, used_namespaces)
   return table.concat(code)
 end
 
-local kNilSymbol = tsukuyomi.get_symbol("nil")
+local kNilSymbol = Symbol.intern('nil')
 local function compile_string_or_symbol(datum, environment, used_namespaces)
   if type(datum) == 'string' then
     return datum

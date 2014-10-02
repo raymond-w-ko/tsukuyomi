@@ -40,9 +40,17 @@ function PersistentList:cons(datum)
   return PersistentList.new(datum, self, self[0] + 1)
 end
 
-local EMPTY_LIST = {}
-PersistentList.EMPTY_LIST = EMPTY_LIST
-function EMPTY_LIST:cons(datum)
+local EMPTY = {}
+PersistentList.EMPTY = EMPTY
+function EMPTY:cons(datum)
   return PersistentList.new(datum, nil, 1)
 end
-setmetatable(EMPTY_LIST, PersistentList)
+setmetatable(EMPTY, PersistentList)
+
+function PersistentList.FromLuaArray(arr)
+  local plist = EMPTY
+  for i = #arr, 1, -1 do
+    plist = plist:cons(arr[i])
+  end
+  return plist
+end

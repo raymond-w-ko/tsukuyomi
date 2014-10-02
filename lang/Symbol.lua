@@ -1,16 +1,18 @@
--- use metatable tagging to mark a Lua table as a Lisp symbol
-local kSymbolTag = {
-  __newindex = function(t, k) assert(false) end
-}
-kSymbolTag.__index = kSymbolTag
+local tsukuyomi = tsukuyomi
+local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
 
--- print the Lisp name
--- since we use metatable tagging, might as well make it useful
-function kSymbolTag.__tostring(symbol)
-  if symbol.namespace then
-    return symbol.namespace .. '/' .. symbol.name
+local Symbol = {}
+tsukuyomi_lang.Symbol = Symbol
+Symbol.__index = Symbol
+Symbol.__newindex = function(t, k)
+  assert(false, 'attempted to modify tsukuyomi.lang.Symbol')
+end
+
+function Symbol:__tostring()
+  if self.namespace then
+    return self.namespace .. '/' .. self.symbol
   else
-    return symbol.name
+    return self.name
   end
 end
 
@@ -19,9 +21,9 @@ end
 --
 -- this way, we can use Lua == to check for symbol equality
 local symbol_cache = {}
-setmetatable(symbol_cache, {__mode = 'kv'})
+setmetatable(symbol_cache, {__mode = 'v'})
 
-function tsukuyomi.get_symbol(name, namespace)
+function Symbol.intern(name, namespace)
   local key
   if namespace then
     key = namespace .. '/' .. name
@@ -37,12 +39,12 @@ function tsukuyomi.get_symbol(name, namespace)
     ['name'] = name,
     ['namespace'] = namespace,
   }
-  setmetatable(symbol, kSymbolTag)
+  setmetatable(symbol, Symbol)
 
   symbol_cache[key] = symbol
   return symbol
 end
 
-function tsukuyomi.is_symbol(datum)
-  return getmetatable(datum) == kSymbolTag
+function Symbol.is(datum)
+  return getmetatable(datum) == Symbol
 end

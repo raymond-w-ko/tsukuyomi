@@ -1,5 +1,7 @@
 local tsukuyomi = tsukuyomi
+local PushbackReader = tsukuyomi.lang.PushbackReader
 local PersistentList = tsukuyomi.lang.PersistentList
+local Symbol = tsukuyomi.lang.Symbol
 local tsukuyomi_core = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
 local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
 
@@ -51,15 +53,8 @@ local function unread(r, ch)
   end
 end
 
-local function ListReader(r, ch)
-end
-macros['('] = ListReader
-
-local function readDelimitedList(delim, r, isRecursive)
-end
-
 local function NumberReader(r, initch)
-  local buf = {initch, nil, nil, nil}; nextslot = 2
+  local buf = {initch, nil, nil, nil}; local nextslot = 2
 
   while true do
     local ch = read1(r)
@@ -79,7 +74,7 @@ local function NumberReader(r, initch)
 end
 
 local function TokenReader(r, initch)
-  local buf = {initch, nil, nil, nil}; nextslot = 2
+  local buf = {initch, nil, nil, nil}; local nextslot = 2
 
   while true do
     local ch = read1(r)
@@ -96,10 +91,23 @@ local function interpretToken(s)
   elseif s == 'true' then return true
   elseif s == 'false' then return false
   else
+    if s:sub(1, 1) == ':' then
+      -- TODO: determine how to support keywords, our PersistentHashMap can
+      -- only support strings as keys anyways, and we has no universal
+      -- Object.getHashCode()
+      return s:sub(1)
+    else
+      local slash = s:find('/')
+      if slash then
+        return Symbol.intern(s:sub(1, slash - 1), s:sub(slash + 1))
+      else
+        return Symbol.intern(s)
+      end
+    end
   end
 end
 
-function LispReader.read(r, eofIsError, isRecursive)
+local function read(r, eofIsError, eofValue, isRecursive)
   -- TODO: do not rely on this
   if type(r) == 'string' then r = PushbackReader.new(r) end
 
@@ -112,7 +120,7 @@ function LispReader.read(r, eofIsError, isRecursive)
       if eofIsError then
         assert(false, 'EOF while reading')
       end
-      return ch
+      return eofValue
     end
 
     if isDigit(ch) then
@@ -140,6 +148,73 @@ function LispReader.read(r, eofIsError, isRecursive)
     end
   end
 end
+LispReader.read = read
+
+local function StringReader(r, initch)
+  local buf = {nil, nil, nil, nil}; local nextslot = 2
+
+  local ch = read1(r)
+  while ch ~= '"' do
+    if ch == EOF then assert(false, 'EOF while reading string') end
+
+    -- TODO: support escaped chars
+
+    buf[nextslot] = ch; nextslot = nextslot + 1
+
+    ch = read1(r)
+  end
+
+  return table.concat(buf)
+end
+
+local function UnmatchedDelimiterReader(r, ch)
+  assert(false, 'unmatched delimiter: ' .. ch)
+end
+macros[')'] = UnmatchedDelimiterReader
+macros[']'] = UnmatchedDelimiterReader
+macros['}'] = UnmatchedDelimiterReader
+
+local function readDelimitedList(delim, r, isRecursive)
+  local arr = {nil, nil, nil, nil}; local nextslot = 1
+
+  while true do
+    local ch = read1(r)
+
+    while isWhitespace(ch) do ch = read1(r) end
+
+    if ch == EOF then
+      assert(false, 'EOF encountered in readDelimitedList() with delimiter: ' .. delim)
+    elseif ch == delim then
+      break
+    else
+      local fn = macros[ch]
+      if fn ~= nil then
+        local datum = fn(r, ch)
+        if datum ~= r then
+          arr[nextslot] = datum; nextslot = nextslot + 1
+        end
+      else
+        unread(r, ch)
+        local datum = read(r, true, nil, isRecursive)
+        if datum ~= r then
+          arr[nextslot] = datum; nextslot = nextslot + 1
+        end
+      end
+    end
+  end
+
+  return arr
+end
+
+local function ListReader(r, ch)
+  local list = readDelimitedList(')', r, true)
+  if #list == 0 then
+    return PersistentList.EMPTY
+  else
+    return PersistentList.FromLuaArray(list)
+  end
+end
+macros['('] = ListReader
 
 -- TODO: fix location to be in tsukuyomi.lang
-tsukuyomi.read = LispReader.read
+tsukuyomi.read = read
