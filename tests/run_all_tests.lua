@@ -1,4 +1,10 @@
-package.path=package.path..';./?/init.lua;./?.lua'
+local paths = {
+  package.path,
+  './?/init.lua',
+  './?.lua',
+  'tsukuyomi/thirdparty/hamt.lua/?.lua',
+}
+package.path=table.concat(paths, ';')
 
 --jit.off()
 --require('jit.v').start()
