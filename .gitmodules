@@ -1,0 +1,3 @@
+[submodule "thirdparty/hamt.lua"]
+	path = thirdparty/hamt.lua
+	url = git@github.com:raymond-w-ko/hamt.lua.git
