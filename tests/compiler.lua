@@ -1,6 +1,21 @@
 local tsukuyomi = tsukuyomi
+local Symbol = tsukuyomi.lang.Symbol
+local PushbackReader = tsukuyomi.lang.PushbackReader
+
+local def_symbol = Symbol.intern('def')
 
 local function test(text)
+  local r = PushbackReader.new(text)
+
+  local datum = tsukuyomi.lang.LispReader.read(r)
+  while datum do
+    print(tsukuyomi.print(datum))
+
+    datum = tsukuyomi.lang.LispReader.read(r)
+  end
+
+  if true then return end
+
   local datum = tsukuyomi.read(text)
   while datum and datum[1] do
     local info
@@ -149,7 +164,13 @@ test([[
 
 ]])
 
-print('vars in tsukuyomi core:')
+print('--------------------------------------------------------------------------------')
+print('vars in tsukuyomi:')
+for k, v in pairs(tsukuyomi) do
+  print(k)
+end
+print('--------------------------------------------------------------------------------')
+print('vars in tsukuyomi.core:')
 for k, v in pairs(tsukuyomi.core) do
   print(k)
 end
