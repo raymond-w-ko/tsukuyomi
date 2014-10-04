@@ -30,13 +30,6 @@ function Namespace.new(name)
   return setmetatable(t, Namespace)
 end
 
-function Namespace:bind_symbol(symbol)
-  assert(symbol.namespace == nil)
-  -- TODO: mimic clojure / python and have a way to import symbols from other
-  -- namespaces so you import math / other libraries
-  return self.name
-end
-
 local namespace_cache = {}
 
 function Namespace.GetNamespace(name)
@@ -67,3 +60,16 @@ function Namespace.SetActiveNamespace(name)
 end
 
 tsukuyomi_lang.Namespace = Namespace
+
+require('tsukuyomi.lang.Symbol')
+local Symbol = tsukuyomi.lang.Symbol
+
+function Namespace:bind_symbol(symbol)
+  -- TODO: this will no longer hold once we have namespace aliases
+  --assert(symbol.namespace == nil)
+  -- TODO: mimic clojure / python and have a way to import symbols from other
+  -- namespaces so you import math / other libraries
+  local ns = symbol.namespace or self.name
+  local name = symbol.name
+  return Symbol.intern(name, ns)
+end
