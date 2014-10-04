@@ -43,9 +43,11 @@ function EMPTY:cons(datum)
 end
 setmetatable(EMPTY, PersistentList)
 
-function PersistentList.FromLuaArray(array)
+function PersistentList.FromLuaArray(array, len)
+  len = len or #array
+
   local plist = EMPTY
-  for i = #array, 1, -1 do
+  for i = len, 1, -1 do
     plist = plist:cons(array[i])
   end
   return plist

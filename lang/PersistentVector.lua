@@ -60,10 +60,24 @@ function PersistentVector:get(key, not_found)
   return hamt.tryGetHash(not_found, key, key, self.hamt)
 end
 
-function PersistentVector.FromLuaArray(array)
+function PersistentVector.FromLuaArray(array, len)
+  len = len or #array
+
   local vec = PersistentVector.new()
-  for i = 1, #array do
+  for i = 1, len do
     vec = vec:conj(array[i])
   end
   return vec
+end
+
+function PersistentVector:ToLuaArray()
+  local array = {}
+  local next_slot = 1
+
+  for i = 0, self._count - 1 do
+    array[next_slot] = self:get(i)
+    next_slot = next_slot + 1
+  end
+
+  return array
 end

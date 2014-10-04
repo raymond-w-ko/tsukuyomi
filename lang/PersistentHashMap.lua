@@ -53,9 +53,11 @@ function PersistentHashMap:seq()
   return PersistentList.FromLuaArray(array)
 end
 
-function PersistentHashMap.FromLuaArray(array)
+function PersistentHashMap.FromLuaArray(array, len)
+  len = len or #array
+
   local m = PersistentHashMap.new()
-  for i = 1, #array - 1, 2 do
+  for i = 1, len - 1, 2 do
     local key = array[i]
     local value = array[i + 1]
     m = m:assoc(key, value)
