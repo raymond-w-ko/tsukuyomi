@@ -25,10 +25,9 @@ function tsukuyomi.print(datum)
     return tostring(datum)
   elseif mt == PersistentList then
     local items = {}
-    while datum do
-      if datum:first() ~= nil then
-        table.insert(items, tsukuyomi.print(datum[1]))
-      end
+    while datum ~= nil and datum ~= PersistentList.EMPTY do
+      local item = datum:first()
+      table.insert(items, tsukuyomi.print(item))
       datum = datum:rest()
     end
     return '(' .. table.concat(items, ' ') .. ')'
