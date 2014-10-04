@@ -1,4 +1,5 @@
 local tsukuyomi = tsukuyomi
+local util = require('tsukuyomi.thirdparty.util')
 local PersistentList = tsukuyomi.lang.PersistentList
 local PersistentVector = tsukuyomi.lang.PersistentVector
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
@@ -14,6 +15,8 @@ function tsukuyomi.print(datum)
     return tostring(datum)
   elseif type(datum) == 'string' then
     return '"' .. datum .. '"'
+  elseif datum == nil then
+    return 'nil'
   end
 
   local mt = getmetatable(datum)
@@ -31,11 +34,22 @@ function tsukuyomi.print(datum)
     return '(' .. table.concat(items, ' ') .. ')'
   elseif mt == PersistentVector then
     local items = {}
-    for i = 1, datum:count() do
+    for i = 0, datum:count() - 1 do
       table.insert(items, tsukuyomi.print(datum:get(i)))
     end
     return '[' .. table.concat(items, ' ') .. ']'
+  elseif mt == PersistentHashMap then
+    local items = {}
+    local seq = datum:seq()
+    while seq and seq:first() ~= nil do
+      local kv = seq:first()
+      table.insert(items, kv:get(0))
+      table.insert(items, kv:get(1))
+      seq = seq:rest()
+    end
+    return '{' .. table.concat(items, ' ') .. '}'
   else
+    print(util.show(datum))
     assert(false)
   end
 end
