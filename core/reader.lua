@@ -5,15 +5,19 @@ local Symbol = tsukuyomi.lang.Symbol
 local tsukuyomi_core = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
 local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
 
+--------------------------------------------------------------------------------
+
 local kWhitespaces = {
   [' '] = true,
   ['\t'] = true,
   ['\r'] = true,
   ['\n'] = true
 }
-local function isWhitespace(ch)
+local function IsWhitespace(ch)
   return kWhitespaces[ch]
 end
+
+--------------------------------------------------------------------------------
 
 local kDigits = {
   ['0'] = true,
@@ -27,21 +31,27 @@ local kDigits = {
   ['8'] = true,
   ['9'] = true,
 }
-local function isDigit(ch)
+local function IsDigit(ch)
   return kDigits[ch]
 end
 
-local LispReader = {}
-local EOF = ''
-local macros = {}
+--------------------------------------------------------------------------------
 
-local function isMacro(ch)
+local EOF = ''
+
+local LispReader = {}
+LispReader.macros = {}
+local macros = LispReader.macros
+
+local function IsMacro(ch)
   return macros[ch] ~= nil
 end
 
-local function isTerminatingMacro(ch)
-  return ch ~= '\'' and ch ~= '#' and isMacro(ch)
+local function IsTerminatingMacro(ch)
+  return ch ~= '\'' and ch ~= '#' and IsMacro(ch)
 end
+
+--------------------------------------------------------------------------------
 
 local function read1(r)
   return r:read()
@@ -53,12 +63,14 @@ local function unread(r, ch)
   end
 end
 
-local function NumberReader(r, initch)
+--------------------------------------------------------------------------------
+
+local function read_number(r, initch)
   local buf = {initch, nil, nil, nil}; local nextslot = 2
 
   while true do
     local ch = read1(r)
-    if ch == EOF or isWhitespace(ch) or isMacro(ch) then
+    if ch == EOF or IsWhitespace(ch) or IsMacro(ch) then
       unread(r, ch)
       break
     end
@@ -73,12 +85,12 @@ local function NumberReader(r, initch)
   return num
 end
 
-local function TokenReader(r, initch)
+local function read_token(r, initch)
   local buf = {initch, nil, nil, nil}; local nextslot = 2
 
   while true do
     local ch = read1(r)
-    if ch == EOF or isWhitespace(ch) or isTerminatingMacro(ch) then
+    if ch == EOF or IsWhitespace(ch) or IsTerminatingMacro(ch) then
       unread(r, ch)
       return table.concat(buf)
     end
@@ -86,7 +98,7 @@ local function TokenReader(r, initch)
   end
 end
 
-local function interpretToken(s)
+local function interpret_token(s)
   if s == 'nil' then return nil
   elseif s == 'true' then return true
   elseif s == 'false' then return false
@@ -114,7 +126,7 @@ local function read(r, eofIsError, eofValue, isRecursive)
   while true do
     local ch = read1(r)
 
-    while isWhitespace(ch) do ch = read1(r) end
+    while IsWhitespace(ch) do ch = read1(r) end
 
     if ch == EOF then
       if eofIsError then
@@ -123,8 +135,8 @@ local function read(r, eofIsError, eofValue, isRecursive)
       return eofValue
     end
 
-    if isDigit(ch) then
-      return NumberReader(r, ch)
+    if IsDigit(ch) then
+      return read_number(r, ch)
     end
 
     local fn = macros[ch]
@@ -136,21 +148,21 @@ local function read(r, eofIsError, eofValue, isRecursive)
     else
       if ch == '+' or ch == '-' then
         local ch2 = read1(r)
-        if isDigit(ch2) then
+        if IsDigit(ch2) then
           unread(r, ch2)
-          return NumberReader(r, ch)
+          return read_number(r, ch)
         end
         unread(r, ch2)
       end
 
-      local token = TokenReader(r, ch)
-      return interpretToken(token)
+      local token = read_token(r, ch)
+      return interpret_token(token)
     end
   end
 end
 LispReader.read = read
 
-local function StringReader(r, initch)
+local function read_string(r, initch)
   local buf = {nil, nil, nil, nil}; local nextslot = 2
 
   local ch = read1(r)
@@ -167,23 +179,23 @@ local function StringReader(r, initch)
   return table.concat(buf)
 end
 
-local function UnmatchedDelimiterReader(r, ch)
+local function read_unmatched_delimiter(r, ch)
   assert(false, 'unmatched delimiter: ' .. ch)
 end
-macros[')'] = UnmatchedDelimiterReader
-macros[']'] = UnmatchedDelimiterReader
-macros['}'] = UnmatchedDelimiterReader
+macros[')'] = read_unmatched_delimiter
+macros[']'] = read_unmatched_delimiter
+macros['}'] = read_unmatched_delimiter
 
-local function readDelimitedList(delim, r, isRecursive)
+local function read_delimited_list(delim, r, isRecursive)
   local arr = {nil, nil, nil, nil}; local nextslot = 1
 
   while true do
     local ch = read1(r)
 
-    while isWhitespace(ch) do ch = read1(r) end
+    while IsWhitespace(ch) do ch = read1(r) end
 
     if ch == EOF then
-      assert(false, 'EOF encountered in readDelimitedList() with delimiter: ' .. delim)
+      assert(false, 'EOF encountered in read_delimited_list() with delimiter: ' .. delim)
     elseif ch == delim then
       break
     else
@@ -206,15 +218,15 @@ local function readDelimitedList(delim, r, isRecursive)
   return arr
 end
 
-local function ListReader(r, ch)
-  local list = readDelimitedList(')', r, true)
+local function read_list(r, ch)
+  local list = read_delimited_list(')', r, true)
   if #list == 0 then
     return PersistentList.EMPTY
   else
     return PersistentList.FromLuaArray(list)
   end
 end
-macros['('] = ListReader
+macros['('] = read_list
 
 -- TODO: fix location to be in tsukuyomi.lang
 tsukuyomi.read = read
