@@ -6,6 +6,8 @@ end
 tsukuyomi = M
 
 require('tsukuyomi.lang.Namespace')
+-- loaded by Namespace due to somewhat complicated initialization order
+--require('tsukuyomi.lang.Symbol')
 
 require('tsukuyomi.lang.PushbackReader')
 
@@ -13,7 +15,6 @@ require('tsukuyomi.lang.PersistentList')
 require('tsukuyomi.lang.PersistentVector')
 require('tsukuyomi.lang.PersistentHashMap')
 
-require('tsukuyomi.lang.Symbol')
 
 require('tsukuyomi.core.linked_list')
 require('tsukuyomi.core.cons_cell')
