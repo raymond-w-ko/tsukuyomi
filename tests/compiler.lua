@@ -1,30 +1,41 @@
 local tsukuyomi = tsukuyomi
 local Symbol = tsukuyomi.lang.Symbol
 local PushbackReader = tsukuyomi.lang.PushbackReader
+local PersistentList = tsukuyomi.lang.PersistentList
 
 local def_symbol = Symbol.intern('def')
+
+local function dump_vars()
+  print('--------------------------------------------------------------------------------')
+  print('vars in tsukuyomi:')
+  for k, v in pairs(tsukuyomi) do
+    print(k)
+  end
+  print('--------------------------------------------------------------------------------')
+  print('vars in tsukuyomi.core:')
+  for k, v in pairs(tsukuyomi.core) do
+    print(k)
+  end
+end
 
 local function test(text)
   local r = PushbackReader.new(text)
 
   local datum = tsukuyomi.lang.LispReader.read(r)
   while datum do
+    print('')
     print(tsukuyomi.print(datum))
 
-    datum = tsukuyomi.lang.LispReader.read(r)
-  end
-
-  if true then return end
-
-  local datum = tsukuyomi.read(text)
-  while datum and datum[1] do
     local info
-    if datum[1][1] == tsukuyomi.get_symbol('def') then
-      local symbol_name = datum[1][2][1].name
-      local ns = tsukuyomi.core['*ns*']:bind_symbol(symbol_name)
-      info =  ns .. '/' .. symbol_name
+    if getmetatable(datum) == PersistentList then
+      if datum:first() == def_symbol then
+        local symbol = datum:rest():first()
+        symbol = tsukuyomi.core['*ns*']:bind_symbol(symbol)
+        info = tostring(symbol)
+      end
     end
-    local code = tsukuyomi.compile(datum[1])
+
+    local code = tsukuyomi.compile(datum)
     local chunk, err = loadstring(code, info)
     if err then
       print(err)
@@ -35,7 +46,7 @@ local function test(text)
       for var, data in pairs(tsukuyomi._data_store) do assert(false) end
     end
 
-    datum = datum[2]
+    datum = tsukuyomi.lang.LispReader.read(r)
   end
 end
 
@@ -76,16 +87,16 @@ test([[
     (_emit_ "x + y")))
 
 (def first
-  (fn [cell]
-    (_emit_ "cell[1]")))
+  (fn [coll]
+    (_emit_ "coll:first()")))
 
 (def rest
-  (fn [cell]
-    (_emit_ "cell[2]")))
+  (fn [coll]
+    (_emit_ "coll:rest()")))
 
-(let [_cons (_emit_ "tsukuyomi.create_cell")]
-  (def cons (fn [item coll]
-     (_emit_ "_cons(item, coll)"))))
+(def cons
+  (fn [x seq]
+    (_emit_ "seq:cons(x)")))
 
 (def second
   (fn [coll]
@@ -95,10 +106,12 @@ test([[
 (test1)
 
 (print "asdf")
+(print (first '(42 43)))
+(print (rest '(42 43)))
 (print (second '(42 43)))
 (print (first '(3 4 5)))
-(print (first (cons 9 (cons 8 (cons 7 nil)))))
-(print (second (cons 9 (cons 8 (cons 7 nil)))))
+(print (first (cons 9 (cons 8 (cons 7 '())))))
+(print (second (cons 9 (cons 8 (cons 7 '())))))
 
 (def user/test "lisp")
 
@@ -161,16 +174,4 @@ test([[
 (print (multifn))
 (print (multifn 1))
 (print (multifn 1 2))
-
 ]])
-
-print('--------------------------------------------------------------------------------')
-print('vars in tsukuyomi:')
-for k, v in pairs(tsukuyomi) do
-  print(k)
-end
-print('--------------------------------------------------------------------------------')
-print('vars in tsukuyomi.core:')
-for k, v in pairs(tsukuyomi.core) do
-  print(k)
-end
