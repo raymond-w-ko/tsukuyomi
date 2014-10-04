@@ -38,8 +38,9 @@ function PersistentVector:pop()
 end
 
 function PersistentVector:conj(x)
-  local count = self._count + 1
+  local count = self._count
   local hamt = hamt.setHash(count, count, x, self.hamt)
+  local count = count + 1
   return setmetatable({_count = count, hamt = hamt}, PersistentVector)
 end
 
