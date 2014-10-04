@@ -115,7 +115,9 @@ local function interpret_token(s)
     else
       local slash = s:find('/')
       if slash then
-        return Symbol.intern(s:sub(1, slash - 1), s:sub(slash + 1))
+        local name = s:sub(slash + 1)
+        local ns = s:sub(1, slash - 1)
+        return Symbol.intern(name, ns)
       else
         return Symbol.intern(s)
       end
@@ -220,31 +222,31 @@ local function read_delimited_list(delim, r, isRecursive)
     end
   end
 
-  return arr
+  return arr, nextslot - 1
 end
 
 local function read_list(r, ch)
-  local array = read_delimited_list(')', r, true)
+  local array, len = read_delimited_list(')', r, true)
   if #array == 0 then
     return PersistentList.EMPTY
   else
-    return PersistentList.FromLuaArray(array)
+    return PersistentList.FromLuaArray(array, len)
   end
 end
 macros['('] = read_list
 
 local function read_vector(r, ch)
-  local array = read_delimited_list(']', r, true)
-  return PersistentVector.FromLuaArray(array)
+  local array, len = read_delimited_list(']', r, true)
+  return PersistentVector.FromLuaArray(array, len)
 end
 macros['['] = read_vector
 
 local function read_map(r, ch)
-  local array = read_delimited_list('}', r, true)
+  local array, len = read_delimited_list('}', r, true)
   if #array % 2 == 1 then
     assert(false, 'Map literal must contain an even number of forms')
   end
-  return PersistentHashMap.FromLuaArray(array)
+  return PersistentHashMap.FromLuaArray(array, len)
 end
 macros['{'] = read_map
 
