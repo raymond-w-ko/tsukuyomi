@@ -1,6 +1,7 @@
 local tsukuyomi = tsukuyomi
-local Symbol = tsukuyomi.lang.Symbol
+local util = require('tsukuyomi.thirdparty.util')
 
+local Symbol = tsukuyomi.lang.Symbol
 -- special forms
 local kNsSymbol = Symbol.intern('ns')
 local kQuoteSymbol = Symbol.intern('quote')
@@ -10,6 +11,10 @@ local kFnSymbol = Symbol.intern('fn')
 local kEmitSymbol = Symbol.intern('_emit_')
 local kNilSymbol = Symbol.intern("nil")
 local kLetSymbol = Symbol.intern("let")
+
+local PersistentList = tsukuyomi.lang.PersistentList
+local PersistentVector = tsukuyomi.lang.PersistentVector
+local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 
 --------------------------------------------------------------------------------
 
@@ -32,7 +37,7 @@ local function is_lua_primitive(datum)
   -- actual primitive types
   if type(datum) == 'string' or type(datum) == 'number' or type(datum) == 'boolean' then
     return true
-  elseif tsukuyomi.is_symbol(datum) then
+  elseif getmetatable(datum) == Symbol then
     -- this isn't a true Lua primitive, but it's intent is that it is just a
     -- variable name referring to something like a Lua variable, so pretend
     -- that it is
@@ -47,7 +52,7 @@ local function compile_lua_primitive(datum)
     return tostring(datum)
   elseif type(datum) == 'string' then
     return '"'..datum..'"'
-  elseif tsukuyomi.is_symbol(datum) then
+  elseif getmetatable(datum) == Symbol then
     -- we can't do symbol binding here since we don't know if the symbol is
     -- referring to a variable in a namespace or a lambda function argument
     -- variable
@@ -58,6 +63,8 @@ local function compile_lua_primitive(datum)
     -- "a" above should refer to the function argument "a", not "a" in the
     -- namespace
     return datum
+  elseif datum == nil then
+    return 'nil'
   end
 
   -- if using is_lua_primitive, this should never happend
@@ -115,7 +122,7 @@ function EnvironmentMetatable:__tostring()
   while env do
     table.insert(t, '(')
     for symbol, _ in pairs(env.symbols) do
-      assert(tsukuyomi.is_symbol(symbol))
+      assert(getmetatable(symbol) == Symbol)
       table.insert(t, symbol.name)
     end
     table.insert(t, ')')
@@ -194,7 +201,8 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   node = fence
 
   local test = datum
-  assert(test[1] ~= nil)
+  -- this can be nil legitimately, although I don't know why anyone would do this
+  --assert(test[1] ~= nil)
   local var_test_node = tsukuyomi.ll_new_node('NEWLVAR', orig_node.environment)
   table.insert(new_dirty_nodes, var_test_node)
   local var_name = make_unique_var_name('cond')
@@ -251,7 +259,7 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local bindings = datum[1]
-  assert(bindings and tsukuyomi.is_array(bindings) and (#bindings % 2 == 0))
+  assert(bindings and getmetatable(bindings) == PersistentVector and (bindings:count() % 2 == 0))
   local exprs = datum[2]
 
   local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR', orig_node.environment)
@@ -265,14 +273,14 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
   node = fence
 
   local extended_environment = orig_node.environment
-  local i = 1
-  while i <= #bindings do
+  local i = 0
+  while i < bindings:count() do
     -- TODO: support destructuring
-    local var_symbol = bindings[i]
+    local var_symbol = bindings:get(i)
     local var_name = var_symbol.name
     extended_environment = extended_environment:extend_with({var_symbol})
 
-    local form = bindings[i + 1]
+    local form = bindings:get(i + 1)
     local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
     lisp_node.args = { form }
     lisp_node.new_lvar_name = var_name
@@ -320,13 +328,14 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
   node.args = nil
 
   local bodies = {}
-  if tsukuyomi.is_cons_cell(datum:first()) then
+  local mt = getmetatable(datum:first())
+  if mt == PersistentList then
     -- this function has multiple aritys
     while datum do
       table.insert(bodies, datum:first())
       datum = datum:rest()
     end
-  elseif tsukuyomi.is_array(datum:first()) then
+  elseif mt == PersistentVector then
     -- this function has only 1 arity
     table.insert(bodies, datum)
   else
@@ -338,7 +347,7 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
     local args = body:first()
     local exprs = body:rest()
 
-    local extended_environment = orig_node.environment:extend_with(args)
+    local extended_environment = orig_node.environment:extend_with(args:ToLuaArray())
     local func_node = tsukuyomi.ll_new_node('FUNCBODY', extended_environment)
     tsukuyomi.ll_insert_after(node, func_node)
     node = func_node
@@ -351,8 +360,8 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
     -- TODO: will I or someone ever put explicit namespace symbols here by accident?
     -- like (fn [foobar lol/wut] (+ foobar lol/wut))
     -- is it even worth it to check?
-    for i = 1, #args do
-      node.args[i] = tostring(args[i])
+    for i = 0, args:count() - 1 do
+      node.args[i + 1] = tostring(args:get(i))
     end
 
     while exprs and exprs[1] do
@@ -389,7 +398,8 @@ local op_dispatch = {}
 
 op_dispatch['LISP'] = function(node, new_dirty_nodes)
   local datum = node.args[1]
-  if tsukuyomi.is_cons_cell(datum) then
+  local mt = getmetatable(datum)
+  if mt == PersistentList then
     local first = datum[1]
     local rest = datum[2]
     if special_forms[first] then
@@ -400,7 +410,9 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
       node.args = tsukuyomi.cons_to_lua_array(datum)
       table.insert(new_dirty_nodes, node)
     end
-  elseif tsukuyomi.is_array(datum) then
+  elseif mt == PersistentVector then
+    assert(false)
+  elseif mt == PersistentHashMap then
     assert(false)
   else
     local primitive = compile_lua_primitive(datum)
