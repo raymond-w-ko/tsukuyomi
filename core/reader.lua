@@ -1,6 +1,8 @@
 local tsukuyomi = tsukuyomi
 local PushbackReader = tsukuyomi.lang.PushbackReader
 local PersistentList = tsukuyomi.lang.PersistentList
+local PersistentVector = tsukuyomi.lang.PersistentVector
+local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 local Symbol = tsukuyomi.lang.Symbol
 local tsukuyomi_core = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
 local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
@@ -219,14 +221,29 @@ local function read_delimited_list(delim, r, isRecursive)
 end
 
 local function read_list(r, ch)
-  local list = read_delimited_list(')', r, true)
-  if #list == 0 then
+  local array = read_delimited_list(')', r, true)
+  if #array == 0 then
     return PersistentList.EMPTY
   else
-    return PersistentList.FromLuaArray(list)
+    return PersistentList.FromLuaArray(array)
   end
 end
 macros['('] = read_list
+
+local function read_vector(r, ch)
+  local array = read_delimited_list(']', r, true)
+  return PersistentVector.FromLuaArray(array)
+end
+macros['['] = read_vector
+
+local function read_map(r, ch)
+  local array = read_delimited_list('}', r, true)
+  if #array % 2 == 1 then
+    assert(false, 'Map literal must contain an even number of forms')
+  end
+  return PersistentHashMap.FromLuaArray(array)
+end
+macros['{'] = read_map
 
 -- TODO: fix location to be in tsukuyomi.lang
 tsukuyomi.read = read
