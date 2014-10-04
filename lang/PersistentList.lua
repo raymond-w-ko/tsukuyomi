@@ -8,10 +8,6 @@ PersistentList.__newindex = function()
   assert(false)
 end
 
-function PersistentList.is(datum)
-  return getmetatable(datum) == PersistentList
-end
-
 -- Since I only use LuaJIT so far, take advantage of the fact that all array
 -- parts have a 0 index part. Like when you have {"foo", "bar"}, you actually
 -- have an array part of size 3.
