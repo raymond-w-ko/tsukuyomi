@@ -44,7 +44,3 @@ function Symbol.intern(name, namespace)
   symbol_cache[key] = symbol
   return symbol
 end
-
-function Symbol.is(datum)
-  return getmetatable(datum) == Symbol
-end
