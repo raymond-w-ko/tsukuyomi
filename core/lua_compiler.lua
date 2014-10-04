@@ -29,19 +29,16 @@ end
 local tsukuyomi_core_ns = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
 local function symbol_to_lua(symbol, used_namespaces)
   local code = {}
+  local bound_symbol = tsukuyomi_core_ns['*ns*']:bind_symbol(symbol)
 
-  local namespace = symbol.namespace
+  local namespace = bound_symbol.namespace
   if namespace then
     table.insert(code, convert_ns_to_lua(namespace))
     used_namespaces[namespace] = true
-  else
-    local active_ns = tsukuyomi_core_ns['*ns*']:bind_symbol(symbol)
-    table.insert(code, convert_ns_to_lua(active_ns))
-    used_namespaces[active_ns] = true
   end
 
   table.insert(code, '["')
-  table.insert(code, symbol.name)
+  table.insert(code, bound_symbol.name)
   table.insert(code, '"]')
 
   return table.concat(code)
@@ -53,7 +50,7 @@ local function compile_string_or_symbol(datum, environment, used_namespaces)
     return datum
   elseif datum == kNilSymbol then
     return 'nil'
-  elseif tsukuyomi.is_symbol(datum) then
+  elseif getmetatable(datum) == Symbol then
     if environment:has_symbol(datum) then
       return datum.name
     else
@@ -103,7 +100,7 @@ function tsukuyomi.compile_to_lua(ir_list)
     elseif insn.op == 'EMPTYVAR' then
       emit('local ', insn.args[1])
     elseif insn.op == 'NS' then
-      emit('tsukuyomi.set_active_namespace("')
+      emit('tsukuyomi.lang.Namespace.SetActiveNamespace("')
       emit(insn.args[1].name)
       emit('"); ')
     elseif insn.op == 'PRIMITIVE' then
@@ -201,7 +198,7 @@ function tsukuyomi.compile_to_lua(ir_list)
     local line = {}
     table.insert(line, 'local ')
     table.insert(line, convert_ns_to_lua(ns))
-    table.insert(line, ' = tsukuyomi.get_namespace_space("')
+    table.insert(line, ' = tsukuyomi.lang.Namespace.GetNamespaceSpace("')
     table.insert(line, ns)
     table.insert(line, '")')
     table.insert(header, table.concat(line))
