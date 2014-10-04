@@ -19,6 +19,7 @@ test([[
 ]])
 test([[
 (def foobar (1 2 3))
+{:foo 1 "bar" 2}
 ]])
 
 -- http://stackoverflow.com/questions/3683388/given-the-following-lisp-eval-function-what-is-required-to-add-defmacro
