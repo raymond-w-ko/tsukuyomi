@@ -1,4 +1,5 @@
 local tsukuyomi = tsukuyomi
+local util = require('tsukuyomi.thirdparty.util')
 local PushbackReader = tsukuyomi.lang.PushbackReader
 local PersistentList = tsukuyomi.lang.PersistentList
 local PersistentVector = tsukuyomi.lang.PersistentVector
@@ -109,7 +110,7 @@ local function interpret_token(s)
       -- TODO: determine how to support keywords, our PersistentHashMap can
       -- only support strings as keys anyways, and we has no universal
       -- Object.getHashCode()
-      return s:sub(1)
+      return s:sub(2)
     else
       local slash = s:find('/')
       if slash then
@@ -165,7 +166,7 @@ end
 LispReader.read = read
 
 local function read_string(r, initch)
-  local buf = {nil, nil, nil, nil}; local nextslot = 2
+  local buf = {nil, nil, nil, nil}; local nextslot = 1
 
   local ch = read1(r)
   while ch ~= '"' do
@@ -180,6 +181,7 @@ local function read_string(r, initch)
 
   return table.concat(buf)
 end
+macros['"'] = read_string
 
 local function read_unmatched_delimiter(r, ch)
   assert(false, 'unmatched delimiter: ' .. ch)
@@ -244,6 +246,22 @@ local function read_map(r, ch)
   return PersistentHashMap.FromLuaArray(array)
 end
 macros['{'] = read_map
+
+local function read_comment(r, semicolon)
+  local ch
+  repeat
+    ch = read1(r)
+  until ch ~= '\n' and ch ~= EOF
+  return r
+end
+macros[';'] = read_comment
+
+local quote_symbol = Symbol.intern('quote')
+local function read_quote(r, ch)
+  local datum = read(r, true, nil, true)
+  return PersistentList.EMPTY:cons(datum):cons(quote_symbol)
+end
+macros['\''] = read_quote
 
 -- TODO: fix location to be in tsukuyomi.lang
 tsukuyomi.read = read
