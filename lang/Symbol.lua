@@ -10,7 +10,7 @@ end
 
 function Symbol:__tostring()
   if self.namespace then
-    return self.namespace .. '/' .. self.symbol
+    return self.namespace .. '/' .. self.name
   else
     return self.name
   end
