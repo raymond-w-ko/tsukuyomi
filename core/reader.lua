@@ -43,6 +43,7 @@ end
 local EOF = ''
 
 local LispReader = {}
+tsukuyomi_lang.LispReader = LispReader
 LispReader.macros = {}
 local macros = LispReader.macros
 
@@ -251,7 +252,7 @@ local function read_comment(r, semicolon)
   local ch
   repeat
     ch = read1(r)
-  until ch ~= '\n' and ch ~= EOF
+  until ch == '\n' or ch == EOF
   return r
 end
 macros[';'] = read_comment
