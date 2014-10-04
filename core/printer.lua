@@ -1,5 +1,7 @@
 local tsukuyomi = tsukuyomi
 local PersistentList = tsukuyomi.lang.PersistentList
+local PersistentVector = tsukuyomi.lang.PersistentVector
+local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 local Symbol = tsukuyomi.lang.Symbol
 
 -- TODO: add indenting
@@ -12,23 +14,27 @@ function tsukuyomi.print(datum)
     return tostring(datum)
   elseif type(datum) == 'string' then
     return '"' .. datum .. '"'
-  elseif getmetatable(datum) == Symbol then
+  end
+
+  local mt = getmetatable(datum)
+
+  if mt == Symbol then
     return tostring(datum)
-  elseif tsukuyomi.is_array(datum) then
-    local items = {}
-    for i = 1, #datum do
-      table.insert(items, tsukuyomi.print(datum[i]))
-    end
-    return '[' .. table.concat(items, ' ') .. ']'
-  elseif getmetatable(datum) == PersistentList then
+  elseif mt == PersistentList then
     local items = {}
     while datum do
-      if datum[1] ~= nil then
+      if datum:first() ~= nil then
         table.insert(items, tsukuyomi.print(datum[1]))
       end
-      datum = datum[2]
+      datum = datum:rest()
     end
     return '(' .. table.concat(items, ' ') .. ')'
+  elseif mt == PersistentVector then
+    local items = {}
+    for i = 1, datum:count() do
+      table.insert(items, tsukuyomi.print(datum:get(i)))
+    end
+    return '[' .. table.concat(items, ' ') .. ']'
   else
     assert(false)
   end
