@@ -2,9 +2,11 @@ local hamt = require('hamt')
 local hash = hamt.hash
 local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
 local PersistentVector = tsukuyomi.lang.PersistentVector
+local PersistentList = tsukuyomi.lang.PersistentList
 
 local PersistentHashMap = {}
 tsukuyomi_lang.PersistentHashMap = PersistentHashMap
+PersistentHashMap.__index = PersistentHashMap
 -- This is a persistent data structure :-)
 PersistentHashMap.__newindex = function()
   assert(false)
@@ -15,7 +17,7 @@ function PersistentHashMap.new()
 end
 
 function PersistentHashMap:assoc(key, value)
-  assert(type(key) == 'number', 'PersistentHashMap:assoc() only accepts string keys right now')
+  assert(type(key) == 'string', 'PersistentHashMap:assoc() only accepts string keys right now')
 
   local hamt = hamt.setHash(hash(key), key, value, self.hamt)
   return setmetatable({hamt = hamt}, PersistentHashMap)
@@ -35,12 +37,24 @@ function PersistentHashMap:conj(vec)
   return self:assoc(key, value)
 end
 
-function PersistentVector:count()
+function PersistentHashMap:count()
   return hamt.count(self.hamt)
 end
 
+local table_insert = table.insert
+local function build_key_value_fn(collection_array, item)
+  table_insert(collection_array, PersistentVector.FromLuaArray({item.key, item.value}))
+  return collection_array
+end
+
+function PersistentHashMap:seq()
+  -- TODO: make this more efficient
+  local array = hamt.fold(build_key_value_fn, {}, self.hamt)
+  return PersistentList.FromLuaArray(array)
+end
+
 function PersistentHashMap.FromLuaArray(array)
-  local m = PersistentVector.new()
+  local m = PersistentHashMap.new()
   for i = 1, #array - 1, 2 do
     local key = array[i]
     local value = array[i + 1]
