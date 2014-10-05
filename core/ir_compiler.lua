@@ -407,7 +407,7 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
     else
       -- normal function call
       node.op = 'CALL'
-      node.args = tsukuyomi.cons_to_lua_array(datum)
+      node.args = datum:ToLuaArray()
       table.insert(new_dirty_nodes, node)
     end
   elseif mt == PersistentVector then
