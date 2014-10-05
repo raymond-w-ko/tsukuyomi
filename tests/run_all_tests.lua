@@ -7,7 +7,7 @@ local paths = {
 package.path=table.concat(paths, ';')
 
 --jit.off()
---require('jit.v').start()
+require('jit.v').start()
 --require('jit.dump').start()
 
 require('tsukuyomi.thirdparty.strict')
