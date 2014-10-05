@@ -4,11 +4,12 @@ local PushbackReader = {}
 tsukuyomi_lang.PushbackReader = PushbackReader
 PushbackReader.__index = PushbackReader
 
-function PushbackReader.new(text)
+function PushbackReader.new(text, filename)
   local t = {}
   t.text = text
   t.i = 1
   t.push_back_buffer = {}
+  t.filename = filename
   return setmetatable(t, PushbackReader)
 end
 
