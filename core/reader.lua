@@ -173,9 +173,32 @@ local function read_string(r, initch)
 
   local ch = read1(r)
   while ch ~= '"' do
-    if ch == EOF then assert(false, 'EOF while reading string') end
+    if ch == EOF then
+      assert(false, 'EOF while reading string')
+    end
 
-    -- TODO: support escaped chars
+    if ch == '\\' then
+      ch = read1(r)
+      if ch == EOF then
+        assert(false, 'EOF while reading string escape character')
+      end
+
+      if ch == 't' then ch = '\t'
+      elseif ch == 'r' then ch = '\r'
+      elseif ch == 'n' then ch = '\n'
+      elseif ch == '\\' then -- already backslash
+      elseif ch == '"' then --already double quote
+      elseif ch == 'b' then ch = '\b'
+      elseif ch == 'f' then ch = '\f'
+      -- FOLLOWING NOT IN CLOJURE!
+      -- adding them because they are present in Lua
+      -- (who actually uses these?)
+      elseif ch == 'a' then ch = '\a' -- bell
+      elseif ch == 'v' then ch = '\v' -- vertical tab
+      else
+        assert(false, 'read_string(): unknown escape character: ' .. ch)
+      end
+    end
 
     buf[nextslot] = ch; nextslot = nextslot + 1
 

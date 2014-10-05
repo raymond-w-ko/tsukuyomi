@@ -11,11 +11,9 @@ require('jit.v').start()
 --require('jit.dump').start()
 
 require('tsukuyomi.thirdparty.strict')
-require('tsukuyomi.thirdparty.util')
 
 require('tsukuyomi')
 
---require('tsukuyomi.tests.tokenizer')
 require('tsukuyomi.tests.reader')
 require('tsukuyomi.tests.compiler')
 

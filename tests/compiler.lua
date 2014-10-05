@@ -124,8 +124,8 @@ test([[
 (if nil (print "hoagie"))
 
 (if true
-  (print "pizza")
-  (print "hotdog"))
+  (print "pizza\tpie\n\twith \"extra cheese\" and \"anchovies\"")
+  (print "hotdog\n\twith\n\"onions\" and \"relish\""))
 
 (if false
   (print "pizza")

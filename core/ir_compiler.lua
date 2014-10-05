@@ -51,7 +51,7 @@ local function compile_lua_primitive(datum)
   if type(datum) == 'number' or type(datum) == 'boolean' then
     return tostring(datum)
   elseif type(datum) == 'string' then
-    return '"'..datum..'"'
+    return string.format('%q', datum)
   elseif getmetatable(datum) == Symbol then
     -- we can't do symbol binding here since we don't know if the symbol is
     -- referring to a variable in a namespace or a lambda function argument
