@@ -123,7 +123,7 @@ function tsukuyomi.compile_to_lua(ir_list)
       end
       emit( ')')
     elseif insn.op == 'FUNC' then
-      emit('tsukuyomi.create_function()')
+      emit('tsukuyomi.lang.Function.new()')
     elseif insn.op == 'FUNCBODY' then
       local arity = #insn.args
       if insn.new_lvar_name then
