@@ -46,8 +46,11 @@ local EOF = ''
 
 local LispReader = {}
 tsukuyomi_lang.LispReader = LispReader
+
 LispReader.macros = {}
 local macros = LispReader.macros
+LispReader.dispatch_macros = {}
+local dispatch_macros = LispReader.dispatch_macros
 
 local function IsMacro(ch)
   return macros[ch] ~= nil
@@ -290,6 +293,64 @@ local function read_quote(r, ch)
   return PersistentList.EMPTY:cons(datum):cons(quote_symbol)
 end
 macros['\''] = read_quote
+
+--------------------------------------------------------------------------------
+-- dispatch macros (the ones that begin with #)
+--------------------------------------------------------------------------------
+
+local function read_dispatch(r, hash_ch)
+  local ch = read1(r)
+  if ch == 'EOF' then
+    assert(false, 'EOF while reading character for dispatch macro #')
+  end
+
+  local fn = dispatch_macros[ch]
+  if fn == nil then
+    assert(false, 'No dispatch macro for: ' .. ch)
+  end
+
+  return fn(r, ch)
+end
+macros['#'] = read_dispatch
+
+local function read_meta(r, caret)
+  local meta = read(r, true, nil, true)
+  local mt = getmetatable(meta)
+  if mt == Symbol then
+    -- I don't think this will be very useful
+    map = PersistentHashMap.new()
+    meta = map:assoc('tag', meta)
+  elseif type(meta) == 'string' then
+    -- what is really meant is Keyword, but I'm not sure it is worth to introduce it here.
+    map = PersistentHashMap.new()
+    meta = map:assoc(meta, true)
+  elseif getmetatable(meta) ~= PersistentHashMap then
+    assert(false, 'Metadata must be a a Symbol, string, or PersistentHashMap')
+  end
+
+  local datum = read(r, true, nil, true)
+
+  -- merge with any existing meta
+  assert(
+    datum.meta and type(datum.meta) == 'function',
+    'read_meta(): datum read does not support meta, missing meta() function')
+  local prevmeta = datum:meta()
+
+  if prevmeta then
+    local seq = meta:seq()
+    meta = prevmeta
+    while seq do
+      local v = seq:first()
+      if v then
+        meta = meta:assoc(v:get(0), v:get(1))
+      end
+      seq = seq:rest()
+    end
+  end
+
+  return datum:with_meta(meta)
+end
+macros['^'] = read_meta
 
 -- TODO: fix location to be in tsukuyomi.lang
 tsukuyomi.read = read
