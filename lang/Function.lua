@@ -1,9 +1,8 @@
-local kFunctionTag = {}
+local tsukuyomi = tsukuyomi
 
-function tsukuyomi.create_function()
-  return setmetatable({}, kFunctionTag)
-end
+local Function = {}
+tsukuyomi.lang.Function = Function
 
-function tsukuyomi.is_function(datum)
-  return getmetatable(datum) == kFunctionTag
+function Function.new()
+  return setmetatable({}, Function)
 end
