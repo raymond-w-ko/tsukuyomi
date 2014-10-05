@@ -23,8 +23,8 @@ local function test(text)
 
   local datum = tsukuyomi.lang.LispReader.read(r)
   while datum do
-    print('')
-    print(tsukuyomi.print(datum))
+    --print('')
+    --print(tsukuyomi.print(datum))
 
     local info
     if getmetatable(datum) == PersistentList then

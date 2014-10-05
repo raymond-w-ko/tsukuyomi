@@ -15,15 +15,12 @@ require('tsukuyomi.lang.PersistentList')
 require('tsukuyomi.lang.PersistentVector')
 require('tsukuyomi.lang.PersistentHashMap')
 
+require('tsukuyomi.lang.Function')
 
 require('tsukuyomi.core.linked_list')
-require('tsukuyomi.core.cons_cell')
-require('tsukuyomi.core.array')
-require('tsukuyomi.core.function')
 
 require('tsukuyomi.core.printer')
 
---require('tsukuyomi.core.tokenizer')
 require('tsukuyomi.core.reader')
 
 require('tsukuyomi.core.ir_compiler')

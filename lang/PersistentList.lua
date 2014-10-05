@@ -52,3 +52,18 @@ function PersistentList.FromLuaArray(array, len)
   end
   return plist
 end
+
+function PersistentList:ToLuaArray()
+  local array = {}
+  local next_slot = 1
+
+  local datum = self
+
+  while datum ~= nil and datum ~= EMPTY do
+    array[next_slot] = datum:first()
+    next_slot = next_slot + 1
+    datum = datum:rest()
+  end
+
+  return array, self:count()
+end
