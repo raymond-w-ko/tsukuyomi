@@ -67,3 +67,11 @@ function PersistentList:ToLuaArray()
 
   return array, self:count()
 end
+
+function PersistentList:meta()
+  return self[3]
+end
+
+function PersistentList:with_meta(m)
+  return setmetatable({[0] = self:count(), self:first(), self:rest(), m}, PersistentList)
+end

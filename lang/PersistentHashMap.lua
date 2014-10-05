@@ -65,3 +65,11 @@ function PersistentHashMap.FromLuaArray(array, len)
 
   return m
 end
+
+function PersistentHashMap:meta()
+  return self._meta
+end
+
+function PersistentHashMap:with_meta(m)
+  return setmetatable({hamt = self.hamt, _meta = m}, PersistentHashMap)
+end

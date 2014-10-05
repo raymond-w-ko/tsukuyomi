@@ -81,3 +81,11 @@ function PersistentVector:ToLuaArray()
 
   return array
 end
+
+function PersistentVector:meta()
+  return self._meta
+end
+
+function PersistentVector:with_meta(m)
+  return setmetatable({_count = self._count, hamt = self.hamt, _meta = m}, PersistentVector)
+end
