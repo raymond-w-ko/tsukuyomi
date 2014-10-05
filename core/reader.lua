@@ -14,7 +14,9 @@ local kWhitespaces = {
   [' '] = true,
   ['\t'] = true,
   ['\r'] = true,
-  ['\n'] = true
+  ['\n'] = true,
+
+  [','] = true,
 }
 local function IsWhitespace(ch)
   return kWhitespaces[ch]
