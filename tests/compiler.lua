@@ -23,8 +23,8 @@ local function test(text)
 
   local datum = tsukuyomi.lang.LispReader.read(r)
   while datum do
-    --print('')
-    --print(tsukuyomi.print(datum))
+    print('')
+    print(tsukuyomi.print(datum))
 
     local info
     if getmetatable(datum) == PersistentList then
@@ -107,7 +107,7 @@ test([[
 
 (print "asdf")
 (print (first '(42 43)))
-(print (rest '(42 43)))
+;(print (rest '(42 43)))
 (print (second '(42 43)))
 (print (first '(3 4 5)))
 (print (first (cons 9 (cons 8 (cons 7 '())))))
@@ -121,8 +121,10 @@ test([[
 (print (f? 43))
 
 (if false (print "pepperoni"))
-(if nil (print "hoagie"))
 
+^{} (if nil (print "hoagie"))
+
+^{:asdf true}
 (if true
   (print "pizza\tpie\n\twith \"extra cheese\" and \"anchovies\"")
   (print "hotdog\n\twith\n\"onions\" and \"relish\""))
