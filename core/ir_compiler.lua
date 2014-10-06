@@ -1,5 +1,6 @@
 local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
+local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
 
 local Symbol = tsukuyomi.lang.Symbol
 -- special forms
@@ -21,7 +22,7 @@ local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 --
 -- so far, just used for IR list, so that is why ll_new_node accepts op
 --------------------------------------------------------------------------------
-function tsukuyomi.ll_new_node(op, env)
+function Compiler.ll_new_node(op, env)
   assert(op)
   assert(env)
 
@@ -31,7 +32,7 @@ function tsukuyomi.ll_new_node(op, env)
   return node
 end
 
-function tsukuyomi.ll_insert_after(node, new_node)
+function Compiler.ll_insert_after(node, new_node)
   new_node.prev = node
   new_node.next = node.next
   if node.next then
@@ -40,7 +41,7 @@ function tsukuyomi.ll_insert_after(node, new_node)
   node.next = new_node
 end
 
-function tsukuyomi.ll_insert_before(node, new_node)
+function Compiler.ll_insert_before(node, new_node)
   new_node.prev = node.prev
   new_node.next = node
   if node.prev then
@@ -49,7 +50,7 @@ function tsukuyomi.ll_insert_before(node, new_node)
   node.prev = new_node
 end
 
-function tsukuyomi.ll_remove(node)
+function Compiler.ll_remove(node)
   node.prev.next = node.next
   node.next.prev = node.prev
 end
@@ -187,9 +188,9 @@ special_forms[kNsSymbol] = function(node, datum, new_dirty_nodes)
   if node.is_return then
     node.is_return = false
 
-    local dummy_return = tsukuyomi.ll_new_node('LISP', node.environment)
+    local dummy_return = Compiler.ll_new_node('LISP', node.environment)
     dummy_return.args = { true }
-    tsukuyomi.ll_insert_after(node, dummy_return)
+    Compiler.ll_insert_after(node, dummy_return)
     dummy_return.is_return = true
     table.insert(new_dirty_nodes, dummy_return)
   end
@@ -197,12 +198,12 @@ end
 
 special_forms[kDefSymbol] = function(node, datum, new_dirty_nodes)
   -- (def symbol datum)
-  local defnode = tsukuyomi.ll_new_node('LISP', node.environment)
+  local defnode = Compiler.ll_new_node('LISP', node.environment)
   table.insert(new_dirty_nodes, defnode)
   defnode.op = 'LISP'
   defnode.define_symbol = datum[1]
   defnode.args = { datum[2][1] }
-  tsukuyomi.ll_insert_before(node, defnode)
+  Compiler.ll_insert_before(node, defnode)
 
   -- it's not possible to get a return value on an assignment, to just add a
   -- dummy instruction after it
@@ -228,64 +229,64 @@ end
 special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
-  local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR', orig_node.environment)
+  local ret_var_node = Compiler.ll_new_node('EMPTYVAR', orig_node.environment)
   local ret_var_name = make_unique_var_name('if_ret')
   ret_var_node.args = { ret_var_name }
-  tsukuyomi.ll_insert_before(orig_node, ret_var_node)
+  Compiler.ll_insert_before(orig_node, ret_var_node)
   node = ret_var_node
 
-  local fence = tsukuyomi.ll_new_node('VARFENCE', orig_node.environment)
-  tsukuyomi.ll_insert_after(node, fence)
+  local fence = Compiler.ll_new_node('VARFENCE', orig_node.environment)
+  Compiler.ll_insert_after(node, fence)
   node = fence
 
   local test = datum
   -- this can be nil legitimately, although I don't know why anyone would do this
   --assert(test[1] ~= nil)
-  local var_test_node = tsukuyomi.ll_new_node('NEWLVAR', orig_node.environment)
+  local var_test_node = Compiler.ll_new_node('NEWLVAR', orig_node.environment)
   table.insert(new_dirty_nodes, var_test_node)
   local var_name = make_unique_var_name('cond')
   var_test_node.args = {var_name, test[1]}
-  tsukuyomi.ll_insert_after(node, var_test_node)
+  Compiler.ll_insert_after(node, var_test_node)
   node = var_test_node
 
-  local if_node = tsukuyomi.ll_new_node('IF', orig_node.environment)
+  local if_node = Compiler.ll_new_node('IF', orig_node.environment)
   if_node.args = { var_name }
-  tsukuyomi.ll_insert_after(node, if_node)
+  Compiler.ll_insert_after(node, if_node)
   node = if_node
 
   local then_cell = test[2]
   assert(then_cell)
-  local then_node = tsukuyomi.ll_new_node('LISP', orig_node.environment)
+  local then_node = Compiler.ll_new_node('LISP', orig_node.environment)
   table.insert(new_dirty_nodes, then_node)
   then_node.args = { then_cell[1] }
   then_node.set_var_name = ret_var_name
-  tsukuyomi.ll_insert_after(node, then_node)
+  Compiler.ll_insert_after(node, then_node)
   node = then_node
 
-  local else_keyword_node = tsukuyomi.ll_new_node('ELSE', orig_node.environment)
-  tsukuyomi.ll_insert_after(node, else_keyword_node)
+  local else_keyword_node = Compiler.ll_new_node('ELSE', orig_node.environment)
+  Compiler.ll_insert_after(node, else_keyword_node)
   node = else_keyword_node
 
   local else_cell = then_cell[2]
   local else_node
   if else_cell then
-    else_node = tsukuyomi.ll_new_node('LISP', orig_node.environment)
+    else_node = Compiler.ll_new_node('LISP', orig_node.environment)
     else_node.args = { else_cell[1] }
     table.insert(new_dirty_nodes, else_node)
   else
-    else_node = tsukuyomi.ll_new_node('PRIMITIVE', orig_node.environment)
+    else_node = Compiler.ll_new_node('PRIMITIVE', orig_node.environment)
     else_node.args = { kNilSymbol }
   end
   else_node.set_var_name = ret_var_name
-  tsukuyomi.ll_insert_after(node, else_node)
+  Compiler.ll_insert_after(node, else_node)
   node = else_node
 
-  local end_node = tsukuyomi.ll_new_node('ENDIF', orig_node.environment)
-  tsukuyomi.ll_insert_after(node, end_node)
+  local end_node = Compiler.ll_new_node('ENDIF', orig_node.environment)
+  Compiler.ll_insert_after(node, end_node)
   node = end_node
 
-  local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', orig_node.environment)
-  tsukuyomi.ll_insert_after(node, endfence)
+  local endfence = Compiler.ll_new_node('ENDVARFENCE', orig_node.environment)
+  Compiler.ll_insert_after(node, endfence)
   node = endfence
 
   node = orig_node
@@ -300,14 +301,14 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
   assert(bindings and getmetatable(bindings) == PersistentVector and (bindings:count() % 2 == 0))
   local exprs = datum[2]
 
-  local ret_var_node = tsukuyomi.ll_new_node('EMPTYVAR', orig_node.environment)
+  local ret_var_node = Compiler.ll_new_node('EMPTYVAR', orig_node.environment)
   local ret_var_name = make_unique_var_name('let_ret')
   ret_var_node.args = { ret_var_name }
-  tsukuyomi.ll_insert_before(orig_node, ret_var_node)
+  Compiler.ll_insert_before(orig_node, ret_var_node)
   node = ret_var_node
 
-  local fence = tsukuyomi.ll_new_node('VARFENCE', orig_node.environment)
-  tsukuyomi.ll_insert_after(node, fence)
+  local fence = Compiler.ll_new_node('VARFENCE', orig_node.environment)
+  Compiler.ll_insert_after(node, fence)
   node = fence
 
   local extended_environment = orig_node.environment
@@ -319,39 +320,39 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
     extended_environment = extended_environment:extend_with({var_symbol})
 
     local form = bindings:get(i + 1)
-    local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
+    local lisp_node = Compiler.ll_new_node('LISP', extended_environment)
     lisp_node.args = { form }
     lisp_node.new_lvar_name = var_name
     table.insert(new_dirty_nodes, lisp_node)
-    tsukuyomi.ll_insert_after(node, lisp_node)
+    Compiler.ll_insert_after(node, lisp_node)
     node = lisp_node
 
     i = i + 2
   end
 
   while exprs and exprs[1] do
-    local fence = tsukuyomi.ll_new_node('VARFENCE', extended_environment)
-    tsukuyomi.ll_insert_after(node, fence)
+    local fence = Compiler.ll_new_node('VARFENCE', extended_environment)
+    Compiler.ll_insert_after(node, fence)
     node = fence
 
-    local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
+    local lisp_node = Compiler.ll_new_node('LISP', extended_environment)
     lisp_node.args = { exprs[1] }
     if exprs[2] == nil then
       lisp_node.set_var_name = ret_var_name
     end
     table.insert(new_dirty_nodes, lisp_node)
-    tsukuyomi.ll_insert_after(node, lisp_node)
+    Compiler.ll_insert_after(node, lisp_node)
     node = lisp_node
 
     exprs = exprs[2]
 
-    local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', extended_environment)
-    tsukuyomi.ll_insert_after(node, endfence)
+    local endfence = Compiler.ll_new_node('ENDVARFENCE', extended_environment)
+    Compiler.ll_insert_after(node, endfence)
     node = endfence
   end
 
-  local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', extended_environment)
-  tsukuyomi.ll_insert_after(node, endfence)
+  local endfence = Compiler.ll_new_node('ENDVARFENCE', extended_environment)
+  Compiler.ll_insert_after(node, endfence)
   node = endfence
 
   node = orig_node
@@ -386,8 +387,8 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
     local exprs = body:rest()
 
     local extended_environment = orig_node.environment:extend_with(args:ToLuaArray())
-    local func_node = tsukuyomi.ll_new_node('FUNCBODY', extended_environment)
-    tsukuyomi.ll_insert_after(node, func_node)
+    local func_node = Compiler.ll_new_node('FUNCBODY', extended_environment)
+    Compiler.ll_insert_after(node, func_node)
     node = func_node
     node.args = {}
     -- propagate what variable this function is suppose to live in
@@ -403,33 +404,33 @@ special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
     end
 
     while exprs and exprs[1] do
-      local fence = tsukuyomi.ll_new_node('VARFENCE', extended_environment)
-      tsukuyomi.ll_insert_after(node, fence)
+      local fence = Compiler.ll_new_node('VARFENCE', extended_environment)
+      Compiler.ll_insert_after(node, fence)
       node = fence
 
-      local lisp_node = tsukuyomi.ll_new_node('LISP', extended_environment)
+      local lisp_node = Compiler.ll_new_node('LISP', extended_environment)
       table.insert(new_dirty_nodes, lisp_node)
       lisp_node.args = { exprs[1] }
       if exprs[2] == nil then
         lisp_node.is_return = true
       end
-      tsukuyomi.ll_insert_after(node, lisp_node)
+      Compiler.ll_insert_after(node, lisp_node)
       node = lisp_node
 
-      local endfence = tsukuyomi.ll_new_node('ENDVARFENCE', extended_environment)
-      tsukuyomi.ll_insert_after(node, endfence)
+      local endfence = Compiler.ll_new_node('ENDVARFENCE', extended_environment)
+      Compiler.ll_insert_after(node, endfence)
       node = endfence
 
       exprs = exprs[2]
     end
 
-    local end_func_body_node = tsukuyomi.ll_new_node('ENDFUNCBODY', extended_environment)
-    tsukuyomi.ll_insert_after(node, end_func_body_node)
+    local end_func_body_node = Compiler.ll_new_node('ENDFUNCBODY', extended_environment)
+    Compiler.ll_insert_after(node, end_func_body_node)
     node = end_func_body_node
   end
 
-  local end_func_node = tsukuyomi.ll_new_node('ENDFUNC', orig_node.environment)
-  tsukuyomi.ll_insert_after(node, end_func_node)
+  local end_func_node = Compiler.ll_new_node('ENDFUNC', orig_node.environment)
+  Compiler.ll_insert_after(node, end_func_node)
 end
 
 local op_dispatch = {}
@@ -465,13 +466,13 @@ op_dispatch['CALL'] = function(node, new_dirty_nodes)
     if is_lua_primitive(args[i]) then
       args[i] = compile_lua_primitive(args[i])
     else
-      local var_node = tsukuyomi.ll_new_node('NEWLVAR', node.environment)
+      local var_node = Compiler.ll_new_node('NEWLVAR', node.environment)
       table.insert(new_dirty_nodes, var_node)
 
       local var_name = make_unique_var_name('arg')
       var_node.args = {var_name, args[i]}
       args[i] = var_name
-      tsukuyomi.ll_insert_before(node, var_node)
+      Compiler.ll_insert_before(node, var_node)
     end
   end
 end
@@ -499,8 +500,8 @@ end
 -- set_var_name
 -- define_symbol
 -- is_return
-function tsukuyomi.compile_to_ir(datum)
-  local head_node = tsukuyomi.ll_new_node('LISP', create_environment())
+function Compiler.compile_to_ir(datum)
+  local head_node = Compiler.ll_new_node('LISP', create_environment())
   head_node.args = { datum }
   head_node.is_return = true
 
@@ -530,7 +531,7 @@ function tsukuyomi.compile_to_ir(datum)
   return head_node
 end
 
-function tsukuyomi._debug_ir(node)
+function Compiler._debug_ir(node)
   local lines = {}
 
   while node do
