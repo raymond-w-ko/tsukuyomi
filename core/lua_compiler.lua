@@ -112,11 +112,41 @@ function Compiler.compile_to_lua(ir_list)
       emit(make_unique_data_var(data_bindings, insn.data_key))
     elseif insn.op == 'CALL' then
       local args = insn.args
-      emit(compile_string_or_symbol(insn.args[1], insn.environment, used_namespaces))
-      local arity = #args - 1
-      emit('[', tostring(arity), ']')
+
+      local fn = insn.args[1]
+      assert(getmetatable(fn) == Symbol or type(fn) == 'string')
+      local name_len
+      if getmetatable(fn) == Symbol then
+        name_len = fn.name:len()
+      elseif type(fn) == 'string' then
+        name_len = fn:len()
+      end
+      -- does this always hold true?
+
+      local arg_start_index = 2
+
+      if getmetatable(fn) == Symbol and fn.namespace == nil and fn.name:sub(1, 1) == '.' then
+        -- object oriented function call
+        -- (method_name object arg0 arg1)
+         emit(compile_string_or_symbol(args[2], insn.environment, used_namespaces))
+         emit(':')
+         emit(fn.name:sub(2))
+
+         arg_start_index = 3
+      elseif getmetatable(fn) == Symbol and fn.name:sub(name_len, name_len) == '.' then
+        -- new style constructor call
+        -- (PersistentHashMap.)
+        local real_sym = Symbol.intern(args[1].name:sub(1, name_len - 1), args[1].namespace)
+        emit(compile_string_or_symbol(args[2], insn.environment, used_namespaces))
+        emit('.new')
+      else
+        emit(compile_string_or_symbol(fn, insn.environment, used_namespaces))
+        local arity = #args - 1
+        emit('[', tostring(arity), ']')
+      end
+
       emit('(')
-      for i = 2, #args do
+      for i = arg_start_index, #args do
         emit(compile_string_or_symbol(args[i], insn.environment, used_namespaces))
         if i < #args then
           emit(', ')

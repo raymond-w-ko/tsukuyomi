@@ -2,19 +2,19 @@
 
 (def first
   (fn [coll]
-    (_emit_ "coll:first()")))
+    (.first coll)))
 
 (def rest
   (fn [coll]
-    (_emit_ "coll:rest()")))
+    (.rest coll)))
 
 (def conj
   (fn [coll x]
-    (_emit_ "coll:conj(x)")))
+    (.conj coll x)))
 
 (def cons
   (fn [x seq]
-    (_emit_ "seq:cons(x)")))
+    (.cons seq x)))
 
 (def second
   (fn [cell]
