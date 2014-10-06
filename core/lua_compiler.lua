@@ -1,5 +1,6 @@
 local tsukuyomi = tsukuyomi
 local Symbol = tsukuyomi.lang.Symbol
+local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
 
 local safe_char_map = {
   ['+'] = '__ADD__',
@@ -67,7 +68,7 @@ local function make_unique_data_var(data_bindings, data_key)
   return var_name
 end
 
-function tsukuyomi.compile_to_lua(ir_list)
+function Compiler.compile_to_lua(ir_list)
   local lines = {}
 
   local indent = 0
