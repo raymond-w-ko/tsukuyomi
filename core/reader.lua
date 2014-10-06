@@ -354,3 +354,9 @@ macros['^'] = read_meta
 
 -- TODO: fix location to be in tsukuyomi.lang
 tsukuyomi.read = read
+
+tsukuyomi.core.read = tsukuyomi.lang.Function.new()
+tsukuyomi.core.read[1] = read
+tsukuyomi.core.read[2] = read
+tsukuyomi.core.read[3] = read
+tsukuyomi.core.read[4] = read
