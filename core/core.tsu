@@ -1,5 +1,14 @@
 (ns tsukuyomi.core)
 
+(def tget
+  (fn [key table]
+    (_emit_ "table[key]")))
+
+(def tassoc!
+  (fn [table key value]
+    (_emit_ "table[key] = value")
+    nil))
+
 (def first
   (fn [coll]
     (.first coll)))
@@ -19,3 +28,15 @@
 (def second
   (fn [cell]
     (first (rest cell))))
+
+(def get
+  (fn [map key]
+    (.get map key)))
+
+(def assoc
+  (fn [map key value]
+    (.assoc map key value)))
+
+(def seq
+  (fn [coll]
+    (.seq coll)))
