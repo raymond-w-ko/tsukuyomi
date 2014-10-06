@@ -2,6 +2,7 @@ local tsukuyomi = tsukuyomi
 local Symbol = tsukuyomi.lang.Symbol
 local PushbackReader = tsukuyomi.lang.PushbackReader
 local PersistentList = tsukuyomi.lang.PersistentList
+local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
 
 local def_symbol = Symbol.intern('def')
 
@@ -35,7 +36,7 @@ local function test(text)
       end
     end
 
-    local code = tsukuyomi.compile(datum)
+    local code = Compiler.compile(datum)
     local chunk, err = loadstring(code, info)
     if err then
       print(err)

@@ -17,8 +17,6 @@ require('tsukuyomi.lang.PersistentHashMap')
 
 require('tsukuyomi.lang.Function')
 
-require('tsukuyomi.core.linked_list')
-
 require('tsukuyomi.core.printer')
 
 require('tsukuyomi.core.reader')
@@ -26,6 +24,7 @@ require('tsukuyomi.core.reader')
 require('tsukuyomi.core.ir_compiler')
 require('tsukuyomi.core.lua_compiler')
 require('tsukuyomi.core.compiler')
+require('tsukuyomi.core.eval')
 
 --------------------------------------------------------------------------------
 -- structures to store data from reader to compiler and evalulation
@@ -56,5 +55,10 @@ function tsukuyomi.store_data(datum)
 
   return data_key
 end
+
+--------------------------------------------------------------------------------
+-- We can finally load Lisp :-)
+--------------------------------------------------------------------------------
+tsukuyomi.core['load-file'][1]('tsukuyomi/core/core.tsu')
 
 return tsukuyomi

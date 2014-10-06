@@ -1,17 +1,20 @@
 (ns tsukuyomi.core)
 
 (def first
-  (fn [cons_cell]
-    _emit_ "cons_cell[0]"))
+  (fn [coll]
+    (_emit_ "coll:first()")))
 
 (def rest
-  (fn [cons_cell]
-    _emit_ "cons_cell[1]"))
+  (fn [coll]
+    (_emit_ "coll:rest()")))
 
-(let [_cons (_emit_ "tsukuyomi.create_cell")]
-  (def cons
-    (fn [item coll]
-      (_cons item coll))))
+(def conj
+  (fn [coll x]
+    (_emit_ "coll:conj(x)")))
+
+(def cons
+  (fn [x seq]
+    (_emit_ "seq:cons(x)")))
 
 (def second
   (fn [cell]
