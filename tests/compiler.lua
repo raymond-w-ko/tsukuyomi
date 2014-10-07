@@ -87,22 +87,6 @@ test([[
   (fn [x y]
     (_emit_ "x + y")))
 
-(def first
-  (fn [coll]
-    (_emit_ "coll:first()")))
-
-(def rest
-  (fn [coll]
-    (_emit_ "coll:rest()")))
-
-(def cons
-  (fn [x seq]
-    (_emit_ "seq:cons(x)")))
-
-(def second
-  (fn [coll]
-    (first (rest coll))))
-
 (def test1 (fn [] (print "foobar")))
 (test1)
 
