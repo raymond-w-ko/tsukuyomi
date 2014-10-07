@@ -10,37 +10,24 @@ end
 
 function Symbol:__tostring()
   if self.namespace then
-    return self.namespace .. '/' .. self.name
+    return table.concat({self.namespace, '/', self.name})
   else
     return self.name
   end
 end
 
--- use a table with weak references to make sure that only one symbol can ever be created.
--- when we create symbols, we look at this cache first to see if it exists first
---
--- this way, we can use Lua == to check for symbol equality
-local symbol_cache = {}
-setmetatable(symbol_cache, {__mode = 'v'})
+function Symbol.__eq(a, b)
+  return a.name == b.name and a.namespace == b.namespace
+end
 
-function Symbol.intern(name, namespace)
-  local key
-  if namespace then
-    key = namespace .. '/' .. name
-  else
-    key = name
-  end
-  local value = symbol_cache[key]
-  if value then
-    return value
-  end
+function Symbol:meta()
+  return self._meta
+end
 
-  local symbol = {
-    ['name'] = name,
-    ['namespace'] = namespace,
-  }
-  setmetatable(symbol, Symbol)
+function Symbol:with_meta(m)
+  return Symbol.intern(self.name, self.namespace, m)
+end
 
-  symbol_cache[key] = symbol
-  return symbol
+function Symbol.intern(name, namespace, meta)
+  return setmetatable({name = name, namespace = namespace, _meta = meta}, Symbol)
 end
