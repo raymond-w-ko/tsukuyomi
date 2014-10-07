@@ -23,8 +23,8 @@ function PersistentHashMap:assoc(key, value)
   return setmetatable({hamt = hamt}, PersistentHashMap)
 end
 
-function PersistentHashMap:get(key)
-  assert(type(key) == 'number', 'PersistentHashMap:get() only accepts string keys right now')
+function PersistentHashMap:get(key, not_found)
+  assert(type(key) == 'string', 'PersistentHashMap:get() only accepts string keys right now')
   return hamt.tryGetHash(not_found, hash(key), key, self.hamt)
 end
 
