@@ -16,6 +16,7 @@ require('tsukuyomi.lang.PersistentVector')
 require('tsukuyomi.lang.PersistentHashMap')
 
 require('tsukuyomi.lang.Function')
+require('tsukuyomi.lang.Var')
 
 require('tsukuyomi.core.printer')
 
