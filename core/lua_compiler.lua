@@ -190,6 +190,20 @@ function Compiler.compile_to_lua(ir_list)
     elseif insn.op == 'ENDVARFENCE' then
       emit('end')
       indent = indent - 1
+    elseif insn.op == 'INTERNVAR' then
+      local var_ns = 'tsukuyomi.lang.Var'
+      used_namespaces[var_ns] = true
+      emit(convert_ns_to_lua(var_ns))
+      emit('.intern(')
+      emit(make_unique_data_var(data_bindings, insn.data_key))
+      emit(')')
+    elseif insn.op == 'GETVAR' then
+      local var_ns = 'tsukuyomi.lang.Var'
+      used_namespaces[var_ns] = true
+      emit(convert_ns_to_lua(var_ns))
+      emit('.get(')
+      emit(make_unique_data_var(data_bindings, insn.data_key))
+      emit(')')
     else
       print('unknown opcode: ' .. insn.op)
       assert(false)

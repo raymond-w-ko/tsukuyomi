@@ -1,4 +1,5 @@
 local tsukuyomi = tsukuyomi
+local tsukuyomi_core = tsukuyomi.core
 local util = require('tsukuyomi.thirdparty.util')
 local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
 
@@ -16,6 +17,8 @@ local kLetSymbol = Symbol.intern("let")
 local PersistentList = tsukuyomi.lang.PersistentList
 local PersistentVector = tsukuyomi.lang.PersistentVector
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
+
+local Var = tsukuyomi.lang.Var
 
 --------------------------------------------------------------------------------
 -- standard doubly-linked list
@@ -203,21 +206,26 @@ special_forms[tostring(kNsSymbol)] = function(node, datum, new_dirty_nodes)
 end
 
 special_forms[tostring(kDefSymbol)] = function(node, datum, new_dirty_nodes)
+  local orig_node = node
+
+  local symbol = datum:first()
+  local intern_var_node = Compiler.ll_new_node('INTERNVAR', orig_node.environment)
+  intern_var_node.args = {}
+  local bound_symbol = tsukuyomi_core['*ns*']:bind_symbol(symbol)
+  intern_var_node.data_key = tsukuyomi.store_data(bound_symbol)
+  Compiler.ll_insert_before(node, intern_var_node)
+
   -- (def symbol datum)
   local defnode = Compiler.ll_new_node('LISP', node.environment)
   table.insert(new_dirty_nodes, defnode)
   defnode.op = 'LISP'
-  defnode.define_symbol = datum[1]
+  defnode.define_symbol = symbol
   defnode.args = { datum[2][1] }
   Compiler.ll_insert_before(node, defnode)
 
-  -- it's not possible to get a return value on an assignment, to just add a
-  -- dummy instruction after it
-  -- TODO: figure out what the sensible dummy return value is
-  -- TODO: can we even have something like a Clojure Var?
-  node.op = 'LISP'
-  node.args = {true}
-  table.insert(new_dirty_nodes, node)
+  node.op = 'GETVAR'
+  node.args = {}
+  node.data_key = tsukuyomi.store_data(bound_symbol)
 end
 
 special_forms[tostring(kEmitSymbol)] = function(node, datum, new_dirty_nodes)
@@ -448,8 +456,10 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
     local first = datum:first()
     local rest = datum:rest()
     local symbol
+    local symbol_name
     if getmetatable(first) == Symbol then
-      symbol = tostring(first)
+      symbol = first
+      symbol_name = tostring(first)
     end
 
     assert(first ~= nil, 'tsukuyomi.lang.Compiler: attempted to call with a nil function or empty list')
@@ -457,14 +467,28 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
     -- below does not hold, it make actually be another list, which returns a function,
     -- like: ((fn [x] (+ 1 x)) 42)
     -- assert(getmetatable(first) == Symbol)
-    if special_forms[symbol] then
-      special_forms[symbol](node, rest, new_dirty_nodes)
-    else
-      -- normal function call
-      node.op = 'CALL'
-      node.args = datum:ToLuaArray()
-      table.insert(new_dirty_nodes, node)
+    if special_forms[symbol_name] then
+      special_forms[symbol_name](node, rest, new_dirty_nodes)
+      return
     end
+
+    -- check to see if this is actually a macro
+    if symbol and not node.environment:has_symbol(symbol) then
+      local len = symbol_name:len()
+      -- make sure it is not an interop macro
+      if symbol_name:sub(1, 1) ~= '.' and symbol_name:sub(len, len) ~= '.' then
+        local bound_symbol = tsukuyomi_core['*ns*']:bind_symbol(symbol)
+        local var = Var.get(bound_symbol)
+        if var and var:is_macro() then
+          print('*** FOUND MACRO ***')
+        end
+      end
+    end
+
+    -- normal function call
+    node.op = 'CALL'
+    node.args = datum:ToLuaArray()
+    table.insert(new_dirty_nodes, node)
   elseif mt == PersistentVector then
     assert(false)
   elseif mt == PersistentHashMap then

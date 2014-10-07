@@ -40,3 +40,10 @@
 (def seq
   (fn [coll]
     (.seq coll)))
+
+(def
+  ^{:macro true} defn
+  (fn [name forms]
+   1))
+
+(defn)
