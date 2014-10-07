@@ -136,14 +136,20 @@ end
 function EnvironmentMetatable:extend_with(symbols)
   local newenv = create_environment()
   for i = 1, #symbols do
-    newenv.symbols[symbols[i]] = true
+    local symbol = symbols[i]
+    assert(getmetatable(symbol) == Symbol,
+           'EnvironmentMetatable:extend_with(): argument must be a list of tsukuyomi.lang.Symbol')
+    newenv.symbols[tostring(symbol)] = true
   end
   newenv.parent = self
   return newenv
 end
 
 function EnvironmentMetatable:has_symbol(symbol)
-  if self.symbols[symbol] then
+  assert(getmetatable(symbol) == Symbol,
+         'EnvironmentMetatable:has_symbol(): argument must be tsukuyomi.lang.Symbol')
+
+  if self.symbols[tostring(symbol)] then
     return true
   end
 
@@ -161,8 +167,7 @@ function EnvironmentMetatable:__tostring()
   while env do
     table.insert(t, '(')
     for symbol, _ in pairs(env.symbols) do
-      assert(getmetatable(symbol) == Symbol)
-      table.insert(t, symbol.name)
+      table.insert(t, symbol)
     end
     table.insert(t, ')')
     env = env.parent
@@ -176,11 +181,12 @@ end
 -- dispatch tables to compile down input
 
 -- used to implement dispatch based on the first / car of a cons cell
-local special_forms = {}
+Compiler.special_forms = {}
+local special_forms = Compiler.special_forms
 
 -- TODO: support other namespaces via require
 -- TODO: check for symbol collision in namespaces
-special_forms[kNsSymbol] = function(node, datum, new_dirty_nodes)
+special_forms[tostring(kNsSymbol)] = function(node, datum, new_dirty_nodes)
   node.op = 'NS'
   node.args = {datum[1]}
 
@@ -196,7 +202,7 @@ special_forms[kNsSymbol] = function(node, datum, new_dirty_nodes)
   end
 end
 
-special_forms[kDefSymbol] = function(node, datum, new_dirty_nodes)
+special_forms[tostring(kDefSymbol)] = function(node, datum, new_dirty_nodes)
   -- (def symbol datum)
   local defnode = Compiler.ll_new_node('LISP', node.environment)
   table.insert(new_dirty_nodes, defnode)
@@ -214,19 +220,19 @@ special_forms[kDefSymbol] = function(node, datum, new_dirty_nodes)
   table.insert(new_dirty_nodes, node)
 end
 
-special_forms[kEmitSymbol] = function(node, datum, new_dirty_nodes)
+special_forms[tostring(kEmitSymbol)] = function(node, datum, new_dirty_nodes)
   node.op = 'RAW'
   local inline = datum[1]
   assert(type(inline) == 'string')
   node.args = {inline}
 end
 
-special_forms[kQuoteSymbol] = function(node, datum, new_dirty_nodes)
+special_forms[tostring(kQuoteSymbol)] = function(node, datum, new_dirty_nodes)
   node.op = 'DATA'
   node.data_key = tsukuyomi.store_data(datum:first())
 end
 
-special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
+special_forms[tostring(kIfSymbol)] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local ret_var_node = Compiler.ll_new_node('EMPTYVAR', orig_node.environment)
@@ -294,7 +300,7 @@ special_forms[kIfSymbol] = function(node, datum, new_dirty_nodes)
   node.args = { ret_var_name }
 end
 
-special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
+special_forms[tostring(kLetSymbol)] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local bindings = datum[1]
@@ -360,7 +366,7 @@ special_forms[kLetSymbol] = function(node, datum, new_dirty_nodes)
   node.args = { ret_var_name }
 end
 
-special_forms[kFnSymbol] = function(node, datum, new_dirty_nodes)
+special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
   -- (fn [arg0 arg1] (body))
   local orig_node = node
   node.op = 'FUNC'
@@ -439,10 +445,20 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
   local datum = node.args[1]
   local mt = getmetatable(datum)
   if mt == PersistentList then
-    local first = datum[1]
-    local rest = datum[2]
-    if special_forms[first] then
-      special_forms[first](node, rest, new_dirty_nodes)
+    local first = datum:first()
+    local rest = datum:rest()
+    local symbol
+    if getmetatable(first) == Symbol then
+      symbol = tostring(first)
+    end
+
+    assert(first ~= nil, 'tsukuyomi.lang.Compiler: attempted to call with a nil function or empty list')
+
+    -- below does not hold, it make actually be another list, which returns a function,
+    -- like: ((fn [x] (+ 1 x)) 42)
+    -- assert(getmetatable(first) == Symbol)
+    if special_forms[symbol] then
+      special_forms[symbol](node, rest, new_dirty_nodes)
     else
       -- normal function call
       node.op = 'CALL'
