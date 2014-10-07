@@ -71,5 +71,5 @@ function Namespace:bind_symbol(symbol)
   -- namespaces so you import math / other libraries
   local ns = symbol.namespace or self.name
   local name = symbol.name
-  return Symbol.intern(name, ns)
+  return Symbol.intern(name, ns, symbol:meta())
 end
