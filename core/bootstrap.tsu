@@ -81,5 +81,18 @@
                     arg2 (first args)]
                 (f arg0 arg1 arg2)))))))))
 
-(defn foo
-  [bar] (+ 1 bar))
+;(defn foo
+  ;[bar] (+ 1 bar))
+
+(def list
+  (fn
+    ([] '())
+    ([x] (cons x '()))
+    ([x y] (cons x (list y)))
+    ([x y z] (cons x (list y z)))
+    ))
+
+(print (list))
+(print (list 1))
+(print (list 1 2))
+(print (list 1 2 3))
