@@ -201,7 +201,7 @@ function Compiler.compile_to_lua(ir_list)
       local var_ns = 'tsukuyomi.lang.Var'
       used_namespaces[var_ns] = true
       emit(convert_ns_to_lua(var_ns))
-      emit('.get(')
+      emit('.getVar(')
       emit(make_unique_data_var(data_bindings, insn.data_key))
       emit(')')
     else

@@ -41,9 +41,45 @@
   (fn [coll]
     (.seq coll)))
 
+(def print
+  (fn [x]
+    (_emit_ "io.write(tsukuyomi.print(x))")
+    (_emit_ "io.write('\\n')")
+    nil
+    ))
+
 (def
   ^{:macro true} defn
-  (fn [name forms]
-   1))
+  (fn [name arg form]
+   '(print "ayy, lmao")))
 
-(defn)
+(def count
+  (fn [coll] (.count coll)))
+
+(def ===
+  (fn [x y] (_emit_ "x == y")))
+
+(def =
+  (fn [x y] (=== x y)))
+
+(def apply
+  (fn [f args]
+    (let [num_args (count args)]
+      (if (= num_args 0)
+        (f)
+        (if (= num_args 1)
+          (f (first args))
+          (if (= num_args 2)
+            (f (first args) (second args))
+            (if (= num_args 3)
+              (let [arg0 (first args)
+                    args (rest args)
+
+                    arg1 (first args)
+                    args (rest args)
+
+                    arg2 (first args)]
+                (f arg0 arg1 arg2)))))))))
+
+(defn foo
+  [bar] (+ 1 bar))

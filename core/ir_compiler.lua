@@ -478,9 +478,15 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
       -- make sure it is not an interop macro
       if symbol_name:sub(1, 1) ~= '.' and symbol_name:sub(len, len) ~= '.' then
         local bound_symbol = tsukuyomi_core['*ns*']:bind_symbol(symbol)
-        local var = Var.get(bound_symbol)
+        local var = Var.getVar(bound_symbol)
         if var and var:is_macro() then
-          print('*** FOUND MACRO ***')
+          local transformed_list = tsukuyomi_core['apply'][2](var:get(), rest)
+          Compiler._log('*** MACRO TRANSFORMATION TO ***')
+          Compiler._log(tsukuyomi.print(transformed_list))
+
+          node.args[1] = transformed_list
+          table.insert(new_dirty_nodes, node)
+          return
         end
       end
     end

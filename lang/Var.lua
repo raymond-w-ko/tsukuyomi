@@ -2,6 +2,7 @@ local tsukuyomi = tsukuyomi
 local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 local Symbol = tsukuyomi.lang.Symbol
+local Namespace = tsukuyomi.lang.Namespace
 
 -- Since variables do not not as feature rich or complicated as Clojure, this
 -- is basically just a place to:
@@ -11,7 +12,7 @@ Var.__index = Var
 tsukuyomi_lang.Var = Var
 
 local var_cache = {}
-setmetatable(var_cache, {__mode = 'v'})
+--setmetatable(var_cache, {__mode = 'v'})
 
 function Var.intern(symbol)
   assert(getmetatable(symbol) == Symbol, 'tsukuyomi.lang.Var.intern() only accepts Symbols')
@@ -22,7 +23,7 @@ function Var.intern(symbol)
   if var_cache[fullname] then
     var = var_cache[fullname]
   else
-    var = {}
+    var = {_symbol = symbol}
     setmetatable(var, Var)
     var_cache[fullname] = var
   end
@@ -32,8 +33,13 @@ function Var.intern(symbol)
   return var
 end
 
-function Var.get(symbol)
+function Var.getVar(symbol)
   return var_cache[tostring(symbol)]
+end
+
+function Var:get()
+  local ns = Namespace.GetNamespaceSpace(self._symbol.namespace)
+  return ns[self._symbol.name]
 end
 
 function Var:set_metadata(m)
