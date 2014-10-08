@@ -3,6 +3,11 @@ local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Comp
 
 local log = io.open('tsukuyomi/tests/compiler.out.txt', 'w')
 if not log then assert(false) end
+function Compiler._log(line)
+  log:write(line)
+  log:write('\n')
+end
+
 
 function Compiler.compile(datum)
   log:write('*** Lisp ***\n\n')
