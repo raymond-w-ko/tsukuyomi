@@ -14,12 +14,23 @@ end
 --
 -- Since the basis of Lisp is linked lists, this will serve to conserve memory.
 --
--- If you ever use this on original Lua, move "count" to be self[3], otherwise
--- you create an array part as well as a hash part, which would be bad
+-- If you ever use this on original Lua, move "meta" to be self[4], otherwise
+-- you create an array part as well as a hash part, which would be a waste of memory.
 assert(_G.jit)
 
-function PersistentList.new(first, rest, count)
-  return setmetatable({[0] = count, first, rest}, PersistentList)
+function PersistentList.new(meta, first, rest, count)
+  return setmetatable({[0] = meta, first, rest, count}, PersistentList)
+end
+
+function PersistentList:meta()
+  return self[0]
+end
+function PersistentList:with_meta(meta)
+  if self[0] ~= meta then
+    return PersistentList.new(meta, self[1], self[2], self[3])
+  else
+    return self
+  end
 end
 
 function PersistentList:first()
@@ -28,20 +39,81 @@ end
 function PersistentList:rest()
   return self[2]
 end
+function PersistentList:next()
+  if self[3] == 1 then
+    return nil
+  else
+    return self[2]
+  end
+end
 function PersistentList:count()
-  return self[0]
+  return self[3]
 end
 
 function PersistentList:cons(datum)
-  return PersistentList.new(datum, self, self[0] + 1)
+  return PersistentList.new(self[0], datum, self, self[3] + 1)
 end
 
-local EMPTY = {}
-PersistentList.EMPTY = EMPTY
-function EMPTY:cons(datum)
-  return PersistentList.new(datum, nil, 1)
+-- EMPTY list specialization, which is weird
+--------------------------------------------------------------------------------
+
+local EmptyList = {}
+EmptyList.__index = EmptyList
+-- This is a persistent data structure :-)
+EmptyList.__newindex = function()
+  assert(false)
 end
-setmetatable(EMPTY, PersistentList)
+
+function EmptyList.new(meta)
+  return setmetatable({_meta = meta}, EmptyList)
+end
+
+function EmptyList:hash_code()
+  return 1
+end
+
+function EmptyList:first()
+  return nil
+end
+function EmptyList:rest()
+  return self
+end
+function EmptyList:next()
+  return nil
+end
+function EmptyList:empty()
+  return self
+end
+function EmptyList:count()
+  return 0
+end
+function EmptyList:is_empty()
+  return true
+end
+
+function EmptyList:cons(datum)
+  return PersistentList.new(self._meta, datum, nil, 1)
+end
+
+function EmptyList:meta()
+  return self._meta
+end
+function EmptyList:with_meta(meta)
+  if self._meta ~= meta then
+    return EmptyList.new(meta)
+  else
+    return self
+  end
+end
+
+local EMPTY = EmptyList.new()
+PersistentList.EMPTY = EMPTY
+
+--------------------------------------------------------------------------------
+
+function PersistentList:empty()
+  return EMPTY
+end
 
 function PersistentList.FromLuaArray(array, len)
   len = len or #array
@@ -66,12 +138,4 @@ function PersistentList:ToLuaArray()
   end
 
   return array, self:count()
-end
-
-function PersistentList:meta()
-  return self[3]
-end
-
-function PersistentList:with_meta(m)
-  return setmetatable({[0] = self:count(), self:first(), self:rest(), m}, PersistentList)
 end
