@@ -112,17 +112,11 @@ PersistentList.EMPTY = EMPTY
 --------------------------------------------------------------------------------
 
 function PersistentList:empty()
-  return EMPTY
+  return EMPTY:with_meta(self[0])
 end
 
 function PersistentList.FromLuaArray(array, len)
-  len = len or #array
-
-  local plist = EMPTY
-  for i = len, 1, -1 do
-    plist = plist:cons(array[i])
-  end
-  return plist
+  assert(false, 'PersistentList.FromLuaArray(): use ArraySeq instead')
 end
 
 function PersistentList:ToLuaArray()
