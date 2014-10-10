@@ -1,3 +1,4 @@
+local util = require('tsukuyomi.thirdparty.util')
 local tsukuyomi = tsukuyomi
 local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
 

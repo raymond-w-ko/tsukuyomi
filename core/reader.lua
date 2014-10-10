@@ -2,6 +2,7 @@ local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
 local PushbackReader = tsukuyomi.lang.PushbackReader
 local PersistentList = tsukuyomi.lang.PersistentList
+local ArraySeq = tsukuyomi.lang.ArraySeq
 local PersistentVector = tsukuyomi.lang.PersistentVector
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 local Symbol = tsukuyomi.lang.Symbol
@@ -258,7 +259,7 @@ local function read_list(r, ch)
   if #array == 0 then
     return PersistentList.EMPTY
   else
-    return PersistentList.FromLuaArray(array, len)
+    return ArraySeq.new(nil, array, 1, len)
   end
 end
 macros['('] = read_list

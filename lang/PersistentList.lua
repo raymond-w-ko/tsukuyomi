@@ -125,11 +125,11 @@ function PersistentList:ToLuaArray()
 
   local datum = self
 
-  while datum ~= nil and datum ~= EMPTY do
+  while datum do
     array[next_slot] = datum:first()
     next_slot = next_slot + 1
-    datum = datum:rest()
+    datum = datum:next()
   end
 
-  return array, self:count()
+  return array, self[3]
 end

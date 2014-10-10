@@ -12,6 +12,7 @@ require('tsukuyomi.lang.Namespace')
 require('tsukuyomi.lang.PushbackReader')
 
 require('tsukuyomi.lang.PersistentList')
+require('tsukuyomi.lang.ArraySeq')
 require('tsukuyomi.lang.PersistentVector')
 require('tsukuyomi.lang.PersistentHashMap')
 

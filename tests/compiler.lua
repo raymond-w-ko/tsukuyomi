@@ -1,3 +1,4 @@
+local util = require('tsukuyomi.thirdparty.util')
 local tsukuyomi = tsukuyomi
 local Symbol = tsukuyomi.lang.Symbol
 local PushbackReader = tsukuyomi.lang.PushbackReader
@@ -28,7 +29,7 @@ local function test(text)
     print(tsukuyomi.print(datum))
 
     local info
-    if getmetatable(datum) == PersistentList then
+    if type(datum) == 'table' and datum.first then
       if datum:first() == def_symbol then
         local symbol = datum:rest():first()
         symbol = tsukuyomi.core['*ns*']:bind_symbol(symbol)

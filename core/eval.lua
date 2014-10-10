@@ -14,7 +14,7 @@ local def_symbol = Symbol.intern('def')
 
 local function describe(datum)
   local info
-  if getmetatable(datum) == PersistentList then
+  if type(datum) == 'table' and datum.first then
     if datum:first() == def_symbol then
       local symbol = datum:rest():first()
       symbol = tsukuyomi.core['*ns*']:bind_symbol(symbol)

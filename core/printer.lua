@@ -41,10 +41,10 @@ function tsukuyomi.print(datum)
     return '{' .. table.concat(items, ' ') .. '}'
   elseif datum.first ~= nil then
     local items = {}
-    while datum ~= nil and datum ~= PersistentList.EMPTY do
+    while datum ~= nil do
       local item = datum:first()
       table.insert(items, tsukuyomi.print(item))
-      datum = datum:rest()
+      datum = datum:next()
     end
     return '(' .. table.concat(items, ' ') .. ')'
   else

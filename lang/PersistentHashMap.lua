@@ -3,6 +3,7 @@ local hash = hamt.hash
 local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
 local PersistentVector = tsukuyomi.lang.PersistentVector
 local PersistentList = tsukuyomi.lang.PersistentList
+local ArraySeq = tsukuyomi.lang.ArraySeq
 
 local PersistentHashMap = {}
 tsukuyomi_lang.PersistentHashMap = PersistentHashMap
@@ -50,7 +51,7 @@ end
 function PersistentHashMap:seq()
   -- TODO: make this more efficient
   local array = hamt.fold(build_key_value_fn, {}, self.hamt)
-  return PersistentList.FromLuaArray(array)
+  return ArraySeq.new(self:meta(), array, 1, #array)
 end
 
 function PersistentHashMap.FromLuaArray(array, len)

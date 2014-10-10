@@ -191,7 +191,7 @@ local special_forms = Compiler.special_forms
 -- TODO: check for symbol collision in namespaces
 special_forms[tostring(kNsSymbol)] = function(node, datum, new_dirty_nodes)
   node.op = 'NS'
-  node.args = {datum[1]}
+  node.args = {datum:first()}
 
   -- TODO: see if it makes sense to return anything here other than a dummy value
   if node.is_return then
@@ -220,7 +220,7 @@ special_forms[tostring(kDefSymbol)] = function(node, datum, new_dirty_nodes)
   table.insert(new_dirty_nodes, defnode)
   defnode.op = 'LISP'
   defnode.define_symbol = symbol
-  defnode.args = { datum[2][1] }
+  defnode.args = { datum:rest():first() }
   Compiler.ll_insert_before(node, defnode)
 
   node.op = 'GETVAR'
@@ -230,7 +230,7 @@ end
 
 special_forms[tostring(kEmitSymbol)] = function(node, datum, new_dirty_nodes)
   node.op = 'RAW'
-  local inline = datum[1]
+  local inline = datum:first()
   assert(type(inline) == 'string')
   node.args = {inline}
 end
@@ -255,11 +255,11 @@ special_forms[tostring(kIfSymbol)] = function(node, datum, new_dirty_nodes)
 
   local test = datum
   -- this can be nil legitimately, although I don't know why anyone would do this
-  --assert(test[1] ~= nil)
+  --assert(test:first() ~= nil)
   local var_test_node = Compiler.ll_new_node('NEWLVAR', orig_node.environment)
   table.insert(new_dirty_nodes, var_test_node)
   local var_name = make_unique_var_name('cond')
-  var_test_node.args = {var_name, test[1]}
+  var_test_node.args = {var_name, test:first()}
   Compiler.ll_insert_after(node, var_test_node)
   node = var_test_node
 
@@ -268,11 +268,11 @@ special_forms[tostring(kIfSymbol)] = function(node, datum, new_dirty_nodes)
   Compiler.ll_insert_after(node, if_node)
   node = if_node
 
-  local then_cell = test[2]
+  local then_cell = test:rest()
   assert(then_cell)
   local then_node = Compiler.ll_new_node('LISP', orig_node.environment)
   table.insert(new_dirty_nodes, then_node)
-  then_node.args = { then_cell[1] }
+  then_node.args = { then_cell:first() }
   then_node.set_var_name = ret_var_name
   Compiler.ll_insert_after(node, then_node)
   node = then_node
@@ -281,11 +281,11 @@ special_forms[tostring(kIfSymbol)] = function(node, datum, new_dirty_nodes)
   Compiler.ll_insert_after(node, else_keyword_node)
   node = else_keyword_node
 
-  local else_cell = then_cell[2]
+  local else_cell = then_cell:rest()
   local else_node
   if else_cell then
     else_node = Compiler.ll_new_node('LISP', orig_node.environment)
-    else_node.args = { else_cell[1] }
+    else_node.args = { else_cell:first() }
     table.insert(new_dirty_nodes, else_node)
   else
     else_node = Compiler.ll_new_node('PRIMITIVE', orig_node.environment)
@@ -311,9 +311,9 @@ end
 special_forms[tostring(kLetSymbol)] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
-  local bindings = datum[1]
+  local bindings = datum:first()
   assert(bindings and getmetatable(bindings) == PersistentVector and (bindings:count() % 2 == 0))
-  local exprs = datum[2]
+  local exprs = datum:rest()
 
   local ret_var_node = Compiler.ll_new_node('EMPTYVAR', orig_node.environment)
   local ret_var_name = make_unique_var_name('let_ret')
@@ -344,21 +344,21 @@ special_forms[tostring(kLetSymbol)] = function(node, datum, new_dirty_nodes)
     i = i + 2
   end
 
-  while exprs and exprs[1] do
+  while exprs do
     local fence = Compiler.ll_new_node('VARFENCE', extended_environment)
     Compiler.ll_insert_after(node, fence)
     node = fence
 
     local lisp_node = Compiler.ll_new_node('LISP', extended_environment)
-    lisp_node.args = { exprs[1] }
-    if exprs[2] == nil then
+    lisp_node.args = { exprs:first() }
+    if exprs:next() == nil then
       lisp_node.set_var_name = ret_var_name
     end
     table.insert(new_dirty_nodes, lisp_node)
     Compiler.ll_insert_after(node, lisp_node)
     node = lisp_node
 
-    exprs = exprs[2]
+    exprs = exprs:next()
 
     local endfence = Compiler.ll_new_node('ENDVARFENCE', extended_environment)
     Compiler.ll_insert_after(node, endfence)
@@ -381,16 +381,16 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
   node.args = nil
 
   local bodies = {}
-  local mt = getmetatable(datum:first())
-  if mt == PersistentList then
+  local mt = datum.first and getmetatable(datum:first())
+  if mt == PersistentVector then
+    -- this function has only 1 arity
+    table.insert(bodies, datum)
+  elseif datum:first() then
     -- this function has multiple aritys
     while datum do
       table.insert(bodies, datum:first())
-      datum = datum:rest()
+      datum = datum:next()
     end
-  elseif mt == PersistentVector then
-    -- this function has only 1 arity
-    table.insert(bodies, datum)
   else
     assert(false)
   end
@@ -417,15 +417,15 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
       node.args[i + 1] = tostring(args:get(i))
     end
 
-    while exprs and exprs[1] do
+    while exprs do
       local fence = Compiler.ll_new_node('VARFENCE', extended_environment)
       Compiler.ll_insert_after(node, fence)
       node = fence
 
       local lisp_node = Compiler.ll_new_node('LISP', extended_environment)
       table.insert(new_dirty_nodes, lisp_node)
-      lisp_node.args = { exprs[1] }
-      if exprs[2] == nil then
+      lisp_node.args = { exprs:first() }
+      if exprs:next() == nil then
         lisp_node.is_return = true
       end
       Compiler.ll_insert_after(node, lisp_node)
@@ -435,7 +435,7 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
       Compiler.ll_insert_after(node, endfence)
       node = endfence
 
-      exprs = exprs[2]
+      exprs = exprs:next()
     end
 
     local end_func_body_node = Compiler.ll_new_node('ENDFUNCBODY', extended_environment)
@@ -452,7 +452,13 @@ local op_dispatch = {}
 op_dispatch['LISP'] = function(node, new_dirty_nodes)
   local datum = node.args[1]
   local mt = getmetatable(datum)
-  if mt == PersistentList then
+  if mt == PersistentVector then
+    assert(false)
+  elseif mt == PersistentHashMap then
+    assert(false)
+  elseif type(datum) == 'table' and datum.first ~= nil then
+    --print(tsukuyomi.print(datum))
+    --print(util.show(datum))
     local first = datum:first()
     local rest = datum:rest()
     local symbol
@@ -495,10 +501,6 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
     node.op = 'CALL'
     node.args = datum:ToLuaArray()
     table.insert(new_dirty_nodes, node)
-  elseif mt == PersistentVector then
-    assert(false)
-  elseif mt == PersistentHashMap then
-    assert(false)
   else
     local primitive = compile_lua_primitive(datum)
     node.op = 'PRIMITIVE'
