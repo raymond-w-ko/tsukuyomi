@@ -23,14 +23,6 @@ function tsukuyomi.print(datum)
 
   if mt == Symbol then
     return tostring(datum)
-  elseif mt == PersistentList then
-    local items = {}
-    while datum ~= nil and datum ~= PersistentList.EMPTY do
-      local item = datum:first()
-      table.insert(items, tsukuyomi.print(item))
-      datum = datum:rest()
-    end
-    return '(' .. table.concat(items, ' ') .. ')'
   elseif mt == PersistentVector then
     local items = {}
     for i = 0, datum:count() - 1 do
@@ -47,6 +39,14 @@ function tsukuyomi.print(datum)
       seq = seq:rest()
     end
     return '{' .. table.concat(items, ' ') .. '}'
+  elseif datum.first ~= nil then
+    local items = {}
+    while datum ~= nil and datum ~= PersistentList.EMPTY do
+      local item = datum:first()
+      table.insert(items, tsukuyomi.print(item))
+      datum = datum:rest()
+    end
+    return '(' .. table.concat(items, ' ') .. ')'
   else
     print(util.show(datum))
     assert(false)
