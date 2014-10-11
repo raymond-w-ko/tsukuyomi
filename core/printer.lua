@@ -1,5 +1,6 @@
 local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
+
 local PersistentList = tsukuyomi.lang.PersistentList
 local PersistentVector = tsukuyomi.lang.PersistentVector
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
