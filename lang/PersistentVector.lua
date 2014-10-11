@@ -1,8 +1,9 @@
 local hamt = require('hamt')
-local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
+local tsukuyomi = tsukuyomi
+local util = require('tsukuyomi.thirdparty.util')
 
 local PersistentVector = {}
-tsukuyomi_lang.PersistentVector = PersistentVector
+tsukuyomi.lang.PersistentVector = PersistentVector
 PersistentVector.__index = PersistentVector
 -- This is a persistent data structure :-)
 PersistentVector.__newindex = function()

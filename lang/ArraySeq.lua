@@ -1,5 +1,6 @@
+local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
-local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
+
 local PersistentList = tsukuyomi.lang.PersistentList
 local EMPTY = PersistentList.EMPTY
 
@@ -10,7 +11,7 @@ local EMPTY = PersistentList.EMPTY
 -- This is necessary to maintain speed in (read)ing and destructuring of
 -- function call argument [& rest]
 local ArraySeq = {}
-tsukuyomi_lang.ArraySeq = ArraySeq
+tsukuyomi.lang.ArraySeq = ArraySeq
 ArraySeq.__index = ArraySeq
 -- This is a persistent data structure :-)
 ArraySeq.__newindex = function()

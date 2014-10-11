@@ -1,7 +1,7 @@
-local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
+local tsukuyomi = tsukuyomi
 
 local PushbackReader = {}
-tsukuyomi_lang.PushbackReader = PushbackReader
+tsukuyomi.lang.PushbackReader = PushbackReader
 PushbackReader.__index = PushbackReader
 
 function PushbackReader.new(text, filename)

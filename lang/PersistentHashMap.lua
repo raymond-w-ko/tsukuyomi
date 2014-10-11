@@ -1,12 +1,15 @@
 local hamt = require('hamt')
 local hash = hamt.hash
-local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
+
+local tsukuyomi = tsukuyomi
+local util = require('tsukuyomi.thirdparty.util')
+
 local PersistentVector = tsukuyomi.lang.PersistentVector
 local PersistentList = tsukuyomi.lang.PersistentList
 local ArraySeq = tsukuyomi.lang.ArraySeq
 
 local PersistentHashMap = {}
-tsukuyomi_lang.PersistentHashMap = PersistentHashMap
+tsukuyomi.lang.PersistentHashMap = PersistentHashMap
 PersistentHashMap.__index = PersistentHashMap
 -- This is a persistent data structure :-)
 PersistentHashMap.__newindex = function()

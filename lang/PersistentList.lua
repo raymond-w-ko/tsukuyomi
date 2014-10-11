@@ -1,7 +1,7 @@
-local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
+local tsukuyomi = tsukuyomi
 
 local PersistentList = {}
-tsukuyomi_lang.PersistentList = PersistentList
+tsukuyomi.lang.PersistentList = PersistentList
 PersistentList.__index = PersistentList
 -- This is a persistent data structure :-)
 PersistentList.__newindex = function()
