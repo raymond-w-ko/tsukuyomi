@@ -1,5 +1,5 @@
 local tsukuyomi = tsukuyomi
-local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
+
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 local Symbol = tsukuyomi.lang.Symbol
 local Namespace = tsukuyomi.lang.Namespace
@@ -9,7 +9,7 @@ local Namespace = tsukuyomi.lang.Namespace
 -- 1. store metadata
 local Var = {}
 Var.__index = Var
-tsukuyomi_lang.Var = Var
+tsukuyomi.lang.Var = Var
 
 local var_cache = {}
 --setmetatable(var_cache, {__mode = 'v'})
