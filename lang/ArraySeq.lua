@@ -21,9 +21,6 @@ end
 assert(_G.jit)
 
 function ArraySeq.new(meta, array, cursor, count)
-  assert(array)
-  assert(cursor)
-  assert(count)
   return setmetatable({[0] = meta, array, cursor, count}, ArraySeq)
 end
 
