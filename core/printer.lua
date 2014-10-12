@@ -42,7 +42,7 @@ function tsukuyomi.print(datum)
     return '{' .. table.concat(items, ' ') .. '}'
   elseif datum.first ~= nil then
     local items = {}
-    while datum ~= nil do
+    while datum ~= nil and datum:count() > 0 do
       local item = datum:first()
       table.insert(items, tsukuyomi.print(item))
       datum = datum:next()
