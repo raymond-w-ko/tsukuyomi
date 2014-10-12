@@ -68,6 +68,11 @@ local function make_unique_data_var(data_bindings, data_key)
   return var_name
 end
 
+local kIgnoreVarGeneration = {
+  ['FUNCBODY'] = true,
+  ['RESTARGSAT'] = true,
+}
+
 function Compiler.compile_to_lua(ir_list)
   local lines = {}
 
@@ -86,11 +91,11 @@ function Compiler.compile_to_lua(ir_list)
   while insn do
     -- IR instructions can be tagged in the following fashion to signal
     -- variable definition, or returning
-    if insn.new_lvar_name and insn.op ~= 'FUNCBODY' then
+    if insn.new_lvar_name and not kIgnoreVarGeneration[insn.op] then
       emit('local ', insn.new_lvar_name, ' = ')
     elseif insn.set_var_name then
       emit(insn.set_var_name, ' = ')
-    elseif insn.define_symbol and insn.op ~= 'FUNCBODY' then
+    elseif insn.define_symbol and not kIgnoreVarGeneration[insn.op] then
       emit(symbol_to_lua(insn.define_symbol, used_namespaces), " = ")
     elseif insn.is_return then
       emit('return ')
@@ -171,6 +176,15 @@ function Compiler.compile_to_lua(ir_list)
         emit(arg_name)
         if i < #insn.args then emit(', ') end
       end
+      emit(')')
+    elseif insn.op == 'RESTARGSAT' then
+      if insn.new_lvar_name then
+        emit(insn.new_lvar_name)
+      elseif insn.define_symbol then
+        emit(symbol_to_lua(insn.define_symbol, used_namespaces))
+      end
+      emit(':make_functions_for_rest(')
+      emit(insn.args[1])
       emit(')')
     elseif insn.op == 'ENDFUNCBODY' then
       emit('end')
