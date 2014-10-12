@@ -13,6 +13,7 @@ local kFnSymbol = Symbol.intern('fn')
 local kEmitSymbol = Symbol.intern('_emit_')
 local kNilSymbol = Symbol.intern("nil")
 local kLetSymbol = Symbol.intern("let")
+local kAmpersandSymbol = Symbol.intern("&")
 
 local PersistentList = tsukuyomi.lang.PersistentList
 local PersistentVector = tsukuyomi.lang.PersistentVector
@@ -142,7 +143,9 @@ function EnvironmentMetatable:extend_with(symbols)
     local symbol = symbols[i]
     assert(getmetatable(symbol) == Symbol,
            'EnvironmentMetatable:extend_with(): argument must be a list of tsukuyomi.lang.Symbol')
-    newenv.symbols[tostring(symbol)] = true
+    if symbol ~= kAmpersandSymbol then
+      newenv.symbols[tostring(symbol)] = true
+    end
   end
   newenv.parent = self
   return newenv
@@ -395,6 +398,8 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
     assert(false)
   end
 
+  local rest_arg_index = false
+
   for i = 1, #bodies do
     local body = bodies[i]
     local args = body:first()
@@ -404,7 +409,7 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
     local func_node = Compiler.ll_new_node('FUNCBODY', extended_environment)
     Compiler.ll_insert_after(node, func_node)
     node = func_node
-    node.args = {}
+    node.args = {}; local slot = 1
     -- propagate what variable this function is suppose to live in
     node.new_lvar_name = orig_node.new_lvar_name
     node.define_symbol = orig_node.define_symbol
@@ -414,7 +419,13 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
     -- like (fn [foobar lol/wut] (+ foobar lol/wut))
     -- is it even worth it to check?
     for i = 0, args:count() - 1 do
-      node.args[i + 1] = tostring(args:get(i))
+      local arg_name = tostring(args:get(i))
+      if arg_name ~= '&' then
+        node.args[slot] = arg_name
+        slot = slot + 1
+      else
+        rest_arg_index = i + 1
+      end
     end
 
     while exprs do
@@ -441,6 +452,15 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
     local end_func_body_node = Compiler.ll_new_node('ENDFUNCBODY', extended_environment)
     Compiler.ll_insert_after(node, end_func_body_node)
     node = end_func_body_node
+  end
+
+  if rest_arg_index then
+    local rest_args_at_node = Compiler.ll_new_node('RESTARGSAT', orig_node.environment)
+    rest_args_at_node.new_lvar_name = orig_node.new_lvar_name
+    rest_args_at_node.define_symbol = orig_node.define_symbol
+    rest_args_at_node.args = {rest_arg_index}
+    Compiler.ll_insert_after(node, rest_args_at_node)
+    node = rest_args_at_node
   end
 
   local end_func_node = Compiler.ll_new_node('ENDFUNC', orig_node.environment)
