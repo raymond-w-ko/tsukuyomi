@@ -87,12 +87,56 @@
 (def list
   (fn
     ([] '())
-    ([x] (cons x '()))
-    ([x y] (cons x (list y)))
-    ([x y z] (cons x (list y z)))
-    ))
+    ([& args] args)))
 
 (print (list))
 (print (list 1))
 (print (list 1 2))
 (print (list 1 2 3))
+(print (list 1 2 3 4))
+(print (list 1 2 3 4 5))
+(print (list 1 2 3 4 5 6))
+(print (list 1 2 3 4 5 6 7))
+(print (list 1 2 3 4 5 6 7 8))
+(print (list 1 2 3 4 5 6 7 8 9))
+(print (list 1 2 3 4 5 6 7 8 9 10))
+(print (list 1 2 3 4 5 6 7 8 9 10 11))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12))
+
+(def test1
+  (fn
+    ([x] "x")
+    ([x & args] (cons x args))))
+
+(print (test1 "foo"))
+(print (test1 "foo" 1))
+(print (test1 "foo" 1 2))
+(print (test1 "foo" 1 2 3))
+(print (test1 "foo" 1 2 3 4))
+(print (test1 "foo" 1 2 3 4 5))
+(print (test1 "foo" 1 2 3 4 5 6))
+(print (test1 "foo" 1 2 3 4 5 6 7))
+(print (test1 "foo" 1 2 3 4 5 6 7 8))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
+
+(def test1
+  (fn
+    ([x y] "x")
+    ([x y & args] (cons x args))))
+
+(print (test1 "foo" "bar"))
+(print (test1 "foo" 1))
+(print (test1 "foo" 1 2))
+(print (test1 "foo" 1 2 3))
+(print (test1 "foo" 1 2 3 4))
+(print (test1 "foo" 1 2 3 4 5))
+(print (test1 "foo" 1 2 3 4 5 6))
+(print (test1 "foo" 1 2 3 4 5 6 7))
+(print (test1 "foo" 1 2 3 4 5 6 7 8))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
