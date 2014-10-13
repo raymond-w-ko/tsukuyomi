@@ -1,8 +1,7 @@
 local tsukuyomi = tsukuyomi
-local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
 
 local Symbol = {}
-tsukuyomi_lang.Symbol = Symbol
+tsukuyomi.lang.Symbol = Symbol
 Symbol.__index = Symbol
 Symbol.__newindex = function(t, k)
   assert(false, 'attempted to modify tsukuyomi.lang.Symbol')
