@@ -15,5 +15,8 @@ local function bcnumber_to_name( bcnum )
 end
  
 for _, v in ipairs(arg) do
-  print(bcnumber_to_name(tonumber(v)))
+  io.write(v)
+  io.write(' == ')
+  io.write(bcnumber_to_name(tonumber(v)))
+  io.write('\n')
 end
