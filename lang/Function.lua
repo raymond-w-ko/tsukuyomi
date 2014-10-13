@@ -9,7 +9,9 @@ function Function.new()
   return setmetatable({}, Function)
 end
 
-local kNumArgsBeforeGeneralizedRest = 8
+local kNumArgsBeforeGeneralizedRest = 16
+-- I really wnat to see code that has (fn [arg1 arg2 .. arg32 & rest])
+local kMaxArgsBeforeRestArg = 32
 
 -- eventually will be _rest_fn_creators[rest_arg_index][function_arity]
 Function._rest_fn_creators = {}
@@ -72,8 +74,10 @@ local function make_fn(base_fn, arity, rest_arg_index)
   text[slot] = 'end'; slot = slot + 1
 
   text = table.concat(text)
-  loadstring(text)()
-  --print(text)
+  local desc = '%d arg fn with rest @ %d'
+  desc = desc:format(arity, rest_arg_index)
+  local lua_chunk = loadstring(text, desc)
+  lua_chunk()
 end
 for arity = 1, kNumArgsBeforeGeneralizedRest do
   for rest_arg_index = 1, arity do
@@ -127,10 +131,12 @@ end
   text[slot] = chunk; slot = slot + 1
 
   text = table.concat(text)
-  loadstring(text)()
-  --print(text)
+  local desc = 'inf arg fn(...) arg fn with rest @ %d'
+  desc = desc:format(rest_arg_index)
+  local lua_chunk = loadstring(text, desc)
+  lua_chunk()
 end
-for rest_arg_index = 1, 20 do
+for rest_arg_index = 1, kMaxArgsBeforeRestArg do
   make_general_rest_fn(rest_arg_index)
 end
 
