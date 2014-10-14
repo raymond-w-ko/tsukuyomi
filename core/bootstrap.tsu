@@ -48,10 +48,16 @@
     nil
     ))
 
+(def concat
+  (fn [] '())
+  (fn [x] (seq x))
+  (fn [x y] (seq x)))
+
 (def
   ^{:macro true} defn
-  (fn [name arg form]
-   '(print "ayy, lmao")))
+  (fn [name & forms]
+   '(print "ayy, lmao")
+   ))
 
 (def count
   (fn [coll] (.count coll)))
@@ -80,9 +86,6 @@
 
                     arg2 (first args)]
                 (f arg0 arg1 arg2)))))))))
-
-;(defn foo
-  ;[bar] (+ 1 bar))
 
 (def list
   (fn
@@ -158,3 +161,10 @@
     ([x y & args] "arity 2 & rest")))
 
 (print (test3 "foo" "bar"))
+
+(print "vector seq test")
+(print (seq []))
+(print (seq [1]))
+(print (seq [1 2]))
+(print (seq [1 2 3]))
+(print "END vector seq test")
