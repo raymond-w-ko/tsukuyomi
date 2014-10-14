@@ -144,7 +144,23 @@ local FunctionWithRestArgsMetatable = {}
 
 FunctionWithRestArgsMetatable.__index = function(t, key)
   if type(key) == 'number' then
-    if t.rest_arg_index and key >= kNumArgsBeforeGeneralizedRest then
+    local rest_arg_index = t.rest_arg_index
+    if rest_arg_index and key >= kNumArgsBeforeGeneralizedRest then
+      return rawget(t, 'general_rest_fn')
+    end
+
+    -- check for empty rest args
+    -- being here in the metamethod means that a concrete one does not exists,
+    -- so upgrade it to the general rest fn
+    --
+    -- not sure if I am wise enough to say whether this should be allowed or not.
+    -- is a nil [& rest] really acceptable?
+    --
+    -- example:
+    --
+    -- ((fn ([] "foo") ([& args] "bar")) ) == "foo"
+    -- ((fn ([& args] "bar")) ) == "bar"
+    if key + 1 == t.rest_arg_index then
       return rawget(t, 'general_rest_fn')
     end
   end

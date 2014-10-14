@@ -86,7 +86,6 @@
 
 (def list
   (fn
-    ([] '())
     ([& args] args)))
 
 (print (list))
@@ -146,3 +145,16 @@
 (print (test1 "foo" 1 2 3 4 5 6 7 8 9 10))
 (print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11))
 (print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
+
+(def test2
+  (fn
+    ([x y] "arity 2")
+    ([x y & args] "arity 2 & rest")))
+
+(print (test2 "foo" "bar"))
+
+(def test3
+  (fn
+    ([x y & args] "arity 2 & rest")))
+
+(print (test3 "foo" "bar"))
