@@ -14,8 +14,8 @@ require('tsukuyomi.thirdparty.strict')
 
 require('tsukuyomi')
 
-require('tsukuyomi.tests.reader')
-require('tsukuyomi.tests.compiler')
+--require('tsukuyomi.tests.reader')
+--require('tsukuyomi.tests.compiler')
 
 --print('********************************************************************************')
 --print('global table dump')
