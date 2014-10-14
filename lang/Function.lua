@@ -6,7 +6,7 @@ local Function = {}
 tsukuyomi.lang.Function = Function
 
 function Function.new()
-  return setmetatable({}, Function)
+  return {}
 end
 
 local kNumArgsBeforeGeneralizedRest = 16
@@ -140,32 +140,28 @@ for rest_arg_index = 1, kMaxArgsBeforeRestArg do
   make_general_rest_fn(rest_arg_index)
 end
 
-function Function:make_functions_for_rest(rest_arg_index)
-  local base_fn = self[rest_arg_index]
+local FunctionWithRestArgsMetatable = {}
 
-  for i = rest_arg_index, kNumArgsBeforeGeneralizedRest do
-    self[i] = Function._rest_fn_creators[rest_arg_index][i](base_fn)
-  end
-
-  self.rest_arg_index = rest_arg_index
-  self.general_rest_fn = Function._general_rest_fn_creators[rest_arg_index](base_fn)
-end
-
-Function.__index = function(t, key)
+FunctionWithRestArgsMetatable.__index = function(t, key)
   if type(key) == 'number' then
     if t.rest_arg_index and key >= kNumArgsBeforeGeneralizedRest then
       return rawget(t, 'general_rest_fn')
-    elseif key < t.rest_arg_index then
-      return rawget(t, key)
-    else
-      assert(false)
     end
-  else
-    local value = rawget(t, key)
-    if value then
-      return value
-    end
-
-    return rawget(Function, key)
   end
+
+  assert(false, 'function with requested arity does not exist')
 end
+
+function Function.make_functions_for_rest(fn, rest_arg_index)
+  local base_fn = fn[rest_arg_index]
+
+  for i = rest_arg_index, kNumArgsBeforeGeneralizedRest do
+    fn[i] = Function._rest_fn_creators[rest_arg_index][i](base_fn)
+  end
+
+  fn.rest_arg_index = rest_arg_index
+  fn.general_rest_fn = Function._general_rest_fn_creators[rest_arg_index](base_fn)
+
+  setmetatable(fn, FunctionWithRestArgsMetatable)
+end
+

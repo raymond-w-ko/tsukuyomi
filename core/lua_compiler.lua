@@ -159,7 +159,10 @@ function Compiler.compile_to_lua(ir_list)
       end
       emit( ')')
     elseif insn.op == 'FUNC' then
-      emit('tsukuyomi.lang.Function.new()')
+      local func_ns = 'tsukuyomi.lang.Function'
+      used_namespaces[func_ns] = true
+      emit(convert_ns_to_lua(func_ns))
+      emit('.new()')
     elseif insn.op == 'FUNCBODY' then
       local arity = #insn.args
       if insn.new_lvar_name then
@@ -178,12 +181,19 @@ function Compiler.compile_to_lua(ir_list)
       end
       emit(')')
     elseif insn.op == 'RESTARGSAT' then
+
+      local func_ns = 'tsukuyomi.lang.Function'
+      used_namespaces[func_ns] = true
+      emit(convert_ns_to_lua(func_ns))
+      emit('.make_functions_for_rest(')
+
       if insn.new_lvar_name then
         emit(insn.new_lvar_name)
       elseif insn.define_symbol then
         emit(symbol_to_lua(insn.define_symbol, used_namespaces))
       end
-      emit(':make_functions_for_rest(')
+
+      emit(', ')
       emit(insn.args[1])
       emit(')')
     elseif insn.op == 'ENDFUNCBODY' then
