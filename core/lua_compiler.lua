@@ -68,10 +68,21 @@ local function make_unique_data_var(data_bindings, data_key)
   return var_name
 end
 
-local kIgnoreVarGeneration = {
-  ['FUNCBODY'] = true,
-  ['RESTARGSAT'] = true,
-}
+local function get_bound_var_name(obj, used_namespaces)
+  local name
+
+  if obj.new_lvar_name then
+    assert(name == nil)
+    name = insn.new_lvar_name
+  end
+  if obj.define_symbol then
+    assert(name == nil)
+    name = symbol_to_lua(obj.define_symbol, used_namespaces)
+  end
+
+  assert(name)
+  return name
+end
 
 function Compiler.compile_to_lua(ir_list)
   local lines = {}
@@ -91,11 +102,11 @@ function Compiler.compile_to_lua(ir_list)
   while insn do
     -- IR instructions can be tagged in the following fashion to signal
     -- variable definition, or returning
-    if insn.new_lvar_name and not kIgnoreVarGeneration[insn.op] then
+    if insn.new_lvar_name then
       emit('local ', insn.new_lvar_name, ' = ')
     elseif insn.set_var_name then
       emit(insn.set_var_name, ' = ')
-    elseif insn.define_symbol and not kIgnoreVarGeneration[insn.op] then
+    elseif insn.define_symbol then
       emit(symbol_to_lua(insn.define_symbol, used_namespaces), " = ")
     elseif insn.is_return then
       emit('return ')
@@ -165,13 +176,8 @@ function Compiler.compile_to_lua(ir_list)
       emit('.new()')
     elseif insn.op == 'FUNCBODY' then
       local arity = #insn.args
-      if insn.new_lvar_name then
-        emit(insn.new_lvar_name)
-        emit('[', tostring(arity), ']')
-      elseif insn.define_symbol then
-        emit(symbol_to_lua(insn.define_symbol, used_namespaces))
-        emit('[', tostring(arity), ']')
-      end
+      emit(get_bound_var_name(insn.parent, used_namespaces))
+      emit('[', tostring(arity), ']')
       emit(' = function ')
       emit('(')
       for i = 1, #insn.args do
@@ -181,20 +187,17 @@ function Compiler.compile_to_lua(ir_list)
       end
       emit(')')
     elseif insn.op == 'RESTARGSAT' then
+      local args = insn.args
 
       local func_ns = 'tsukuyomi.lang.Function'
       used_namespaces[func_ns] = true
       emit(convert_ns_to_lua(func_ns))
       emit('.make_functions_for_rest(')
 
-      if insn.new_lvar_name then
-        emit(insn.new_lvar_name)
-      elseif insn.define_symbol then
-        emit(symbol_to_lua(insn.define_symbol, used_namespaces))
-      end
+      emit(get_bound_var_name(args[1], used_namespaces))
 
       emit(', ')
-      emit(insn.args[1])
+      emit(insn.args[2])
       emit(')')
     elseif insn.op == 'ENDFUNCBODY' then
       emit('end')
@@ -228,6 +231,15 @@ function Compiler.compile_to_lua(ir_list)
       emit('.getVar(')
       emit(make_unique_data_var(data_bindings, insn.data_key))
       emit(')')
+    elseif insn.op == 'NEWVEC' then
+      local vec_ns = 'tsukuyomi.lang.PersistentVector'
+      used_namespaces[vec_ns] = true
+      emit(convert_ns_to_lua(vec_ns))
+      emit('.new()')
+    elseif insn.op == 'VECADD' then
+      local vec = insn.args[1]
+      emit('-- ')
+      emit(compile_string_or_symbol(insn.args[2], insn.environment, used_namespaces))
     else
       print('unknown opcode: ' .. insn.op)
       assert(false)
