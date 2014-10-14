@@ -410,9 +410,7 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
     Compiler.ll_insert_after(node, func_node)
     node = func_node
     node.args = {}; local slot = 1
-    -- propagate what variable this function is suppose to live in
-    node.new_lvar_name = orig_node.new_lvar_name
-    node.define_symbol = orig_node.define_symbol
+    node.parent = orig_node
 
     -- convert function argument symbols to string
     -- TODO: will I or someone ever put explicit namespace symbols here by accident?
@@ -456,9 +454,7 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
 
   if rest_arg_index then
     local rest_args_at_node = Compiler.ll_new_node('RESTARGSAT', orig_node.environment)
-    rest_args_at_node.new_lvar_name = orig_node.new_lvar_name
-    rest_args_at_node.define_symbol = orig_node.define_symbol
-    rest_args_at_node.args = {rest_arg_index}
+    rest_args_at_node.args = {orig_node, rest_arg_index}
     Compiler.ll_insert_after(node, rest_args_at_node)
     node = rest_args_at_node
   end
@@ -473,7 +469,20 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
   local datum = node.args[1]
   local mt = getmetatable(datum)
   if mt == PersistentVector then
-    assert(false)
+    local orig_node = node
+
+    node.op = 'NEWVEC'
+    node.args = {}
+
+    for i = 0, datum:count() do
+      local arg = datum:get(i)
+
+      local vecadd_node = Compiler.ll_new_node('VECADD', orig_node.environment)
+      table.insert(new_dirty_nodes, vecadd_node)
+      vecadd_node.args = {orig_node, arg}
+      Compiler.ll_insert_after(node, vecadd_node)
+      node = vecadd_node
+    end
   elseif mt == PersistentHashMap then
     assert(false)
   elseif type(datum) == 'table' and datum.first ~= nil then
@@ -526,6 +535,11 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
     node.op = 'PRIMITIVE'
     node.args = {primitive}
   end
+end
+
+op_dispatch['VECADD'] = function(node, new_dirty_nodes)
+  local args = node.args
+  args[2] = compile_lua_primitive(args[2])
 end
 
 op_dispatch['CALL'] = function(node, new_dirty_nodes)
