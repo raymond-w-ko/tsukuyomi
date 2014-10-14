@@ -54,6 +54,10 @@ function PersistentList:cons(datum)
   return PersistentList.new(self[0], datum, self, self[3] + 1)
 end
 
+function PersistentList:seq()
+  return self
+end
+
 -- EMPTY list specialization, which is weird
 --------------------------------------------------------------------------------
 
@@ -83,6 +87,9 @@ function EmptyList:next()
 end
 function EmptyList:empty()
   return self
+end
+function EmptyList:seq()
+  return nil
 end
 function EmptyList:count()
   return 0
