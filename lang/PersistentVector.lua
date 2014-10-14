@@ -1,6 +1,7 @@
 local hamt = require('hamt')
 local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
+local PersistentVectorSeq = tsukuyomi.lang.PersistentVectorSeq
 
 local PersistentVector = {}
 tsukuyomi.lang.PersistentVector = PersistentVector
@@ -89,4 +90,8 @@ end
 
 function PersistentVector:with_meta(m)
   return setmetatable({_count = self._count, hamt = self.hamt, _meta = m}, PersistentVector)
+end
+
+function PersistentVector:seq()
+  return PersistentVectorSeq.new(self._meta, self, 0, self._count)
 end
