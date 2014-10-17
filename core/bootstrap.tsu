@@ -91,6 +91,10 @@
   (fn
     ([& args] args)))
 
+(def +
+  (fn
+    [x y] (_emit_ "(x + y)")))
+
 (print (list))
 (print (list 1))
 (print (list 1 2))
@@ -167,4 +171,5 @@
 (print (seq [1]))
 (print (seq [1 2]))
 (print (seq [1 2 3]))
+(print (seq [1 2 (+ 42 1)]))
 (print "END vector seq test")

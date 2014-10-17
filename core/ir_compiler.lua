@@ -474,7 +474,7 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
     node.op = 'NEWVEC'
     node.args = {}
 
-    for i = 0, datum:count() do
+    for i = 0, datum:count() - 1 do
       local arg = datum:get(i)
 
       local vecadd_node = Compiler.ll_new_node('VECADD', orig_node.environment)
@@ -539,7 +539,20 @@ end
 
 op_dispatch['VECADD'] = function(node, new_dirty_nodes)
   local args = node.args
-  args[2] = compile_lua_primitive(args[2])
+
+  local datum = args[2]
+  if is_lua_primitive(datum) then
+    args[2] = compile_lua_primitive(args[2])
+  else
+    local var_name = make_unique_var_name('arg')
+    args[2] = var_name
+
+    local datum_node = Compiler.ll_new_node('LISP', node.environment)
+    datum_node.new_lvar_name = var_name
+    datum_node.args = {datum}
+    table.insert(new_dirty_nodes, datum_node)
+    Compiler.ll_insert_before(node, datum_node)
+  end
 end
 
 op_dispatch['CALL'] = function(node, new_dirty_nodes)
@@ -646,9 +659,14 @@ function Compiler._debug_ir(node)
         local arg = args[i]
         if node.op == 'LISP' then
           table.insert(line, tsukuyomi.print(arg))
+        elseif type(arg) == 'table' and arg.op ~= nil and arg.environment ~= nil then
+          table.insert(line, 'NODE(')
+          table.insert(line, tostring(arg))
+          table.insert(line, ')')
         else
           table.insert(line, tostring(arg))
         end
+
         if i < #args then
           table.insert(line, ', ')
         end

@@ -73,7 +73,7 @@ local function get_bound_var_name(obj, used_namespaces)
 
   if obj.new_lvar_name then
     assert(name == nil)
-    name = insn.new_lvar_name
+    name = obj.new_lvar_name
   end
   if obj.define_symbol then
     assert(name == nil)
@@ -238,8 +238,14 @@ function Compiler.compile_to_lua(ir_list)
       emit('.new()')
     elseif insn.op == 'VECADD' then
       local vec = insn.args[1]
-      emit('-- ')
+      local datum = insn.args[2]
+      local vec_name = get_bound_var_name(vec, used_namespaces)
+      emit(vec_name)
+      emit(' = ')
+      emit(vec_name)
+      emit(':conj(')
       emit(compile_string_or_symbol(insn.args[2], insn.environment, used_namespaces))
+      emit(')')
     else
       print('unknown opcode: ' .. insn.op)
       assert(false)
