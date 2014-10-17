@@ -80,6 +80,8 @@ local function is_lua_primitive(datum)
   -- actual primitive types
   if type(datum) == 'string' or type(datum) == 'number' or type(datum) == 'boolean' then
     return true
+  elseif datum == nil then
+    return true
   elseif getmetatable(datum) == Symbol then
     -- this isn't a true Lua primitive, but it's intent is that it is just a
     -- variable name referring to something like a Lua variable, so pretend
@@ -528,7 +530,7 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
 
     -- normal function call
     node.op = 'CALL'
-    node.args = datum:ToLuaArray()
+    node.args, node.args_length = datum:ToLuaArray()
     table.insert(new_dirty_nodes, node)
   else
     local primitive = compile_lua_primitive(datum)
@@ -557,7 +559,7 @@ end
 
 op_dispatch['CALL'] = function(node, new_dirty_nodes)
   local args = node.args
-  for i = 1, #args do
+  for i = 1, node.args_length do
     if is_lua_primitive(args[i]) then
       args[i] = compile_lua_primitive(args[i])
     else

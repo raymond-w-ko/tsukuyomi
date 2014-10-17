@@ -49,9 +49,15 @@
     ))
 
 (def concat
-  (fn [] '())
-  (fn [x] (seq x))
-  (fn [x y] (seq x)))
+  (fn
+    ([] '()) 
+    ([x]
+     (if (=== x nil)
+       '()
+       (seq x)))
+    ([x y]
+     (tsukuyomi.lang.ConcatSeq/new (seq x) (seq y)))
+    ))
 
 (def
   ^{:macro true} defn
@@ -94,82 +100,3 @@
 (def +
   (fn
     [x y] (_emit_ "(x + y)")))
-
-(print (list))
-(print (list 1))
-(print (list 1 2))
-(print (list 1 2 3))
-(print (list 1 2 3 4))
-(print (list 1 2 3 4 5))
-(print (list 1 2 3 4 5 6))
-(print (list 1 2 3 4 5 6 7))
-(print (list 1 2 3 4 5 6 7 8))
-(print (list 1 2 3 4 5 6 7 8 9))
-(print (list 1 2 3 4 5 6 7 8 9 10))
-(print (list 1 2 3 4 5 6 7 8 9 10 11))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18))
-
-(def test1
-  (fn
-    ([x] "x")
-    ([x & args] (cons x args))))
-
-(print (test1 "foo"))
-(print (test1 "foo" 1))
-(print (test1 "foo" 1 2))
-(print (test1 "foo" 1 2 3))
-(print (test1 "foo" 1 2 3 4))
-(print (test1 "foo" 1 2 3 4 5))
-(print (test1 "foo" 1 2 3 4 5 6))
-(print (test1 "foo" 1 2 3 4 5 6 7))
-(print (test1 "foo" 1 2 3 4 5 6 7 8))
-(print (test1 "foo" 1 2 3 4 5 6 7 8 9))
-(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10))
-(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11))
-(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
-
-(def test1
-  (fn
-    ([x y] "x")
-    ([x y & args] (cons x args))))
-
-(print (test1 "foo" "bar"))
-(print (test1 "foo" 1))
-(print (test1 "foo" 1 2))
-(print (test1 "foo" 1 2 3))
-(print (test1 "foo" 1 2 3 4))
-(print (test1 "foo" 1 2 3 4 5))
-(print (test1 "foo" 1 2 3 4 5 6))
-(print (test1 "foo" 1 2 3 4 5 6 7))
-(print (test1 "foo" 1 2 3 4 5 6 7 8))
-(print (test1 "foo" 1 2 3 4 5 6 7 8 9))
-(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10))
-(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11))
-(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
-
-(def test2
-  (fn
-    ([x y] "arity 2")
-    ([x y & args] "arity 2 & rest")))
-
-(print (test2 "foo" "bar"))
-
-(def test3
-  (fn
-    ([x y & args] "arity 2 & rest")))
-
-(print (test3 "foo" "bar"))
-
-(print "vector seq test")
-(print (seq []))
-(print (seq [1]))
-(print (seq [1 2]))
-(print (seq [1 2 3]))
-(print (seq [1 2 (+ 42 1)]))
-(print "END vector seq test")

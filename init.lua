@@ -16,6 +16,7 @@ require('tsukuyomi.lang.ArraySeq')
 require('tsukuyomi.lang.PersistentVectorSeq')
 require('tsukuyomi.lang.PersistentVector')
 require('tsukuyomi.lang.PersistentHashMap')
+require('tsukuyomi.lang.ConcatSeq')
 
 require('tsukuyomi.lang.Function')
 require('tsukuyomi.lang.Var')
