@@ -18,6 +18,27 @@
 (print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17))
 (print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18))
 
+(def test0
+  (fn
+    ([] "zerg")
+    ([& args] (cons "ayy" args))))
+
+(print (test0))
+(print (test0 "foo"))
+(print (test0 "foo" 1))
+(print (test0 "foo" 1 2))
+(print (test0 "foo" 1 2 3))
+(print (test0 "foo" 1 2 3 4))
+(print (test0 "foo" 1 2 3 4 5))
+(print (test0 "foo" 1 2 3 4 5 6))
+(print (test0 "foo" 1 2 3 4 5 6 7))
+(print (test0 "foo" 1 2 3 4 5 6 7 8))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
+
+
 (def test1
   (fn
     ([x] "x")
@@ -76,3 +97,10 @@
 (print (seq [1 2 3]))
 (print (seq [1 2 (+ 42 1)]))
 (print "END vector seq test")
+
+(print (concat '(1 2 3) '(4 5 6)))
+(let [x (concat '(1) '(2))]
+  (print (count x))
+  (print (count x))
+  )
+
