@@ -14,6 +14,7 @@ local kEmitSymbol = Symbol.intern('_emit_')
 local kNilSymbol = Symbol.intern("nil")
 local kLetSymbol = Symbol.intern("let")
 local kAmpersandSymbol = Symbol.intern("&")
+local kDotSymbol = Symbol.intern(".")
 
 local PersistentList = tsukuyomi.lang.PersistentList
 local PersistentVector = tsukuyomi.lang.PersistentVector
@@ -526,6 +527,21 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
           return
         end
       end
+    end
+
+    if first == kDotSymbol then
+      datum = datum:rest()
+
+      local ns = datum:first()
+      datum = datum:rest()
+
+      local method = datum:first()
+      datum = datum:rest()
+
+      local real_sym = Symbol.intern(method.name, ns.name)
+      datum = PersistentList.new(nil, real_sym, datum, 1 + datum:count())
+
+      node.is_pure_function = true
     end
 
     -- normal function call
