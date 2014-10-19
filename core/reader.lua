@@ -291,7 +291,7 @@ macros[';'] = read_comment
 local quote_symbol = Symbol.intern('quote')
 local function read_quote(r, ch)
   local datum = read(r, true, nil, true)
-  return PersistentList.EMPTY:cons(datum):cons(quote_symbol)
+  return ArraySeq.new(nil, {quote_symbol, datum}, 1, 2)
 end
 macros['\''] = read_quote
 
