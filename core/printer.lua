@@ -4,7 +4,16 @@ local util = require('tsukuyomi.thirdparty.util')
 local PersistentList = tsukuyomi.lang.PersistentList
 local PersistentVector = tsukuyomi.lang.PersistentVector
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
+local ArraySeq = tsukuyomi.lang.ArraySeq
+local ConcatSeq = tsukuyomi.lang.ConcatSeq
 local Symbol = tsukuyomi.lang.Symbol
+
+print('PersistentList: ' .. tostring(PersistentList))
+print('PersistentList.EmptyList: ' .. tostring(PersistentList.EmptyList))
+print('PersistentVector: ' .. tostring(PersistentVector))
+print('PersistentHashMap: ' .. tostring(PersistentHashMap))
+print('ConcatSeq: ' .. tostring(ConcatSeq))
+print('ArraySeq: ' .. tostring(ArraySeq))
 
 -- TODO: add indenting
 -- TODO: make not vulnerable to a stack overflow when printing cons cells
@@ -42,10 +51,30 @@ function tsukuyomi.print(datum)
     return '{' .. table.concat(items, ' ') .. '}'
   elseif datum.first ~= nil then
     local items = {}
-    while datum ~= nil and datum:count() > 0 do
+
+    --[[
+    while true do
+      if datum:count() == 0 then
+        local check = datum:seq()
+        if check ~= nil then
+          print(getmetatable(datum))
+          print(util.show(datum))
+          assert(false)
+        end
+        break
+      end
+
       local item = datum:first()
       table.insert(items, tsukuyomi.print(item))
-      datum = datum:next()
+
+      datum = datum:rest()
+    end
+    ]]--
+
+    while datum:seq() do
+      local item = datum:first()
+      table.insert(items, tsukuyomi.print(item))
+      datum = datum:rest()
     end
     return '(' .. table.concat(items, ' ') .. ')'
   else
