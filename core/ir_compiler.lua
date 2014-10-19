@@ -562,7 +562,7 @@ op_dispatch['VECADD'] = function(node, new_dirty_nodes)
   if is_lua_primitive(datum) then
     args[2] = compile_lua_primitive(args[2])
   else
-    local var_name = make_unique_var_name('arg')
+    local var_name = make_unique_var_name('vec_item')
     args[2] = var_name
 
     local datum_node = Compiler.ll_new_node('LISP', node.environment)
