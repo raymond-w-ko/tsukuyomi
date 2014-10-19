@@ -1,6 +1,9 @@
 local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
 
+local PersistentList = tsukuyomi.lang.PersistentList
+local EMPTY = PersistentList.EMPTY
+
 local PersistentVectorSeq = {}
 tsukuyomi.lang.PersistentVectorSeq = PersistentVectorSeq
 PersistentVectorSeq.__index = PersistentVectorSeq
@@ -13,6 +16,9 @@ end
 assert(_G.jit)
 
 function PersistentVectorSeq.new(meta, vector, cursor, count)
+  if count == 0 then
+    return EMPTY:with_meta(meta)
+  end
   return setmetatable({[0] = meta, vector, cursor, count}, PersistentVectorSeq)
 end
 
@@ -54,6 +60,10 @@ end
 
 function PersistentVectorSeq:cons(datum)
   return PersistentList.new(self[0], datum, self, self[3] + 1)
+end
+
+function PersistentVectorSeq:seq()
+  return self
 end
 
 function PersistentVectorSeq:empty()
