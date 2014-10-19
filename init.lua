@@ -64,5 +64,6 @@ end
 -- We can finally load Lisp :-)
 --------------------------------------------------------------------------------
 tsukuyomi.core['load-file'][1]('tsukuyomi/core/bootstrap.tsu')
+tsukuyomi.core['load-file'][1]('tsukuyomi/core/tests.tsu')
 
 return tsukuyomi
