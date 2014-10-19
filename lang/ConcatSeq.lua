@@ -8,8 +8,9 @@ local ConcatSeq = {}
 tsukuyomi.lang.ConcatSeq = ConcatSeq
 ConcatSeq.__index = ConcatSeq
 -- This is a persistent data structure :-)
-ConcatSeq.__newindex = function()
-  assert(false)
+ConcatSeq.__newindex = function(t, k, v)
+  -- only self[3] == self._count maybe modified after the fact
+  assert(k == 3)
 end
 
 -- same reason as mentioned in PersistentList
@@ -42,6 +43,10 @@ function ConcatSeq:rest()
   if remainder == nil then
     return self[2]
   else
+    -- it is possible that we might not have triggered self:count() yet, so
+    -- don't do it unless the user does it through some operation.
+    --
+    -- this helps against crazy cases where where count() maybe O(n + m).
     local count = self[3]
     if count then
       count = count - 1
@@ -55,8 +60,11 @@ end
 ConcatSeq.next = ConcatSeq.rest
 
 function ConcatSeq:count()
-  if self[3] then
-    return self[3]
+  do
+    local maybe_count = self[3]
+    if maybe_count ~= nil then
+      return maybe_count
+    end
   end
 
   local count = self[1]:count() + self[2]:count()
@@ -66,4 +74,8 @@ end
 
 function ConcatSeq:cons(datum)
   return PersistentList.new(self[0], datum, self, self:count() + 1)
+end
+
+function ConcatSeq:seq()
+  return self
 end
