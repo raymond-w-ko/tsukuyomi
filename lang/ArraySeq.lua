@@ -22,6 +22,9 @@ end
 assert(_G.jit)
 
 function ArraySeq.new(meta, array, cursor, count)
+  if count == 0 then
+    return EMPTY:with_meta(meta)
+  end
   return setmetatable({[0] = meta, array, cursor, count}, ArraySeq)
 end
 
@@ -63,6 +66,10 @@ end
 
 function ArraySeq:cons(datum)
   return PersistentList.new(self[0], datum, self, self[3] + 1)
+end
+
+function ArraySeq:seq()
+  return self
 end
 
 function ArraySeq:empty()
