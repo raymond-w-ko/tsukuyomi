@@ -170,19 +170,19 @@ function EnvironmentMetatable:has_symbol(symbol)
 end
 
 function EnvironmentMetatable:__tostring()
-  local t = {'ENV:'}
-  local env = self
+  local t = {}
 
-  while env do
-    table.insert(t, '(')
-    for symbol, _ in pairs(env.symbols) do
-      table.insert(t, symbol)
-    end
-    table.insert(t, ')')
-    env = env.parent
+  table.insert(t, '(')
+  for symbol, _ in pairs(self.symbols) do
+    table.insert(t, symbol)
+    table.insert(t, ' ')
   end
+  if self.parent then
+    table.insert(t, tostring(self.parent))
+  end
+  table.insert(t, ')')
 
-  return table.concat(t, ' ')
+  return table.concat(t)
 end
 
 --------------------------------------------------------------------------------
@@ -691,8 +691,14 @@ function Compiler._debug_ir(node)
       end
     end
 
-    table.insert(line, '\t\t\t\t\t\t')
     assert(node.environment)
+    local line_prefix = table.concat(line)
+    line = {line_prefix}
+    local spacing = 50 - line_prefix:len()
+    spacing = math.max(spacing, 8)
+    for i = 1, spacing do
+      table.insert(line, ' ')
+    end
     table.insert(line, tostring(node.environment))
 
     table.insert(lines, table.concat(line))
