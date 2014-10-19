@@ -9,10 +9,13 @@
     (_emit_ "table[key] = value")
     nil))
 
+(def nil?
+  (fn [x]
+    (_emit_ "(x == nil)")))
+
 ;; this is Lua's ==
 (def ===
   (fn [x y] (_emit_ "x == y")))
-
 
 (def first
   (fn [coll]
@@ -44,7 +47,9 @@
 
 (def seq
   (fn [coll]
-    (.seq coll)))
+    (if (nil? coll)
+     nil
+    (.seq coll))))
 
 (def print
   (fn [x]
