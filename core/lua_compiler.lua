@@ -158,7 +158,7 @@ function Compiler.compile_to_lua(ir_list)
       else
         emit(compile_string_or_symbol(fn, insn.environment, used_namespaces))
         local arity = #args - 1
-        if not insn.is_pure_function then
+        if not insn.is_direct_function then
           emit('[', tostring(arity), ']')
         end
       end
