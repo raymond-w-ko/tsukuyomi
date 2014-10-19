@@ -9,6 +9,11 @@
     (_emit_ "table[key] = value")
     nil))
 
+;; this is Lua's ==
+(def ===
+  (fn [x y] (_emit_ "x == y")))
+
+
 (def first
   (fn [coll]
     (.first coll)))
@@ -56,8 +61,7 @@
        '()
        (seq x)))
     ([x y]
-     (tsukuyomi.lang.ConcatSeq/new (seq x) (seq y)))
-    ))
+     (. tsukuyomi.lang.ConcatSeq new nil (seq x) (seq y)))))
 
 (def
   ^{:macro true} defn
@@ -67,9 +71,6 @@
 
 (def count
   (fn [coll] (.count coll)))
-
-(def ===
-  (fn [x y] (_emit_ "x == y")))
 
 (def =
   (fn [x y] (=== x y)))
