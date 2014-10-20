@@ -68,12 +68,6 @@
     ([x y]
      (. tsukuyomi.lang.ConcatSeq new nil (seq x) (seq y)))))
 
-(def
-  ^{:macro true} defn
-  (fn [name & forms]
-   '(print "ayy, lmao")
-   ))
-
 (def count
   (fn [coll] (.count coll)))
 
@@ -103,6 +97,16 @@
   (fn
     ([& args] args)))
 
+;; relies on apply, list
+(def
+  ^{:macro true} defn
+  (fn [name & forms]
+   (list 'def name (concat (list 'fn ) forms))))
+
 (def +
   (fn
     [x y] (_emit_ "(x + y)")))
+
+(defn asdf [x] (+ 1000 x))
+(print (asdf 23))
+
