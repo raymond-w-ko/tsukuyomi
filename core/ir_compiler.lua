@@ -432,7 +432,7 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
         if (args:get(20) == kAmpersandSymbol) then
           -- pass
         else
-          assert(false, "Can't specify more than 20 params, did you mean to use (... & rest)")
+          assert(false, "Can't specify more than 20 params, did you mean to use (... & rest)?")
         end
       else
         assert(false, "Can't specify more than 20 params")

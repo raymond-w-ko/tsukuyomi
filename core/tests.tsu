@@ -1,7 +1,41 @@
+;; test upper limit to make sure you can have 20 args
 (fn
   [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10 
    arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20]
   "max args fn")
+
+;;; uncomment these to test compiler errors
+
+;(fn
+  ;[arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
+   ;arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 arg21]
+  ;"compile error close")
+
+;(fn
+  ;[arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
+   ;arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 arg21 args22]
+  ;"compile error close")
+
+;(fn
+  ;[arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
+   ;arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 arg21 args22 args23]
+  ;"compile error way too much")
+
+;; test upper limit to make sure you can have 20 args & rest
+(fn
+  [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
+   arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 & rest]
+  "max args fn with rest")
+
+(def maxargs (fn
+  [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
+   arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 & rest]
+  (print rest)))
+
+(print (maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+(print (maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 "rest1"))
+(print (maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 "rest1" "rest2"))
+
 (print (list))
 (print (list 1))
 (print (list 1 2))
