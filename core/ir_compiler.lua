@@ -695,7 +695,7 @@ function Compiler._debug_ir(node)
     local line_prefix = table.concat(line)
     line = {line_prefix}
     local spacing = 50 - line_prefix:len()
-    spacing = math.max(spacing, 8)
+    spacing = math.max(spacing, 4)
     for i = 1, spacing do
       table.insert(line, ' ')
     end
