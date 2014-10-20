@@ -340,9 +340,8 @@ special_forms[tostring(kLetSymbol)] = function(node, datum, new_dirty_nodes)
     extended_environment = extended_environment:extend_with({var_symbol})
 
     local form = bindings:get(i + 1)
-    local lisp_node = Compiler.ll_new_node('LISP', extended_environment)
-    lisp_node.args = { form }
-    lisp_node.new_lvar_name = var_name
+    local lisp_node = Compiler.ll_new_node('NEWLVAR', extended_environment)
+    lisp_node.args = { var_name, form }
     table.insert(new_dirty_nodes, lisp_node)
     Compiler.ll_insert_after(node, lisp_node)
     node = lisp_node
@@ -577,9 +576,9 @@ op_dispatch['VECADD'] = function(node, new_dirty_nodes)
     local var_name = make_unique_var_name('vec_item')
     args[2] = var_name
 
-    local datum_node = Compiler.ll_new_node('LISP', node.environment)
-    datum_node.new_lvar_name = var_name
-    datum_node.args = {datum}
+    local datum_node = Compiler.ll_new_node('NEWLVAR', node.environment)
+    datum_node.args = {var_name, datum}
+
     table.insert(new_dirty_nodes, datum_node)
     Compiler.ll_insert_before(node, datum_node)
   end
