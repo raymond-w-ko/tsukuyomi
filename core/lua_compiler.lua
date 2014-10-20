@@ -79,6 +79,10 @@ local function get_bound_var_name(obj, used_namespaces)
     assert(name == nil)
     name = symbol_to_lua(obj.define_symbol, used_namespaces)
   end
+  if obj.set_var_name then
+    assert(name == nil)
+    name = obj.set_var_name
+  end
 
   assert(name)
   return name
@@ -96,6 +100,7 @@ function Compiler.compile_to_lua(ir_list)
   local function emit(...)
     local t = {...}
     for _, text in ipairs(t) do
+      assert(text)
       table.insert(line, text)
     end
   end
