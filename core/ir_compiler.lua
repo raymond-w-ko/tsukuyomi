@@ -379,11 +379,19 @@ special_forms[tostring(kLetSymbol)] = function(node, datum, new_dirty_nodes)
   node.args = { ret_var_name }
 end
 
+-- (fn [arg0 arg1] (body))
 special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
-  -- (fn [arg0 arg1] (body))
+  local func_var_name = make_unique_var_name('func')
+
   local orig_node = node
-  node.op = 'FUNC'
-  node.args = nil
+  node.op = 'PRIMITIVE'
+  node.args = {func_var_name}
+
+  local real_func_node = Compiler.ll_new_node('FUNC', orig_node.environment)
+  Compiler.ll_insert_before(node, real_func_node)
+  real_func_node.new_lvar_name = func_var_name
+  node = real_func_node
+  orig_node = node
 
   local bodies = {}
   local mt = datum.first and getmetatable(datum:first())
