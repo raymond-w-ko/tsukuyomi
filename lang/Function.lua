@@ -9,9 +9,9 @@ function Function.new()
   return {}
 end
 
-local kNumArgsBeforeGeneralizedRest = 16
--- I really wnat to see code that has (fn [arg1 arg2 .. arg32 & rest])
-local kMaxArgsBeforeRestArg = 32
+local kNumArgsBeforeGeneralizedRest = 20
+-- I really ant to see code that has (fn [arg1 arg2 .. arg32 & rest])
+local kMaxArgsBeforeRestArg = 20
 
 -- eventually will be _rest_fn_creators[rest_arg_index][function_arity]
 Function._rest_fn_creators = {}
