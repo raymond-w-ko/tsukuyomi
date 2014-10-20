@@ -419,7 +419,19 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
     -- TODO: will I or someone ever put explicit namespace symbols here by accident?
     -- like (fn [foobar lol/wut] (+ foobar lol/wut))
     -- is it even worth it to check?
-    for i = 0, args:count() - 1 do
+    local args_count = args:count()
+    if args_count > 20 then
+      if (args_count == 21 or args_count == 22) then
+        if (args:get(20) == kAmpersandSymbol) then
+          -- pass
+        else
+          assert(false, "Can't specify more than 20 params, did you mean to use (... & rest)")
+        end
+      else
+        assert(false, "Can't specify more than 20 params")
+      end
+    end
+    for i = 0, args_count- 1 do
       local arg_name = tostring(args:get(i))
       if arg_name ~= '&' then
         node.args[slot] = arg_name
@@ -695,7 +707,7 @@ function Compiler._debug_ir(node)
     local line_prefix = table.concat(line)
     line = {line_prefix}
     local spacing = 50 - line_prefix:len()
-    spacing = math.max(spacing, 4)
+    spacing = math.max(spacing, 1)
     for i = 1, spacing do
       table.insert(line, ' ')
     end
