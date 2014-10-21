@@ -3,8 +3,10 @@ cls
 pushd %~dp0
 cd ..\..
 
-luajit-2.0\src\luajit.exe tsukuyomi\thirdparty\bcname.lua 50 51 70 72
+SET LUAJIT=luas\luajit\luajit.exe
 
-REM luajit-2.0\src\luajit.exe tsukuyomi\tests\run_all_tests.lua
-luajit-2.0\src\luajit.exe tsukuyomi\tests\run_all_tests.lua > tsukuyomi\tests\test_output.log
+%LUAJIT% tsukuyomi\thirdparty\bcname.lua 50 51 70 72
+
+REM %LUAJIT% tsukuyomi\tests\run_all_tests.lua
+%LUAJIT% tsukuyomi\tests\run_all_tests.lua > tsukuyomi\tests\test_output.log
 popd
