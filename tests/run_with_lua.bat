@@ -3,9 +3,7 @@ cls
 pushd %~dp0
 cd ..\..
 
-SET LUA=luas\luajit\luajit.exe
-
-%LUA% tsukuyomi\thirdparty\bcname.lua 50 51 70 72
+SET LUA=luas\lua51\lua.exe
 
 REM %LUA% tsukuyomi\tests\run_all_tests.lua
 %LUA% tsukuyomi\tests\run_all_tests.lua > tsukuyomi\tests\test_output.log
