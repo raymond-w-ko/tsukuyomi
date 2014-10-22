@@ -8,28 +8,48 @@ PersistentList.__newindex = function()
   assert(false)
 end
 
--- Since I only use LuaJIT so far, take advantage of the fact that all array
--- parts have a 0 index part. Like when you have {"foo", "bar"}, you actually
--- have an array part of size 3.
---
--- Since the basis of Lisp is linked lists, this will serve to conserve memory.
---
--- If you ever use this on original Lua, move "meta" to be self[4], otherwise
--- you create an array part as well as a hash part, which would be a waste of memory.
-assert(_G.jit)
 
-function PersistentList.new(meta, first, rest, count)
-  return setmetatable({[0] = meta, first, rest, count}, PersistentList)
-end
+-- We have this crazy duplication here since LuaJIT has a penalty free 0-index,
+-- but Lua proper does not. This means that Lua proper's 1 index is the same
+-- memory location location as LuaJIT's 0 index in the array part of the table
+-- data structure
+if rawget(_G, 'jit') then
+  function PersistentList.new(meta, first, rest, count)
+    return setmetatable({[0] = meta, first, rest, count}, PersistentList)
+  end
 
-function PersistentList:meta()
-  return self[0]
-end
-function PersistentList:with_meta(meta)
-  if self[0] ~= meta then
-    return PersistentList.new(meta, self[1], self[2], self[3])
-  else
-    return self
+  function PersistentList:meta()
+    return self[0]
+  end
+  function PersistentList:with_meta(meta)
+    if self[0] ~= meta then
+      return setmetatable({[0] = meta, self[1], self[2], self[3]}, PersistentList)
+    else
+      return self
+    end
+  end
+
+  function PersistentList:cons(datum)
+    return setmetatable({[0] = self[0], datum, self, self[3] + 1}, PersistentList)
+  end
+else
+  function PersistentList.new(meta, first, rest, count)
+    return setmetatable({first, rest, count, meta}, PersistentList)
+  end
+
+  function PersistentList:meta()
+    return self[4]
+  end
+  function PersistentList:with_meta(meta)
+    if self[4] ~= meta then
+      return setmetatable({self[1], self[2], self[3], meta}, PersistentList)
+    else
+      return self
+    end
+  end
+
+  function PersistentList:cons(datum)
+    return setmetatable({datum, self, self[3] + 1, self[4]}, PersistentList)
   end
 end
 
@@ -48,10 +68,6 @@ function PersistentList:next()
 end
 function PersistentList:count()
   return self[3]
-end
-
-function PersistentList:cons(datum)
-  return PersistentList.new(self[0], datum, self, self[3] + 1)
 end
 
 function PersistentList:seq()
@@ -118,8 +134,14 @@ PersistentList.EMPTY = EMPTY
 
 --------------------------------------------------------------------------------
 
-function PersistentList:empty()
-  return EMPTY:with_meta(self[0])
+if rawget(_G, 'jit') then
+  function PersistentList:empty()
+    return EMPTY:with_meta(self[0])
+  end
+else
+  function PersistentList:empty()
+    return EMPTY:with_meta(self[4])
+  end
 end
 
 function PersistentList.FromLuaArray(array, len)

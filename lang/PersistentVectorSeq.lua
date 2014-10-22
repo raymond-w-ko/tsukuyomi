@@ -12,24 +12,92 @@ PersistentVectorSeq.__newindex = function()
   assert(false)
 end
 
--- same reason as mentioned in PersistentList
-assert(_G.jit)
-
-function PersistentVectorSeq.new(meta, vector, cursor, count)
-  if count == 0 then
-    return EMPTY:with_meta(meta)
+-- duplication for the same reason as mentioned in PersistentList
+if rawget(_G, 'jit') then
+  function PersistentVectorSeq.new(meta, vector, cursor, count)
+    if count == 0 then
+      return EMPTY:with_meta(meta)
+    end
+    return setmetatable({[0] = meta, vector, cursor, count}, PersistentVectorSeq)
   end
-  return setmetatable({[0] = meta, vector, cursor, count}, PersistentVectorSeq)
-end
 
-function PersistentVectorSeq:meta()
-  return self[0]
-end
-function PersistentVectorSeq:with_meta(meta)
-  if self[0] ~= meta then
-    return setmetatable({[0] = meta, self[1], self[2], self[3]}, PersistentVectorSeq)
-  else
-    return self
+  function PersistentVectorSeq:meta()
+    return self[0]
+  end
+  function PersistentVectorSeq:with_meta(meta)
+    if self[0] ~= meta then
+      return setmetatable({[0] = meta, self[1], self[2], self[3]}, PersistentVectorSeq)
+    else
+      return self
+    end
+  end
+
+  function PersistentVectorSeq:rest()
+    if self[3] == 1 then
+      return EMPTY:with_meta(self[0])
+    else
+      return setmetatable({[0] = self[0], self[1], self[2] + 1, self[3] - 1}, PersistentVectorSeq)
+    end
+  end
+
+  function PersistentVectorSeq:next()
+    if self[3] == 1 then
+      return nil
+    else
+
+      return setmetatable({[0] = self[0], self[1], self[2] + 1, self[3] - 1}, PersistentVectorSeq)
+    end
+  end
+
+  function PersistentVectorSeq:cons(datum)
+    return PersistentList.new(self[0], datum, self, self[3] + 1)
+  end
+
+  function PersistentVectorSeq:empty()
+    return EMPTY:with_meta(self[0])
+  end
+else
+  function PersistentVectorSeq.new(meta, vector, cursor, count)
+    if count == 0 then
+      return EMPTY:with_meta(meta)
+    end
+    return setmetatable({vector, cursor, count, meta}, PersistentVectorSeq)
+  end
+
+  function PersistentVectorSeq:meta()
+    return self[4]
+  end
+  function PersistentVectorSeq:with_meta(meta)
+    if self[4] ~= meta then
+      return setmetatable({self[1], self[2], self[3], meta}, PersistentVectorSeq)
+    else
+      return self
+    end
+  end
+
+  function PersistentVectorSeq:rest()
+    if self[3] == 1 then
+      return EMPTY:with_meta(self[4])
+    else
+      return setmetatable({self[1], self[2] + 1, self[3] - 1, self[4]}, PersistentVectorSeq)
+    end
+  end
+
+  function PersistentVectorSeq:next()
+    if self[3] == 1 then
+      return nil
+    else
+
+      return setmetatable({self[1], self[2] + 1, self[3] - 1, self[4]}, PersistentVectorSeq)
+    end
+  end
+
+  function PersistentVectorSeq:cons(datum)
+    return PersistentList.new(self[4], datum, self, self[3] + 1)
+  end
+
+  function PersistentVectorSeq:empty()
+    return EMPTY:with_meta(self[4])
   end
 end
 
@@ -37,37 +105,12 @@ function PersistentVectorSeq:first()
   return self[1]:get(self[2])
 end
 
-function PersistentVectorSeq:rest()
-  if self[3] == 1 then
-    return EMPTY:with_meta(self[0])
-  else
-    return setmetatable({[0] = self[0], self[1], self[2] + 1, self[3] - 1}, PersistentVectorSeq)
-  end
-end
-
-function PersistentVectorSeq:next()
-  if self[3] == 1 then
-    return nil
-  else
-    
-    return setmetatable({[0] = self[0], self[1], self[2] + 1, self[3] - 1}, PersistentVectorSeq)
-  end
-end
-
 function PersistentVectorSeq:count()
   return self[3]
 end
 
-function PersistentVectorSeq:cons(datum)
-  return PersistentList.new(self[0], datum, self, self[3] + 1)
-end
-
 function PersistentVectorSeq:seq()
   return self
-end
-
-function PersistentVectorSeq:empty()
-  return EMPTY:with_meta(self[0])
 end
 
 function PersistentVectorSeq:ToLuaArray()
