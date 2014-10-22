@@ -283,7 +283,7 @@ function Compiler.compile_to_lua(ir_list)
   local body = table.concat(lines, '\n')
 
   local header = {}
-  table.insert(header, 'local tsukuyomi = tsukuyomi')
+  table.insert(header, 'local tsukuyomi = _G.tsukuyomi')
   table.insert(header, '')
   -- write out used namespaces
   local has_namespace = false
