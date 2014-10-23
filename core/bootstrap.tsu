@@ -101,7 +101,7 @@
 (def
   ^{:macro true} defn
   (fn [name & forms]
-   (list 'def name (concat (list 'fn ) forms))))
+   (list 'def name (concat (list 'fn) forms))))
 
 (def +
   (fn
@@ -109,4 +109,3 @@
 
 (defn asdf [x] (+ 1000 x))
 (print (asdf 23))
-
