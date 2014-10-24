@@ -2,6 +2,7 @@ local tsukuyomi = tsukuyomi
 
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 local Symbol = tsukuyomi.lang.Symbol
+local Keyword = tsukuyomi.lang.Keyword
 local Namespace = tsukuyomi.lang.Namespace
 
 -- Since variables do not not as feature rich or complicated as Clojure, this
@@ -42,6 +43,11 @@ function Var:get()
   return ns[self._symbol.name]
 end
 
+function Var:set(x)
+  local ns = Namespace.GetNamespaceSpace(self._symbol.namespace)
+  ns[self._symbol.name] = x
+end
+
 function Var:set_metadata(m)
   assert(m == nil or getmetatable(m) == PersistentHashMap,
          'Var:set_metadata() needs the argument to be a PersistentHashMap')
@@ -52,9 +58,10 @@ function Var:meta()
   return self._meta
 end
 
+local macro_keyword = Keyword.intern(Symbol.intern('macro'))
 function Var:is_macro()
   if self._meta == nil then
     return false
   end
-  return self._meta:get('macro') == true
+  return self._meta:get(macro_keyword) == true
 end
