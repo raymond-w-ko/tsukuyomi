@@ -10,7 +10,7 @@ ConcatSeq.__index = ConcatSeq
 -- This is a persistent data structure :-)
 ConcatSeq.__newindex = function(t, k, v)
   -- only self[3] == self._count maybe modified after the fact
-  assert(k == 3)
+  assert(false, 'attempted to modify tsukuyomi.lang.ConcatSeq')
 end
 
 -- duplication for the same reason as mentioned in PersistentList
@@ -107,7 +107,7 @@ function ConcatSeq:count()
   end
 
   local count = self[1]:count() + self[2]:count()
-  self[3] = count
+  rawset(self, 3, count)
   return count
 end
 
