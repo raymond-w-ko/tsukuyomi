@@ -15,7 +15,7 @@ tsukuyomi.lang.ArraySeq = ArraySeq
 ArraySeq.__index = ArraySeq
 -- This is a persistent data structure :-)
 ArraySeq.__newindex = function()
-  assert(false)
+  assert(false, 'attempted to modify tsukuyomi.lang.ArraySeq')
 end
 
 -- duplication for the same reason as mentioned in PersistentList
