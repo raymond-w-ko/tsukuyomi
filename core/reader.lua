@@ -6,8 +6,7 @@ local ArraySeq = tsukuyomi.lang.ArraySeq
 local PersistentVector = tsukuyomi.lang.PersistentVector
 local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 local Symbol = tsukuyomi.lang.Symbol
-local tsukuyomi_core = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
-local tsukuyomi_lang = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang')
+local Keyword = tsukuyomi.lang.Keyword
 
 --------------------------------------------------------------------------------
 
@@ -46,7 +45,7 @@ end
 local EOF = ''
 
 local LispReader = {}
-tsukuyomi_lang.LispReader = LispReader
+tsukuyomi.lang.LispReader = LispReader
 
 LispReader.macros = {}
 local macros = LispReader.macros
@@ -108,25 +107,33 @@ local function read_token(r, initch)
   end
 end
 
+local function parse_symbol(s)
+  local slash = s:find('/')
+  if slash then
+    local name = s:sub(slash + 1)
+    local ns = s:sub(1, slash - 1)
+    return Symbol.intern(name, ns)
+  else
+    return Symbol.intern(s)
+  end
+end
+
 local function interpret_token(s)
   if s == 'nil' then return nil
   elseif s == 'true' then return true
   elseif s == 'false' then return false
   else
-    if s:sub(1, 1) == ':' then
-      -- TODO: determine how to support keywords, our PersistentHashMap can
-      -- only support strings as keys anyways, and we has no universal
-      -- Object.getHashCode()
-      return s:sub(2)
+    if s:sub(1, 2) == '::' then
+      -- it seems current NS qualified keywords are used for protocol and
+      -- types, and collision avoidance in hash maps for when different
+      -- namespace integrate into the same hash map?
+      --
+      -- not sure if I will ever get arround to implementing this
+      assert(false, 'TODO: implement current namespace resolution for Keywords in reader')
+    elseif s:sub(1, 1) == ':' then
+      return Keyword.intern(parse_symbol(s:sub(2)))
     else
-      local slash = s:find('/')
-      if slash then
-        local name = s:sub(slash + 1)
-        local ns = s:sub(1, slash - 1)
-        return Symbol.intern(name, ns)
-      else
-        return Symbol.intern(s)
-      end
+      return parse_symbol(s)
     end
   end
 end
