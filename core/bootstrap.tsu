@@ -45,6 +45,10 @@
   (fn [map key value]
     (.assoc map key value)))
 
+(def hash
+  (fn [x]
+    (.hasheq x)))
+
 (def seq
   (fn [coll]
     (if (nil? coll)
