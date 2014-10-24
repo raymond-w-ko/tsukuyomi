@@ -145,3 +145,6 @@
   (print (count x))
   )
 
+(print (hash 'asdf))
+(print :asdf)
+(print (hash :asdf))
