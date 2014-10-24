@@ -4,6 +4,7 @@ local util = require('tsukuyomi.thirdparty.util')
 local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
 
 local Symbol = tsukuyomi.lang.Symbol
+local Keyword = tsukuyomi.lang.Keyword
 -- special forms
 local kNsSymbol = Symbol.intern('ns')
 local kQuoteSymbol = Symbol.intern('quote')
@@ -567,6 +568,9 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
     node.op = 'CALL'
     node.args, node.args_length = datum:ToLuaArray()
     table.insert(new_dirty_nodes, node)
+  elseif mt == Keyword then
+    node.op = 'KEYWORD'
+    node.args = {datum}
   else
     local primitive = compile_lua_primitive(datum)
     node.op = 'PRIMITIVE'

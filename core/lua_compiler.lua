@@ -253,6 +253,26 @@ function Compiler.compile_to_lua(ir_list)
       emit(':conj(')
       emit(compile_string_or_symbol(insn.args[2], insn.environment, used_namespaces))
       emit(')')
+    elseif insn.op == 'KEYWORD' then
+      local keyword_ns = 'tsukuyomi.lang.Keyword'
+      local symbol_ns = 'tsukuyomi.lang.Symbol'
+      used_namespaces[keyword_ns] = true
+      used_namespaces[symbol_ns] = true
+
+      emit(convert_ns_to_lua(keyword_ns))
+      emit('.intern(')
+      emit(convert_ns_to_lua(symbol_ns))
+      emit('.intern(\'')
+      local sym = insn.args[1].sym
+      emit(sym.name)
+      emit('\'')
+      if sym.namespace then
+        emit(', ')
+        emit('\'')
+        emit(sym.namespace)
+        emit('\'')
+      end
+      emit('))')
     else
       print('unknown opcode: ' .. insn.op)
       assert(false)
