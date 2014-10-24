@@ -1,10 +1,15 @@
 local tsukuyomi = tsukuyomi
+local hamt = require('hamt')
 
 local Symbol = {}
 tsukuyomi.lang.Symbol = Symbol
 Symbol.__index = Symbol
 Symbol.__newindex = function(t, k)
   assert(false, 'attempted to modify tsukuyomi.lang.Symbol')
+end
+
+function Symbol.intern(name, namespace, meta)
+  return setmetatable({name = name, namespace = namespace, _meta = meta}, Symbol)
 end
 
 function Symbol:__tostring()
@@ -27,6 +32,11 @@ function Symbol:with_meta(m)
   return Symbol.intern(self.name, self.namespace, m)
 end
 
-function Symbol.intern(name, namespace, meta)
-  return setmetatable({name = name, namespace = namespace, _meta = meta}, Symbol)
+local hash_fn = hamt.hash
+
+function Symbol:hasheq()
+  if self._hasheq == nil then
+    rawset(self, '_hasheq', hash_fn(tostring(self)))
+  end
+  return self._hasheq
 end
