@@ -1,5 +1,4 @@
 local hamt = require('hamt')
-local hash = hamt.hash
 
 local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
@@ -21,15 +20,14 @@ function PersistentHashMap.new()
 end
 
 function PersistentHashMap:assoc(key, value)
-  assert(type(key) == 'string', 'PersistentHashMap:assoc() only accepts string keys right now')
-
-  local hamt = hamt.setHash(hash(key), key, value, self.hamt)
+  local hash = key:hasheq()
+  local hamt = hamt.setHash(hash, key, value, self.hamt)
   return setmetatable({hamt = hamt}, PersistentHashMap)
 end
 
 function PersistentHashMap:get(key, not_found)
-  assert(type(key) == 'string', 'PersistentHashMap:get() only accepts string keys right now')
-  return hamt.tryGetHash(not_found, hash(key), key, self.hamt)
+  local hash = key:hasheq()
+  return hamt.tryGetHash(not_found, hash, key, self.hamt)
 end
 
 function PersistentHashMap:conj(vec)
