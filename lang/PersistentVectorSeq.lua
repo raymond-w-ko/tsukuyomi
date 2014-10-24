@@ -9,7 +9,7 @@ tsukuyomi.lang.PersistentVectorSeq = PersistentVectorSeq
 PersistentVectorSeq.__index = PersistentVectorSeq
 -- This is a persistent data structure :-)
 PersistentVectorSeq.__newindex = function()
-  assert(false)
+  assert(false, 'attempted to modify tsukuyomi.lang.PersistentVectorSeq')
 end
 
 -- duplication for the same reason as mentioned in PersistentList
