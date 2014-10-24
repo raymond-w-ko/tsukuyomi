@@ -7,6 +7,7 @@ local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
 local ArraySeq = tsukuyomi.lang.ArraySeq
 local ConcatSeq = tsukuyomi.lang.ConcatSeq
 local Symbol = tsukuyomi.lang.Symbol
+local Keyword = tsukuyomi.lang.Keyword
 
 print('PersistentList: ' .. tostring(PersistentList))
 print('PersistentList.EmptyList: ' .. tostring(PersistentList.EmptyList))
@@ -31,7 +32,7 @@ function tsukuyomi.print(datum)
 
   local mt = getmetatable(datum)
 
-  if mt == Symbol then
+  if mt == Symbol or mt == Keyword then
     return tostring(datum)
   elseif mt == PersistentVector then
     local items = {}
