@@ -1,18 +1,10 @@
-local M = {}
 -- support strict.lua
 if _G.__STRICT then
   global('tsukuyomi')
 end
-tsukuyomi = M
+tsukuyomi = {}
 
-local hamt = require('hamt')
-local string_hash_fn = hamt.hash
-
-assert(string.hasheq == nil)
-function string:hasheq()
-  return string_hash_fn(self)
-end
-
+require('tsukuyomi.lang.String')
 require('tsukuyomi.lang.Namespace')
 -- loaded by Namespace due to somewhat complicated initialization order
 --require('tsukuyomi.lang.Symbol')
