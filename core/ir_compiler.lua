@@ -638,7 +638,7 @@ end
 -- is_return
 function Compiler.compile_to_ir(datum)
   local head_node = Compiler.ll_new_node('LISP', create_environment())
-  head_node.args = { datum }
+  head_node.args = {datum}
   head_node.is_return = true
 
   -- prepare input nodes by marking them all as dirty
