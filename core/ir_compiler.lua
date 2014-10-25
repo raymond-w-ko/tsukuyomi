@@ -486,7 +486,8 @@ special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
   Compiler.ll_insert_after(node, end_func_node)
 end
 
-local op_dispatch = {}
+Compiler.op_dispatch = {}
+local op_dispatch = Compiler.op_dispatch
 
 op_dispatch['LISP'] = function(node, new_dirty_nodes)
   local datum = node.args[1]

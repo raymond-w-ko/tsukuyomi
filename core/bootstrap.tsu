@@ -59,8 +59,7 @@
   (fn [x]
     (_emit_ "io.write(tsukuyomi.print(x))")
     (_emit_ "io.write('\\n')")
-    nil
-    ))
+    nil))
 
 (def concat
   (fn
