@@ -22,9 +22,17 @@ end
 -- this helps against crazy cases where where count() maybe O(n + m).
 if rawget(_G, 'jit') then
   function ConcatSeq.new(meta, x, y)
-    --assert(x.first and x.rest)
-    --assert(y.first and y.rest)
-    return setmetatable({[0] = meta, x, y, nil}, ConcatSeq)
+    if x == nil then
+      assert(y.first)
+      return y
+    elseif y == nil then
+      assert(x.first)
+      return x
+    else
+      assert(x.first)
+      assert(y.first)
+      return setmetatable({[0] = meta, x, y, nil}, ConcatSeq)
+    end
   end
 
   function ConcatSeq:meta()
@@ -56,9 +64,17 @@ if rawget(_G, 'jit') then
   end
 else
   function ConcatSeq.new(meta, x, y)
-    --assert(x.first and x.rest)
-    --assert(y.first and y.rest)
-    return setmetatable({x, y, nil, meta}, ConcatSeq)
+    if x == nil then
+      assert(y.first)
+      return y
+    elseif y == nil then
+      assert(x.first)
+      return x
+    else
+      assert(x.first)
+      assert(y.first)
+      return setmetatable({x, y, nil, meta}, ConcatSeq)
+    end
   end
 
   function ConcatSeq:meta()
