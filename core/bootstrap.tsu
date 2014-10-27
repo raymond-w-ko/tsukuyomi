@@ -77,27 +77,15 @@
 (def =
   (fn [x y] (=== x y)))
 
-(def apply
-  (fn [f args]
-    (let [num_args (count args)]
-      (if (= num_args 0)
-        (f)
-        (if (= num_args 1)
-          (f (first args))
-          (if (= num_args 2)
-            (f (first args) (second args))
-            (if (= num_args 3)
-              (let [arg0 (first args)
-                    args (rest args)
-
-                    arg1 (first args)
-                    args (rest args)
-
-                    arg2 (first args)]
-                (f arg0 arg1 arg2)))))))))
+(let [_apply tsukuyomi.core/_apply]
+  (def apply
+    (fn
+      ([f args]
+       (_apply f args)))))
 
 (def list
   (fn
+    ([] '())
     ([& args] args)))
 
 ;; relies on apply, list
@@ -109,6 +97,3 @@
 (def +
   (fn
     [x y] (_emit_ "(x + y)")))
-
-(defn asdf [x] (+ 1000 x))
-(print (asdf 23))
