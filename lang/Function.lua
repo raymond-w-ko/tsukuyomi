@@ -10,19 +10,22 @@ function Function.new()
 end
 
 local kNumArgsBeforeGeneralizedRest = 20
+Function.kNumArgsBeforeGeneralizedRest = kNumArgsBeforeGeneralizedRest
+
 -- I really ant to see code that has (fn [arg1 arg2 .. arg32 & rest])
 local kMaxArgsBeforeRestArg = 21
+Function.kMaxArgsBeforeRestArg = kMaxArgsBeforeRestArg
 
 -- eventually will be _rest_fn_creators[rest_arg_index][function_arity]
 Function._rest_fn_creators = {}
-for i = 1, kNumArgsBeforeGeneralizedRest do
+for i = 0, kMaxArgsBeforeRestArg do
   Function._rest_fn_creators[i] = {}
 end
 -- eventually will be _general_rest_fn_creators[rest_arg_index]
 Function._general_rest_fn_creators = {}
 
-local function make_fn(base_fn, arity, rest_arg_index)
-  assert(rest_arg_index <= arity)
+local function make_fn(arity, rest_arg_index)
+  --assert(rest_arg_index <= arity)
   local text = {}
   local slot = 1
   local rest_size = arity - rest_arg_index + 1
@@ -43,8 +46,10 @@ local function make_fn(base_fn, arity, rest_arg_index)
     text[slot] = tostring(i); slot = slot + 1
     text[slot] = ', '; slot = slot + 1
   end
-  -- remove extra ', '
-  slot = slot - 1; text[slot] = nil;
+  if text[slot - 1] == ', ' then
+    -- remove extra ', '
+    slot = slot - 1; text[slot] = nil;
+  end
   text[slot] = ')\n'; slot = slot + 1
 
   text[slot] = '\t\treturn base_fn('; slot = slot + 1
@@ -55,18 +60,23 @@ local function make_fn(base_fn, arity, rest_arg_index)
     text[slot] = ', '; slot = slot + 1
   end
 
-  text[slot] = 'ArraySeq.new(nil, {'; slot = slot + 1
-  for i = rest_arg_index, arity do
-    text[slot] = 'arg'; slot = slot + 1
-    text[slot] = tostring(i); slot = slot + 1
-    text[slot] = ', '; slot = slot + 1
-  end
-  -- remove extra ', '
-  slot = slot - 1; text[slot] = nil;
+  if rest_arg_index <= arity then
+    text[slot] = 'ArraySeq.new(nil, {'; slot = slot + 1
+    for i = rest_arg_index, arity do
+      text[slot] = 'arg'; slot = slot + 1
+      text[slot] = tostring(i); slot = slot + 1
+      text[slot] = ', '; slot = slot + 1
+    end
+    -- remove extra ', '
+    slot = slot - 1; text[slot] = nil;
 
-  text[slot] = '}, 1, '; slot = slot + 1
-  text[slot] = tostring(rest_size); slot = slot + 1
-  text[slot] = ')'; slot = slot + 1
+    text[slot] = '}, 1, '; slot = slot + 1
+    text[slot] = tostring(rest_size); slot = slot + 1
+    text[slot] = ')'; slot = slot + 1
+  else
+    text[slot] = 'nil'; slot = slot + 1
+  end
+
 
   text[slot] = ')\n'; slot = slot + 1
 
@@ -74,14 +84,16 @@ local function make_fn(base_fn, arity, rest_arg_index)
   text[slot] = 'end'; slot = slot + 1
 
   text = table.concat(text)
+  --print(text)
   local desc = '%d arg fn with rest @ %d'
   desc = desc:format(arity, rest_arg_index)
+  --print(desc)
   local lua_chunk = loadstring(text, desc)
   lua_chunk()
 end
-for arity = 1, kNumArgsBeforeGeneralizedRest do
-  for rest_arg_index = 1, arity do
-    make_fn(nil, arity, rest_arg_index)
+for rest_arg_index = 1, kMaxArgsBeforeRestArg do
+  for arity = rest_arg_index - 1, kNumArgsBeforeGeneralizedRest do
+    make_fn(arity, rest_arg_index)
   end
 end
 
@@ -89,50 +101,81 @@ local function make_general_rest_fn(rest_arg_index)
   local text = {}; local slot = 1
   local chunk = [[
 local ArraySeq = tsukuyomi.lang.ArraySeq
+local ConcatSeq = tsukuyomi.lang.ConcatSeq
 tsukuyomi.lang.Function._general_rest_fn_creators[]]
   text[slot] = chunk; slot = slot + 1
 
   text[slot] = tostring(rest_arg_index); slot = slot + 1
 
-local chunk = [[] = function (base_fn)
-  return function(...)
-    local args = {...}
+  local chunk = [[] = function (base_fn)
+  return function(]]
+  text[slot] = chunk; slot = slot + 1
+  for i = 1, kMaxArgsBeforeRestArg do
+    text[slot] = 'arg'; slot = slot + 1
+    text[slot] = tostring(i); slot = slot + 1
+    text[slot] = ', '; slot = slot + 1
+  end
+  slot = slot - 1; text[slot] = nil
+  text[slot] = ')\n'; slot = slot + 1
 
-    local restargs = {}
-    local rest_args_len = 0
-    for k, v in pairs(args) do
-      local index = k - ]]
-    text[slot] = chunk; slot = slot + 1
-    text[slot] = tostring(rest_arg_index - 1); slot = slot + 1
+  local chunk = [[
+    local part1 = ]]
+  text[slot] = chunk; slot = slot + 1
 
-    local chunk = [[
-
-      if index > 0 then
-        restargs[index] = v
-        rest_args_len = rest_args_len + 1
-      end
-    end
-
-    return base_fn(]]
+  if 20 - rest_arg_index + 1 > 0 then
+    local chunk = [[ArraySeq.new(nil, {]]
     text[slot] = chunk; slot = slot + 1
 
-    for i = 1, rest_arg_index - 1 do
-      text[slot] = 'args['; slot = slot + 1
+    for i = rest_arg_index, kNumArgsBeforeGeneralizedRest do
+      text[slot] = 'arg'; slot = slot + 1
       text[slot] = tostring(i); slot = slot + 1
-      text[slot] = ']'; slot = slot + 1
       text[slot] = ', '; slot = slot + 1
     end
+    if rest_arg_index <= kNumArgsBeforeGeneralizedRest then
+      slot = slot - 1; text[slot] = nil
+    end
 
-local chunk = [[
-ArraySeq.new(nil, restargs, 1, rest_args_len))
+    local chunk = '}, 1, '
+    text[slot] = chunk; slot = slot + 1
+
+    local chunk = tostring(20 - rest_arg_index + 1)
+    text[slot] = chunk; slot = slot + 1
+    text[slot] = ')\n'; slot = slot + 1
+  else
+    slot = slot - 1; text[slot] = nil
   end
-end
-]]
+
+  if 20 - rest_arg_index + 1 > 0 then
+    local chunk = [[
+      local concat_seq = ConcatSeq.new(nil, part1, arg21)
+  ]]
+    text[slot] = chunk; slot = slot + 1
+  else
+    local chunk = [[
+      local concat_seq = arg21
+  ]]
+    text[slot] = chunk; slot = slot + 1
+  end
+
+  local chunk = [[
+    return base_fn(]]
+  text[slot] = chunk; slot = slot + 1
+  for i = 1, rest_arg_index - 1 do
+    text[slot] = 'arg'; slot = slot + 1
+    text[slot] = tostring(i); slot = slot + 1
+    text[slot] = ', '; slot = slot + 1
+  end
+
+  local chunk = [[concat_seq)
+  end
+end]]
   text[slot] = chunk; slot = slot + 1
 
   text = table.concat(text)
-  local desc = 'inf arg fn(...) arg fn with rest @ %d'
+  --print(text)
+  local desc = 'max arg fn() arg fn with rest @ %d'
   desc = desc:format(rest_arg_index)
+  --print(desc)
   local lua_chunk = loadstring(text, desc)
   lua_chunk()
 end
@@ -142,12 +185,14 @@ end
 
 local FunctionWithRestArgsMetatable = {}
 
+--[[
 FunctionWithRestArgsMetatable.__index = function(t, key)
+  assert(false)
   if type(key) == 'number' then
     local rest_arg_index = t.rest_arg_index
-    if rest_arg_index and key >= kNumArgsBeforeGeneralizedRest then
-      return rawget(t, 'general_rest_fn')
-    end
+    --if rest_arg_index and key >= kNumArgsBeforeGeneralizedRest then
+      --return rawget(t, 'general_rest_fn')
+    --end
 
     -- check for empty rest args
     -- being here in the metamethod means that a concrete one does not exists,
@@ -161,23 +206,28 @@ FunctionWithRestArgsMetatable.__index = function(t, key)
     -- ((fn ([] "foo") ([& args] "bar")) ) == "foo"
     -- ((fn ([& args] "bar")) ) == "bar"
     if key + 1 == t.rest_arg_index then
-      return rawget(t, 'general_rest_fn')
+      return rawget(t, rest_arg_index)
     end
   end
 
-  assert(false, 'function with requested arity does not exist')
+  assert(false, 'function with arity ' .. tostring(key) .. ' does not exist')
 end
+]]--
 
 function Function.make_functions_for_rest(fn, rest_arg_index)
   local base_fn = fn[rest_arg_index]
 
+  local index = rest_arg_index - 1
+  if fn[index] == nil then
+    fn[index] = Function._rest_fn_creators[rest_arg_index][index](base_fn)
+  end
+
   for i = rest_arg_index, kNumArgsBeforeGeneralizedRest do
     fn[i] = Function._rest_fn_creators[rest_arg_index][i](base_fn)
   end
+  fn[kMaxArgsBeforeRestArg] = Function._general_rest_fn_creators[rest_arg_index](base_fn)
 
-  fn.rest_arg_index = rest_arg_index
-  fn.general_rest_fn = Function._general_rest_fn_creators[rest_arg_index](base_fn)
-
-  setmetatable(fn, FunctionWithRestArgsMetatable)
+  --fn.rest_arg_index = rest_arg_index
+  --setmetatable(fn, FunctionWithRestArgsMetatable)
 end
 

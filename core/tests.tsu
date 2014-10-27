@@ -1,3 +1,6 @@
+(defn asdf [x] (+ 1000 x))
+(print (asdf 23))
+
 ;; test upper limit to make sure you can have 20 args
 (fn
   [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10 
@@ -9,7 +12,7 @@
 ;(fn
   ;[arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
    ;arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 arg21]
-  ;"compile error close")
+  ;"compiler error close")
 
 ;(fn
   ;[arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
@@ -27,14 +30,13 @@
    arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 & rest]
   "max args fn with rest")
 
-(def maxargs (fn
-  [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
-   arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 & rest]
-  (print rest)))
+(defn maxargs [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
+               arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 & rest]
+  (print rest))
 
-(print (maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
-(print (maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 "rest1"))
-(print (maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 "rest1" "rest2"))
+(maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)
+(maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 "rest1")
+(maxargs 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 "rest1" "rest2")
 
 (print (list))
 (print (list 1))
@@ -58,6 +60,7 @@
 (print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18 19))
 (print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18 19 20))
 (print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18 19 20 21))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18 19 20 21 22))
 
 (def test0
   (fn
@@ -78,6 +81,15 @@
 (print (test0 "foo" 1 2 3 4 5 6 7 8 9 10))
 (print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11))
 (print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+(print (test0 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21))
 
 
 (def test1
@@ -98,25 +110,43 @@
 (print (test1 "foo" 1 2 3 4 5 6 7 8 9 10))
 (print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11))
 (print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+(print (test1 "foo" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21))
 
 (def test2
   (fn
-    ([x y] "x")
+    ([x y] "yyy")
     ([x y & args] (cons x args))))
 
-(print (test2 "foo" "bar"))
-(print (test2 "foo" 1))
-(print (test2 "foo" 1 2))
-(print (test2 "foo" 1 2 3))
-(print (test2 "foo" 1 2 3 4))
-(print (test2 "foo" 1 2 3 4 5))
-(print (test2 "foo" 1 2 3 4 5 6))
-(print (test2 "foo" 1 2 3 4 5 6 7))
-(print (test2 "foo" 1 2 3 4 5 6 7 8))
-(print (test2 "foo" 1 2 3 4 5 6 7 8 9))
-(print (test2 "foo" 1 2 3 4 5 6 7 8 9 10))
-(print (test2 "foo" 1 2 3 4 5 6 7 8 9 10 11))
-(print (test2 "foo" 1 2 3 4 5 6 7 8 9 10 11 12))
+(print (test2 "qux" "bar"))
+(print (test2 "qux" 1))
+(print (test2 "qux" 1 2))
+(print (test2 "qux" 1 2 3))
+(print (test2 "qux" 1 2 3 4))
+(print (test2 "qux" 1 2 3 4 5))
+(print (test2 "qux" 1 2 3 4 5 6))
+(print (test2 "qux" 1 2 3 4 5 6 7))
+(print (test2 "qux" 1 2 3 4 5 6 7 8))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13 14))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+(print (test2 "qux" 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21))
 
 (def test3
   (fn
@@ -142,9 +172,35 @@
 (print (concat '(1 2 3) '(4 5 6)))
 (let [x (concat '(1) '(2))]
   (print (count x))
-  (print (count x))
-  )
+  (print (count x)))
 
 (print (hash 'asdf))
 (print :asdf)
 (print (hash :asdf))
+
+(defn apply-test [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
+                  arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20]
+  (print arg1)
+  (print arg2)
+  (print arg3)
+  (print arg4)
+  (print arg5)
+  (print arg6)
+  (print arg7)
+  (print arg8)
+  (print arg9)
+  (print arg10)
+  (print arg11)
+  (print arg12)
+  (print arg13)
+  (print arg14)
+  (print arg15)
+  (print arg16)
+  (print arg17)
+  (print arg18)
+  (print arg19)
+  (print arg20)
+  )
+
+(apply-test 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)
+(apply apply-test '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))

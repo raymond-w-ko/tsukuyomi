@@ -164,16 +164,33 @@ function Compiler.compile_to_lua(ir_list)
         emit(compile_string_or_symbol(fn, insn.environment, used_namespaces))
         local arity = #args - 1
         if not insn.is_direct_function then
-          emit('[', tostring(arity), ']')
+          emit('[', tostring(math.min(arity, 21)), ']')
         end
       end
 
       emit('(')
-      for i = arg_start_index, #args do
+      local stray_args_max_bounds = math.min(20 + 1, #args)
+      for i = arg_start_index, stray_args_max_bounds do
         emit(compile_string_or_symbol(args[i], insn.environment, used_namespaces))
-        if i < #args then
+        if i < stray_args_max_bounds then
           emit(', ')
         end
+      end
+      if #args > 21 then
+        emit(', ')
+        used_namespaces['tsukuyomi.lang.ArraySeq'] = true
+        local arrayseq_ns = convert_ns_to_lua('tsukuyomi.lang.ArraySeq')
+        emit(arrayseq_ns)
+        emit('.new(nil, {')
+        for i = 21 + 1, #args do
+          emit(compile_string_or_symbol(args[i], insn.environment, used_namespaces))
+          if i < #args then
+            emit(', ')
+          end
+        end
+        emit('}, 1, ')
+        emit(tostring(#args - 20 - 1))
+        emit( ')')
       end
       emit( ')')
     elseif insn.op == 'FUNC' then

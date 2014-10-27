@@ -5,6 +5,7 @@ local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Comp
 
 local Symbol = tsukuyomi.lang.Symbol
 local Keyword = tsukuyomi.lang.Keyword
+local Function = tsukuyomi.lang.Function
 -- special forms
 local kNsSymbol = Symbol.intern('ns')
 local kQuoteSymbol = Symbol.intern('quote')
@@ -212,7 +213,7 @@ special_forms[tostring(kNsSymbol)] = function(node, datum, new_dirty_nodes)
   end
 end
 
-special_forms[tostring(kDefSymbol)] = function(node, datum, new_dirty_nodes)
+special_forms['def'] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local symbol = datum:first()

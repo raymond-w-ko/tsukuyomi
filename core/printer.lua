@@ -10,7 +10,7 @@ local Symbol = tsukuyomi.lang.Symbol
 local Keyword = tsukuyomi.lang.Keyword
 
 print('PersistentList: ' .. tostring(PersistentList))
-print('PersistentList.EmptyList: ' .. tostring(PersistentList.EmptyList))
+print('PersistentList.EMPTY: ' .. tostring(PersistentList.EMPTY))
 print('PersistentVector: ' .. tostring(PersistentVector))
 print('PersistentHashMap: ' .. tostring(PersistentHashMap))
 print('ConcatSeq: ' .. tostring(ConcatSeq))
@@ -53,24 +53,22 @@ function tsukuyomi.print(datum)
   elseif datum.first ~= nil then
     local items = {}
 
-    --[[
-    while true do
-      if datum:count() == 0 then
-        local check = datum:seq()
-        if check ~= nil then
-          print(getmetatable(datum))
-          print(util.show(datum))
-          assert(false)
-        end
-        break
-      end
+    --while true do
+      --if datum:count() == 0 then
+        --local check = datum:seq()
+        --if check ~= nil then
+          --print(getmetatable(datum))
+          --print(util.show(datum))
+          --assert(false)
+        --end
+        --break
+      --end
 
-      local item = datum:first()
-      table.insert(items, tsukuyomi.print(item))
+      --local item = datum:first()
+      --table.insert(items, tsukuyomi.print(item))
 
-      datum = datum:rest()
-    end
-    ]]--
+      --datum = datum:rest()
+    --end
 
     while datum:seq() do
       local item = datum:first()
