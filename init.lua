@@ -30,6 +30,7 @@ require('tsukuyomi.core.ir_compiler')
 require('tsukuyomi.core.lua_compiler')
 require('tsukuyomi.core.compiler')
 require('tsukuyomi.core.eval')
+require('tsukuyomi.core.apply')
 
 --------------------------------------------------------------------------------
 -- structures to store data from reader to compiler and evalulation
