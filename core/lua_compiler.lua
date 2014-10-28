@@ -1,6 +1,7 @@
 local tsukuyomi = tsukuyomi
 local Symbol = tsukuyomi.lang.Symbol
 local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
+local Var = tsukuyomi.lang.Var
 
 local safe_char_map = {
   ['+'] = '__ADD__',
@@ -28,9 +29,22 @@ local function convert_ns_to_lua(ns)
 end
 
 local tsukuyomi_core_ns = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
-local function symbol_to_lua(symbol, used_namespaces)
+local function symbol_to_lua(symbol, used_namespaces, skip_var_existence_check)
   local code = {}
   local bound_symbol = tsukuyomi_core_ns['*ns*']:bind_symbol(symbol)
+
+  -- var existence check should only be skipped when defining something
+  if not skip_var_existence_check then
+    local var = Var.GetVar(bound_symbol)
+    if var == nil then
+      local err = {
+        'unable to resolve var: ',
+        tostring(bound_symbol),
+        ' while compiling to Lua',
+      }
+      assert(false, table.concat(err))
+    end
+  end
 
   local namespace = bound_symbol.namespace
   if namespace then
@@ -77,7 +91,7 @@ local function get_bound_var_name(obj, used_namespaces)
   end
   if obj.define_symbol then
     assert(name == nil)
-    name = symbol_to_lua(obj.define_symbol, used_namespaces)
+    name = symbol_to_lua(obj.define_symbol, used_namespaces, true)
   end
   if obj.set_var_name then
     assert(name == nil)
@@ -112,7 +126,7 @@ function Compiler.compile_to_lua(ir_list)
     elseif insn.set_var_name then
       emit(insn.set_var_name, ' = ')
     elseif insn.define_symbol then
-      emit(symbol_to_lua(insn.define_symbol, used_namespaces), " = ")
+      emit(symbol_to_lua(insn.define_symbol, used_namespaces, true), " = ")
     elseif insn.is_return then
       emit('return ')
     end
@@ -252,7 +266,7 @@ function Compiler.compile_to_lua(ir_list)
       local var_ns = 'tsukuyomi.lang.Var'
       used_namespaces[var_ns] = true
       emit(convert_ns_to_lua(var_ns))
-      emit('.getVar(')
+      emit('.GetVar(')
       emit(make_unique_data_var(data_bindings, insn.data_key))
       emit(')')
     elseif insn.op == 'NEWVEC' then

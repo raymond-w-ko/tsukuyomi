@@ -34,7 +34,7 @@ function Var.intern(symbol)
   return var
 end
 
-function Var.getVar(symbol)
+function Var.GetVar(symbol)
   return var_cache[tostring(symbol)]
 end
 
