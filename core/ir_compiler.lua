@@ -115,7 +115,7 @@ local function compile_lua_primitive(datum)
     return 'nil'
   end
 
-  -- if using is_lua_primitive, this should never happend
+  -- if datum has been checked using is_lua_primitive, this should never happend
   assert(false)
 end
 
@@ -236,19 +236,19 @@ special_forms['def'] = function(node, datum, new_dirty_nodes)
   node.data_key = tsukuyomi.store_data(bound_symbol)
 end
 
-special_forms[tostring(kEmitSymbol)] = function(node, datum, new_dirty_nodes)
+special_forms['_emit_'] = function(node, datum, new_dirty_nodes)
   node.op = 'RAW'
   local inline = datum:first()
   assert(type(inline) == 'string')
   node.args = {inline}
 end
 
-special_forms[tostring(kQuoteSymbol)] = function(node, datum, new_dirty_nodes)
+special_forms['quote'] = function(node, datum, new_dirty_nodes)
   node.op = 'DATA'
   node.data_key = tsukuyomi.store_data(datum:first())
 end
 
-special_forms[tostring(kIfSymbol)] = function(node, datum, new_dirty_nodes)
+special_forms['if'] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local ret_var_node = Compiler.ll_new_node('EMPTYVAR', orig_node.environment)
@@ -262,7 +262,8 @@ special_forms[tostring(kIfSymbol)] = function(node, datum, new_dirty_nodes)
   node = fence
 
   local test = datum
-  -- this can be nil legitimately, although I don't know why anyone would do this
+  -- this can be nil legitimately, although I don't know why anyone would do
+  -- this, maybe a macro?
   --assert(test:first() ~= nil)
   local var_test_node = Compiler.ll_new_node('NEWLVAR', orig_node.environment)
   table.insert(new_dirty_nodes, var_test_node)
