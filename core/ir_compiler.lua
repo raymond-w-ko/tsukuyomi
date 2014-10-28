@@ -134,20 +134,20 @@ end
 -- e.g. this would print 2 instead of 1
 
 -- mapping of variable name to number of time mentioned in enclosing functions
-local EnvironmentMetatable = {}
-EnvironmentMetatable.__index = EnvironmentMetatable
+local LexicalEnvironment = {}
+LexicalEnvironment.__index = LexicalEnvironment
 
-local function create_environment()
-  local env = setmetatable({symbols = {}}, EnvironmentMetatable)
+local function create_lexical_environment()
+  local env = setmetatable({symbols = {}}, LexicalEnvironment)
   return env
 end
 
-function EnvironmentMetatable:extend_with(symbols)
-  local newenv = create_environment()
+function LexicalEnvironment:extend_with(symbols)
+  local newenv = create_lexical_environment()
   for i = 1, #symbols do
     local symbol = symbols[i]
     assert(getmetatable(symbol) == Symbol,
-           'EnvironmentMetatable:extend_with(): argument must be a list of tsukuyomi.lang.Symbol')
+           'LexicalEnvironment:extend_with(): argument must be a list of tsukuyomi.lang.Symbol')
     if symbol ~= kAmpersandSymbol then
       newenv.symbols[tostring(symbol)] = true
     end
@@ -156,9 +156,9 @@ function EnvironmentMetatable:extend_with(symbols)
   return newenv
 end
 
-function EnvironmentMetatable:has_symbol(symbol)
+function LexicalEnvironment:has_symbol(symbol)
   assert(getmetatable(symbol) == Symbol,
-         'EnvironmentMetatable:has_symbol(): argument must be tsukuyomi.lang.Symbol')
+         'LexicalEnvironment:has_symbol(): argument must be tsukuyomi.lang.Symbol')
 
   if self.symbols[tostring(symbol)] then
     return true
@@ -171,7 +171,7 @@ function EnvironmentMetatable:has_symbol(symbol)
   end
 end
 
-function EnvironmentMetatable:__tostring()
+function LexicalEnvironment:__tostring()
   local t = {}
 
   table.insert(t, '(')
@@ -640,7 +640,7 @@ end
 -- define_symbol
 -- is_return
 function Compiler.compile_to_ir(datum)
-  local head_node = Compiler.ll_new_node('LISP', create_environment())
+  local head_node = Compiler.ll_new_node('LISP', create_lexical_environment())
   head_node.args = {datum}
   head_node.is_return = true
 
