@@ -49,6 +49,22 @@ function Namespace.GetNamespaceSpace(name)
   return Namespace.GetNamespace(name).space
 end
 
+-- just straight up indexing via _G.x.y.z
+-- does not try create tables if it doesn't exist
+--
+-- this can return nil if it doesn't exist
+function Namespace.GetExternalNamespace(name)
+  local tokens = split(name, '.')
+  local t = _G
+  for i = 1, #tokens do
+    if t == nil then
+      return nil
+    end
+    t = t[tokens[i]]
+  end
+  return t
+end
+
 local tsukuyomi_core = Namespace.GetNamespaceSpace('tsukuyomi.core')
 local tsukuyomi_lang = Namespace.GetNamespaceSpace('tsukuyomi.lang')
 

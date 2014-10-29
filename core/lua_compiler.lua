@@ -2,6 +2,7 @@ local tsukuyomi = tsukuyomi
 local Symbol = tsukuyomi.lang.Symbol
 local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
 local Var = tsukuyomi.lang.Var
+local Namespace = tsukuyomi.lang.Namespace
 
 local safe_char_map = {
   ['+'] = '__ADD__',
@@ -28,6 +29,22 @@ local function convert_ns_to_lua(ns)
   return '__' .. to_lua_identifier(ns)
 end
 
+local function check_var_exists(bound_symbol)
+  local lisp_var_exists = Var.GetVar(bound_symbol)
+  local external_var_exists = Namespace.GetExternalNamespace(bound_symbol.namespace)[bound_symbol.name]
+
+  if lisp_var_exists ~= nil or external_var_exists ~= nil then
+    return
+  end
+
+  local err = {
+    'unable to resolve var: ',
+    tostring(bound_symbol),
+    ' while compiling to Lua',
+  }
+  assert(false, table.concat(err))
+end
+
 local tsukuyomi_core_ns = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
 local function symbol_to_lua(symbol, used_namespaces, skip_var_existence_check)
   local code = {}
@@ -35,15 +52,7 @@ local function symbol_to_lua(symbol, used_namespaces, skip_var_existence_check)
 
   -- var existence check should only be skipped when defining something
   if not skip_var_existence_check then
-    local var = Var.GetVar(bound_symbol)
-    if var == nil then
-      local err = {
-        'unable to resolve var: ',
-        tostring(bound_symbol),
-        ' while compiling to Lua',
-      }
-      assert(false, table.concat(err))
-    end
+    check_var_exists(bound_symbol)
   end
 
   local namespace = bound_symbol.namespace
