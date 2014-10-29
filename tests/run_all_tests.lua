@@ -12,6 +12,13 @@ if _G.jit then
   --require('jit.dump').start()
 end
 
+-- Lua 5.2 compatibility fix
+if _G.loadstring == nil then
+  function _G.loadstring(string, chunkname)
+    return load(string, chunkname, 't')
+  end
+end
+
 require('tsukuyomi.thirdparty.strict')
 
 require('tsukuyomi')

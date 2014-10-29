@@ -1,4 +1,7 @@
 -- http://metalua.luaforge.net/src/lib/strict.lua.html
+--  
+--  NOTE: this has been modified to be SUPER strict. Probably not recommended
+--  for normal usage.
 local mt = getmetatable(_G)
 if mt == nil then
   mt = {}
