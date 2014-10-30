@@ -45,8 +45,10 @@ function tsukuyomi.print(datum)
     local seq = datum:seq()
     while seq and seq:first() ~= nil do
       local kv = seq:first()
-      table.insert(items, kv:get(0))
-      table.insert(items, kv:get(1))
+      local k = kv:get(0)
+      local v = kv:get(1)
+      table.insert(items, tsukuyomi.print(k))
+      table.insert(items, tsukuyomi.print(v))
       seq = seq:rest()
     end
     return '{' .. table.concat(items, ' ') .. '}'

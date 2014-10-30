@@ -293,6 +293,24 @@ function Compiler.compile_to_lua(ir_list)
       emit(':conj(')
       emit(compile_string_or_symbol(insn.args[2], insn.environment, used_namespaces))
       emit(')')
+    elseif insn.op == 'NEWMAP' then
+      local map_ns = 'tsukuyomi.lang.PersistentHashMap'
+      used_namespaces[map_ns] = true
+      emit(convert_ns_to_lua(map_ns))
+      emit('.new()')
+    elseif insn.op == 'MAPADD' then
+      local map = insn.args[1]
+      local k = insn.args[2]
+      local v = insn.args[3]
+      local map_name = get_bound_var_name(map, used_namespaces)
+      emit(map_name)
+      emit(' = ')
+      emit(map_name)
+      emit(':assoc(')
+      emit(compile_string_or_symbol(insn.args[2], insn.environment, used_namespaces))
+      emit(', ')
+      emit(compile_string_or_symbol(insn.args[3], insn.environment, used_namespaces))
+      emit(')')
     elseif insn.op == 'KEYWORD' then
       local keyword_ns = 'tsukuyomi.lang.Keyword'
       local symbol_ns = 'tsukuyomi.lang.Symbol'

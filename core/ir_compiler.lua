@@ -217,6 +217,7 @@ special_forms['def'] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local symbol = datum:first()
+  assert(getmetatable(symbol) == Symbol, 'first arg to (def) must be a symbol')
   local intern_var_node = Compiler.ll_new_node('INTERNVAR', orig_node.environment)
   intern_var_node.args = {}
   local bound_symbol = tsukuyomi_core['*ns*']:bind_symbol(symbol)
@@ -510,7 +511,25 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
       node = vecadd_node
     end
   elseif mt == PersistentHashMap then
-    assert(false)
+    local orig_node = node
+
+    node.op = 'NEWMAP'
+    node.args = {}
+
+    local items = datum:seq()
+    while items:seq() do
+      local kv = items:first()
+      local k = kv:get(0)
+      local v = kv:get(1)
+
+      local mapadd_node = Compiler.ll_new_node('MAPADD', orig_node.environment)
+      table.insert(new_dirty_nodes, mapadd_node)
+      mapadd_node.args = {orig_node, k, v}
+      Compiler.ll_insert_after(node, mapadd_node)
+      node = mapadd_node
+
+      items = items:rest()
+    end
   elseif type(datum) == 'table' and datum.first ~= nil then
     --print(tsukuyomi.print(datum))
     --print(util.show(datum))
@@ -599,6 +618,38 @@ op_dispatch['VECADD'] = function(node, new_dirty_nodes)
   else
     local var_name = make_unique_var_name('vec_item')
     args[2] = var_name
+
+    local datum_node = Compiler.ll_new_node('NEWLVAR', node.environment)
+    datum_node.args = {var_name, datum}
+
+    table.insert(new_dirty_nodes, datum_node)
+    Compiler.ll_insert_before(node, datum_node)
+  end
+end
+
+op_dispatch['MAPADD'] = function(node, new_dirty_nodes)
+  local args = node.args
+
+  local datum = args[2]
+  if is_lua_primitive(datum) then
+    args[2] = compile_lua_primitive(args[2])
+  else
+    local var_name = make_unique_var_name('map_key')
+    args[2] = var_name
+
+    local datum_node = Compiler.ll_new_node('NEWLVAR', node.environment)
+    datum_node.args = {var_name, datum}
+
+    table.insert(new_dirty_nodes, datum_node)
+    Compiler.ll_insert_before(node, datum_node)
+  end
+
+  local datum = args[3]
+  if is_lua_primitive(datum) then
+    args[3] = compile_lua_primitive(args[3])
+  else
+    local var_name = make_unique_var_name('map_value')
+    args[3] = var_name
 
     local datum_node = Compiler.ll_new_node('NEWLVAR', node.environment)
     datum_node.args = {var_name, datum}

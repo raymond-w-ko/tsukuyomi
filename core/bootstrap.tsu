@@ -89,11 +89,19 @@
     ([& args] args)))
 
 ;; relies on apply, list
-(def
-  ^{:macro true} defn
+(def ^{:macro true} defn
   (fn [name & forms]
    (list 'def name (concat (list 'fn) forms))))
 
-(def +
-  (fn
-    [x y] (_emit_ "(x + y)")))
+(defn meta
+  [obj] (.meta obj))
+
+(defn with-meta
+  [obj m] (.with_meta obj m))
+
+;(def ^{:macro true} defmacro
+  ;(fn [name & forms]
+    ;(list 'def (list 'with-meta name {:macro true})  (concat (list 'fn) forms))))
+
+(defn +
+  [x y] (_emit_ "(x + y)"))
