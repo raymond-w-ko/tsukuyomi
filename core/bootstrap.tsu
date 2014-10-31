@@ -4,7 +4,7 @@
   (fn [key table]
     (_emit_ "table[key]")))
 
-(def tassoc!
+(def tset
   (fn [table key value]
     (_emit_ "table[key] = value")
     nil))
