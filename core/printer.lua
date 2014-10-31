@@ -83,3 +83,6 @@ function tsukuyomi.print(datum)
     assert(false)
   end
 end
+
+tsukuyomi.core['pr-str'] = tsukuyomi.lang.Function.new()
+tsukuyomi.core['pr-str'][1] = tsukuyomi.print

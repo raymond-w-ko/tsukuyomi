@@ -33,36 +33,6 @@ require('tsukuyomi.core.eval')
 require('tsukuyomi.core.apply')
 
 --------------------------------------------------------------------------------
--- structures to store data from reader to compiler and evalulation
---------------------------------------------------------------------------------
-
-local available_data_keys = {}
-local data_key_counter = 1
-tsukuyomi._data_store = {}
-local data_store = tsukuyomi._data_store
-
-function tsukuyomi.retrieve_data(key)
-  local datum = data_store[key]
-  data_store[key] = nil
-  table.insert(available_data_keys, key)
-  return datum
-end
-
-function tsukuyomi.store_data(datum)
-  local data_key
-  if #available_data_keys == 0 then
-    data_key = data_key_counter
-    data_key_counter = data_key_counter + 1
-  else
-    data_key = table.remove(available_data_keys)
-  end
-
-  data_store[data_key] = datum
-
-  return data_key
-end
-
---------------------------------------------------------------------------------
 -- We can finally load Lisp :-)
 --------------------------------------------------------------------------------
 tsukuyomi.core['load-file'][1]('tsukuyomi/core/bootstrap.tsu')

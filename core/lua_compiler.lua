@@ -5,14 +5,20 @@ local Var = tsukuyomi.lang.Var
 local Namespace = tsukuyomi.lang.Namespace
 
 local safe_char_map = {
+  -- is the below a good idea?
+  -- or is the following needed instead?
+  --['-'] = '__SUB__',
+  --['.'] = '__DOT__',
+  ['-'] = '_',
+  ['.'] = '_',
+
   ['+'] = '__ADD__',
-  ['-'] = '__SUB__',
   ['*'] = '__MUL__',
   ['/'] = '__DIV__',
-  ['.'] = '__DOT__',
   ['?'] = '__QMARK__',
+  [':'] = '__COLON__',
 }
-local function to_lua_identifier(lisp_name)
+function Compiler.to_safe_lua_identifier(lisp_name)
   local safe_var = {}
   for i = 1, lisp_name:len() do
     local ch = lisp_name:sub(i, i)
@@ -21,12 +27,6 @@ local function to_lua_identifier(lisp_name)
     safe_var[i] = safe_ch
   end
   return table.concat(safe_var)
-end
-
--- convert Lisp namespace name to a valid Lua identifier, with some prefix so
--- that it doesn't get accidentally called
-local function convert_ns_to_lua(ns)
-  return '__' .. to_lua_identifier(ns)
 end
 
 local function check_var_exists(bound_symbol)
@@ -45,10 +45,9 @@ local function check_var_exists(bound_symbol)
   assert(false, table.concat(err))
 end
 
-local tsukuyomi_core_ns = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.core')
-local function symbol_to_lua(symbol, used_namespaces, skip_var_existence_check)
+local function symbol_to_lua(state, symbol, skip_var_existence_check)
   local code = {}
-  local bound_symbol = tsukuyomi_core_ns['*ns*']:bind_symbol(symbol)
+  local bound_symbol = tsukuyomi.core['*ns*']:bind_symbol(symbol)
 
   -- var existence check should only be skipped when defining something
   if not skip_var_existence_check then
@@ -57,8 +56,7 @@ local function symbol_to_lua(symbol, used_namespaces, skip_var_existence_check)
 
   local namespace = bound_symbol.namespace
   if namespace then
-    table.insert(code, convert_ns_to_lua(namespace))
-    used_namespaces[namespace] = true
+    table.insert(code, Compiler.compile_ns(state, namespace))
   end
 
   table.insert(code, '["')
@@ -69,7 +67,7 @@ local function symbol_to_lua(symbol, used_namespaces, skip_var_existence_check)
 end
 
 local kNilSymbol = Symbol.intern('nil')
-local function compile_string_or_symbol(datum, environment, used_namespaces)
+local function compile_string_or_symbol(state, datum, environment)
   if type(datum) == 'string' then
     return datum
   elseif datum == kNilSymbol then
@@ -78,20 +76,14 @@ local function compile_string_or_symbol(datum, environment, used_namespaces)
     if environment:has_symbol(datum) then
       return datum.name
     else
-      return symbol_to_lua(datum, used_namespaces)
+      return symbol_to_lua(state, datum)
     end
   else
     assert(false)
   end
 end
 
-local function make_unique_data_var(data_bindings, data_key)
-  local var_name = '__data' .. tostring(data_key)
-  data_bindings[var_name] = data_key
-  return var_name
-end
-
-local function get_bound_var_name(obj, used_namespaces)
+local function get_bound_var_name(state, obj)
   local name
 
   if obj.new_lvar_name then
@@ -100,7 +92,7 @@ local function get_bound_var_name(obj, used_namespaces)
   end
   if obj.define_symbol then
     assert(name == nil)
-    name = symbol_to_lua(obj.define_symbol, used_namespaces, true)
+    name = symbol_to_lua(state, obj.define_symbol, true)
   end
   if obj.set_var_name then
     assert(name == nil)
@@ -111,12 +103,60 @@ local function get_bound_var_name(obj, used_namespaces)
   return name
 end
 
+function Compiler.compile_ns(state, ns)
+  local identifier = '__NS__' .. Compiler.to_safe_lua_identifier(ns)
+  if not state.seen_namespaces[ns] then
+    table.insert(state.seen_namespaces_list, {identifier, ns})
+    state.seen_namespaces[ns] = true
+  end
+  return identifier
+end
+
+function Compiler.compile_symbol(state, symbol)
+  local full_symbol_name = tostring(symbol)
+  local identifier = '__SYM__' .. Compiler.to_safe_lua_identifier(full_symbol_name)
+  if not state.seen_symbols[full_symbol_name] then
+    table.insert(state.seen_symbols_list, {identifier, {symbol.name, symbol.namespace}})
+    state.seen_namespaces[full_symbol_name] = true
+  end
+  return identifier
+end
+
+function Compiler.compile_keyword(state, keyword)
+  local full_keyword_name = tostring(keyword)
+  local identifier = '__KEYWORD__' .. Compiler.to_safe_lua_identifier(full_keyword_name)
+  if not state.seen_keywords[full_keyword_name] then
+    table.insert(state.seen_keywords_list,
+                 {identifier, Compiler.compile_symbol(state, keyword.sym)})
+    state.seen_namespaces[full_keyword_name] = true
+  end
+  return identifier
+end
+
+function Compiler.compile_data(state, data)
+  local var_name = Compiler.make_unique_var_name('data')
+  local data_str = string.format('%q', tsukuyomi.core['pr-str'][1](data))
+  table.insert(state.data_list, {var_name, data_str})
+  return var_name
+end
+
 function Compiler.compile_to_lua(ir_list)
   local lines = {}
 
-  local indent = 0
-  local used_namespaces = {}
-  local data_bindings = {}
+  local state = {
+    indent = 0,
+
+    seen_namespaces = {},
+    seen_namespaces_list = {},
+
+    seen_symbols = {},
+    seen_symbols_list = {},
+
+    seen_keywords = {},
+    seen_keywords_list = {},
+
+    data_list = {},
+  }
 
   local insn = ir_list
   local line = {}
@@ -135,7 +175,7 @@ function Compiler.compile_to_lua(ir_list)
     elseif insn.set_var_name then
       emit(insn.set_var_name, ' = ')
     elseif insn.define_symbol then
-      emit(symbol_to_lua(insn.define_symbol, used_namespaces, true), " = ")
+      emit(symbol_to_lua(state, insn.define_symbol, true), " = ")
     elseif insn.is_return then
       emit('return ')
     end
@@ -149,11 +189,11 @@ function Compiler.compile_to_lua(ir_list)
       emit(insn.args[1].name)
       emit('"); ')
     elseif insn.op == 'PRIMITIVE' then
-      emit(compile_string_or_symbol(insn.args[1], insn.environment, used_namespaces))
+      emit(compile_string_or_symbol(state, insn.args[1], insn.environment))
     elseif insn.op == 'RAW' then
       emit(insn.args[1])
     elseif insn.op == 'DATA' then
-      emit(make_unique_data_var(data_bindings, insn.data_key))
+      emit(Compiler.compile_data(state, insn.args[1]))
     elseif insn.op == 'CALL' then
       local args = insn.args
 
@@ -172,7 +212,7 @@ function Compiler.compile_to_lua(ir_list)
       if getmetatable(fn) == Symbol and fn.namespace == nil and fn.name:sub(1, 1) == '.' then
         -- object oriented function call
         -- (method_name object arg0 arg1)
-         emit(compile_string_or_symbol(args[2], insn.environment, used_namespaces))
+         emit(compile_string_or_symbol(state, args[2], insn.environment))
          emit(':')
          emit(fn.name:sub(2))
 
@@ -181,10 +221,10 @@ function Compiler.compile_to_lua(ir_list)
         -- new style constructor call
         -- (PersistentHashMap.)
         local real_sym = Symbol.intern(args[1].name:sub(1, name_len - 1), args[1].namespace)
-        emit(compile_string_or_symbol(args[2], insn.environment, used_namespaces))
+        emit(compile_string_or_symbol(state, args[2], insn.environment))
         emit('.new')
       else
-        emit(compile_string_or_symbol(fn, insn.environment, used_namespaces))
+        emit(compile_string_or_symbol(state, fn, insn.environment))
         local arity = #args - 1
         if not insn.is_direct_function then
           emit('[', tostring(math.min(arity, 21)), ']')
@@ -194,19 +234,17 @@ function Compiler.compile_to_lua(ir_list)
       emit('(')
       local stray_args_max_bounds = math.min(20 + 1, #args)
       for i = arg_start_index, stray_args_max_bounds do
-        emit(compile_string_or_symbol(args[i], insn.environment, used_namespaces))
+        emit(compile_string_or_symbol(state, args[i], insn.environment))
         if i < stray_args_max_bounds then
           emit(', ')
         end
       end
       if #args > 21 then
         emit(', ')
-        used_namespaces['tsukuyomi.lang.ArraySeq'] = true
-        local arrayseq_ns = convert_ns_to_lua('tsukuyomi.lang.ArraySeq')
-        emit(arrayseq_ns)
+        emit(Compiler.compile_ns(state, 'tsukuyomi.lang.ArraySeq'))
         emit('.new(nil, {')
         for i = 21 + 1, #args do
-          emit(compile_string_or_symbol(args[i], insn.environment, used_namespaces))
+          emit(compile_string_or_symbol(state, args[i], insn.environment))
           if i < #args then
             emit(', ')
           end
@@ -217,13 +255,11 @@ function Compiler.compile_to_lua(ir_list)
       end
       emit( ')')
     elseif insn.op == 'FUNC' then
-      local func_ns = 'tsukuyomi.lang.Function'
-      used_namespaces[func_ns] = true
-      emit(convert_ns_to_lua(func_ns))
+      emit(Compiler.compile_ns(state,  'tsukuyomi.lang.Function'))
       emit('.new()')
     elseif insn.op == 'FUNCBODY' then
       local arity = #insn.args
-      emit(get_bound_var_name(insn.parent, used_namespaces))
+      emit(get_bound_var_name(state, insn.parent))
       emit('[', tostring(arity), ']')
       emit(' = function ')
       emit('(')
@@ -236,123 +272,97 @@ function Compiler.compile_to_lua(ir_list)
     elseif insn.op == 'RESTARGSAT' then
       local args = insn.args
 
-      local func_ns = 'tsukuyomi.lang.Function'
-      used_namespaces[func_ns] = true
-      emit(convert_ns_to_lua(func_ns))
+      emit(Compiler.compile_ns(state,  'tsukuyomi.lang.Function'))
       emit('.make_functions_for_rest(')
 
-      emit(get_bound_var_name(args[1], used_namespaces))
+      emit(get_bound_var_name(state, args[1]))
 
       emit(', ')
       emit(insn.args[2])
       emit(')')
     elseif insn.op == 'ENDFUNCBODY' then
       emit('end')
-      indent = indent - 1
+      state.indent = state.indent - 1
     elseif insn.op == 'ENDFUNC' then
       -- pass
     elseif insn.op == 'IF' then
       emit('if ', insn.args[1], ' then')
     elseif insn.op == 'ELSE' then
-      indent = indent - 1
+      state.indent = state.indent - 1
       emit('else')
     elseif insn.op == 'ENDIF' then
-      indent = indent - 1
+      state.indent = state.indent - 1
       emit('end')
     elseif insn.op == 'VARFENCE' then
       emit('do')
     elseif insn.op == 'ENDVARFENCE' then
       emit('end')
-      indent = indent - 1
+      state.indent = state.indent - 1
     elseif insn.op == 'INTERNVAR' then
-      local var_ns = 'tsukuyomi.lang.Var'
-      used_namespaces[var_ns] = true
-      emit(convert_ns_to_lua(var_ns))
+      emit(Compiler.compile_ns(state, 'tsukuyomi.lang.Var'))
       emit('.intern(')
-      emit(make_unique_data_var(data_bindings, insn.data_key))
+      emit(Compiler.compile_data(state, insn.args[1]))
+      emit('):set_metadata(')
+      emit(Compiler.compile_data(state, insn.args[2]))
       emit(')')
     elseif insn.op == 'GETVAR' then
-      local var_ns = 'tsukuyomi.lang.Var'
-      used_namespaces[var_ns] = true
-      emit(convert_ns_to_lua(var_ns))
+      emit(Compiler.compile_ns(state, 'tsukuyomi.lang.Var'))
       emit('.GetVar(')
-      emit(make_unique_data_var(data_bindings, insn.data_key))
+      emit(Compiler.compile_data(state, insn.args[1]))
       emit(')')
     elseif insn.op == 'NEWVEC' then
-      local vec_ns = 'tsukuyomi.lang.PersistentVector'
-      used_namespaces[vec_ns] = true
-      emit(convert_ns_to_lua(vec_ns))
+      emit(Compiler.compile_ns(state,  'tsukuyomi.lang.PersistentVector'))
       emit('.new()')
     elseif insn.op == 'VECADD' then
       local vec = insn.args[1]
       local datum = insn.args[2]
-      local vec_name = get_bound_var_name(vec, used_namespaces)
+      local vec_name = get_bound_var_name(state, vec)
       emit(vec_name)
       emit(' = ')
       emit(vec_name)
       emit(':conj(')
-      emit(compile_string_or_symbol(insn.args[2], insn.environment, used_namespaces))
+      emit(compile_string_or_symbol(state, insn.args[2], insn.environment))
       emit(')')
     elseif insn.op == 'NEWMAP' then
-      local map_ns = 'tsukuyomi.lang.PersistentHashMap'
-      used_namespaces[map_ns] = true
-      emit(convert_ns_to_lua(map_ns))
+      emit(Compiler.compile_ns(state,  'tsukuyomi.lang.PersistentHashMap'))
       emit('.new()')
     elseif insn.op == 'MAPADD' then
       local map = insn.args[1]
       local k = insn.args[2]
       local v = insn.args[3]
-      local map_name = get_bound_var_name(map, used_namespaces)
+      local map_name = get_bound_var_name(state, map)
       emit(map_name)
       emit(' = ')
       emit(map_name)
       emit(':assoc(')
-      emit(compile_string_or_symbol(insn.args[2], insn.environment, used_namespaces))
+      emit(compile_string_or_symbol(state, insn.args[2], insn.environment))
       emit(', ')
-      emit(compile_string_or_symbol(insn.args[3], insn.environment, used_namespaces))
+      emit(compile_string_or_symbol(state, insn.args[3], insn.environment))
       emit(')')
     elseif insn.op == 'KEYWORD' then
-      local keyword_ns = 'tsukuyomi.lang.Keyword'
-      local symbol_ns = 'tsukuyomi.lang.Symbol'
-      used_namespaces[keyword_ns] = true
-      used_namespaces[symbol_ns] = true
-
-      emit(convert_ns_to_lua(keyword_ns))
-      emit('.intern(')
-      emit(convert_ns_to_lua(symbol_ns))
-      emit('.intern(\'')
-      local sym = insn.args[1].sym
-      emit(sym.name)
-      emit('\'')
-      if sym.namespace then
-        emit(', ')
-        emit('\'')
-        emit(sym.namespace)
-        emit('\'')
-      end
-      emit('))')
+      emit(Compiler.compile_keyword(state, insn.args[1]))
     else
       print('unknown opcode: ' .. insn.op)
       assert(false)
     end
 
     if #line > 0 then
-      for i = 1, indent do
+      for i = 1, state.indent do
         table.insert(line, 1, '\t')
       end
       table.insert(lines, table.concat(line))
       line = {}
     end
 
-    -- indent change after line is generated
+    -- state.indent change after line is generated
     if insn.op == 'FUNCBODY' then
-      indent = indent + 1
+      state.indent = state.indent + 1
     elseif insn.op == 'IF' then
-      indent = indent + 1
+      state.indent = state.indent + 1
     elseif insn.op == 'ELSE' then
-      indent = indent + 1
+      state.indent = state.indent + 1
     elseif insn.op == 'VARFENCE' then
-      indent = indent + 1
+      state.indent = state.indent + 1
     end
 
     insn = insn.next
@@ -360,43 +370,70 @@ function Compiler.compile_to_lua(ir_list)
 
   local body = table.concat(lines, '\n')
 
-  local header = {}
-  table.insert(header, 'local tsukuyomi = _G.tsukuyomi')
-  table.insert(header, '')
-  -- write out used namespaces
-  local has_namespace = false
-  for ns, _ in pairs(used_namespaces) do
-    has_namespace = true
-    local line = {}
-    table.insert(line, 'local ')
-    table.insert(line, convert_ns_to_lua(ns))
-    table.insert(line, ' = tsukuyomi.lang.Namespace.GetNamespaceSpace("')
-    table.insert(line, ns)
-    table.insert(line, '")')
-    table.insert(header, table.concat(line))
-  end
-  if has_namespace then
-    table.insert(header, '')
-  end
-
-  -- write out data bindings
-  local has_data_bindings = false
-  for data_var_name, data_key in pairs(data_bindings) do
-    has_data_bindings = true
-    local line = {}
-    table.insert(line, 'local ')
-    table.insert(line, data_var_name)
-    table.insert(line, ' = tsukuyomi.retrieve_data(')
-    table.insert(line, data_key)
-    table.insert(line, ')')
-    table.insert(header, table.concat(line))
-  end
-  if has_data_bindings then
-    table.insert(header, '')
-  end
-
   local final = {}
-  table.insert(final, table.concat(header, '\n'))
+
+  table.insert(final, 'local tsukuyomi = _G.tsukuyomi')
+  table.insert(final, '')
+
+  -- write out seen namespaces
+  for i = 1, #state.seen_namespaces_list do
+    local pair = state.seen_namespaces_list[i]
+    local line = {}
+    table.insert(line, 'local ')
+    table.insert(line, pair[1])
+    table.insert(line, ' = tsukuyomi.lang.Namespace.GetNamespaceSpace("')
+    table.insert(line, pair[2])
+    table.insert(line, '")')
+    table.insert(final, table.concat(line))
+  end
+  table.insert(final, '')
+
+  -- write out seen symbols
+  for i = 1, #state.seen_symbols_list do
+    local pair = state.seen_symbols_list[i]
+    local symbol = pair[2]
+    local line = {}
+    table.insert(line, 'local ')
+    table.insert(line, pair[1])
+    table.insert(line, ' = tsukuyomi.lang.Symbol.intern(')
+    table.insert(line, string.format('%q', symbol[1]))
+    table.insert(line, '')
+    if symbol[2] then
+      table.insert(line, ', ')
+      table.insert(line, string.format('%q', symbol[2]))
+    end
+    table.insert(line, ')')
+    table.insert(final, table.concat(line))
+  end
+  table.insert(final, '')
+
+  -- write out seen keywords
+  for i = 1, #state.seen_keywords_list do
+    local pair = state.seen_keywords_list[i]
+    local line = {}
+    table.insert(line, 'local ')
+    table.insert(line, pair[1])
+    table.insert(line, ' = tsukuyomi.lang.Keyword.intern(')
+    table.insert(line, pair[2])
+    table.insert(line, ')')
+    table.insert(final, table.concat(line))
+  end
+  table.insert(final, '')
+
+  -- write out data
+  for i = 1, #state.data_list do
+    local pair = state.data_list[i]
+    local line = {}
+    table.insert(line, 'local ')
+    table.insert(line, pair[1])
+    table.insert(line, ' = tsukuyomi.core.read[1](')
+    table.insert(line, pair[2])
+    table.insert(line, ')')
+    table.insert(final, table.concat(line))
+  end
+  table.insert(final, '')
+
   table.insert(final, body)
+
   return table.concat(final, '\n')
 end

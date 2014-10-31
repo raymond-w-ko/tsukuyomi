@@ -70,12 +70,7 @@ local function make_unique_var_name(desc)
   var_counter = var_counter + 1
   return '__' .. desc .. '_' .. tostring(var_counter)
 end
-
-local data_key_counter = -1
-local function make_unique_data_key()
-  data_key_counter = data_key_counter + 1
-  return data_key_counter
-end
+Compiler.make_unique_var_name = make_unique_var_name
 
 --------------------------------------------------------------------------------
 
@@ -134,16 +129,17 @@ end
 -- e.g. this would print 2 instead of 1
 
 -- mapping of variable name to number of time mentioned in enclosing functions
-local LexicalEnvironment = {}
+Compiler.LexicalEnvironment = {}
+local LexicalEnvironment = Compiler.LexicalEnvironment
 LexicalEnvironment.__index = LexicalEnvironment
 
-local function create_lexical_environment()
+function LexicalEnvironment.new()
   local env = setmetatable({symbols = {}}, LexicalEnvironment)
   return env
 end
 
 function LexicalEnvironment:extend_with(symbols)
-  local newenv = create_lexical_environment()
+  local newenv = LexicalEnvironment.new()
   for i = 1, #symbols do
     local symbol = symbols[i]
     assert(getmetatable(symbol) == Symbol,
@@ -205,11 +201,10 @@ special_forms[tostring(kNsSymbol)] = function(node, datum, new_dirty_nodes)
   if node.is_return then
     node.is_return = false
 
-    local dummy_return = Compiler.ll_new_node('LISP', node.environment)
-    dummy_return.args = { true }
+    local dummy_return = Compiler.ll_new_node('PRIMITIVE', node.environment)
+    dummy_return.args = { 'nil' }
     Compiler.ll_insert_after(node, dummy_return)
     dummy_return.is_return = true
-    table.insert(new_dirty_nodes, dummy_return)
   end
 end
 
@@ -217,11 +212,10 @@ special_forms['def'] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local symbol = datum:first()
-  assert(getmetatable(symbol) == Symbol, 'first arg to (def) must be a symbol')
+  assert(getmetatable(symbol) == Symbol, 'First argument to def must be a Symbol')
   local intern_var_node = Compiler.ll_new_node('INTERNVAR', orig_node.environment)
-  intern_var_node.args = {}
   local bound_symbol = tsukuyomi_core['*ns*']:bind_symbol(symbol)
-  intern_var_node.data_key = tsukuyomi.store_data(bound_symbol)
+  intern_var_node.args = {bound_symbol, symbol:meta()}
   Compiler.ll_insert_before(node, intern_var_node)
 
   -- (def symbol datum)
@@ -229,12 +223,11 @@ special_forms['def'] = function(node, datum, new_dirty_nodes)
   table.insert(new_dirty_nodes, defnode)
   defnode.op = 'LISP'
   defnode.define_symbol = symbol
-  defnode.args = { datum:rest():first() }
+  defnode.args = {datum:rest():first()}
   Compiler.ll_insert_before(node, defnode)
 
   node.op = 'GETVAR'
-  node.args = {}
-  node.data_key = tsukuyomi.store_data(bound_symbol)
+  node.args = {bound_symbol}
 end
 
 special_forms['_emit_'] = function(node, datum, new_dirty_nodes)
@@ -246,7 +239,7 @@ end
 
 special_forms['quote'] = function(node, datum, new_dirty_nodes)
   node.op = 'DATA'
-  node.data_key = tsukuyomi.store_data(datum:first())
+  node.args = {datum:first()}
 end
 
 special_forms['if'] = function(node, datum, new_dirty_nodes)
@@ -700,7 +693,7 @@ end
 -- define_symbol
 -- is_return
 function Compiler.compile_to_ir(datum)
-  local head_node = Compiler.ll_new_node('LISP', create_lexical_environment())
+  local head_node = Compiler.ll_new_node('LISP', LexicalEnvironment.new())
   head_node.args = {datum}
   head_node.is_return = true
 
