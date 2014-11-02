@@ -193,7 +193,7 @@ local special_forms = Compiler.special_forms
 
 -- TODO: support other namespaces via require
 -- TODO: check for symbol collision in namespaces
-special_forms[tostring(kNsSymbol)] = function(node, datum, new_dirty_nodes)
+special_forms['ns'] = function(node, datum, new_dirty_nodes)
   node.op = 'NS'
   node.args = {datum:first()}
 
@@ -311,7 +311,7 @@ special_forms['if'] = function(node, datum, new_dirty_nodes)
   node.args = { ret_var_name }
 end
 
-special_forms[tostring(kLetSymbol)] = function(node, datum, new_dirty_nodes)
+special_forms['let'] = function(node, datum, new_dirty_nodes)
   local orig_node = node
 
   local bindings = datum:first()
@@ -377,7 +377,7 @@ special_forms[tostring(kLetSymbol)] = function(node, datum, new_dirty_nodes)
 end
 
 -- (fn [arg0 arg1] (body))
-special_forms[tostring(kFnSymbol)] = function(node, datum, new_dirty_nodes)
+special_forms['fn'] = function(node, datum, new_dirty_nodes)
   local func_var_name = make_unique_var_name('func')
 
   local orig_node = node
