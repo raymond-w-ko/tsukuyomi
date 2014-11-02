@@ -248,7 +248,7 @@ special_forms['if'] = function(node, datum, new_dirty_nodes)
 
   local ret_var_node = Compiler.ll_new_node('EMPTYVAR', orig_node.environment)
   local ret_var_name = make_unique_var_name('if_ret')
-  ret_var_node.args = { ret_var_name }
+  ret_var_node.args = {ret_var_name}
   Compiler.ll_insert_before(orig_node, ret_var_node)
   node = ret_var_node
 
@@ -306,6 +306,48 @@ special_forms['if'] = function(node, datum, new_dirty_nodes)
   local endfence = Compiler.ll_new_node('ENDVARFENCE', orig_node.environment)
   Compiler.ll_insert_after(node, endfence)
   node = endfence
+
+  node = orig_node
+  node.op = 'PRIMITIVE'
+  node.args = { ret_var_name }
+end
+
+special_forms['do'] = function(node, datum, dirty_nodes)
+  local orig_node = node
+
+  local ret_var_node = Compiler.ll_new_node('EMPTYVAR', orig_node.environment)
+  local ret_var_name = make_unique_var_name('do_ret')
+  ret_var_node.args = {ret_var_name}
+  Compiler.ll_insert_before(orig_node, ret_var_node)
+  node = ret_var_node
+
+  local num_forms = 0
+
+  while datum:seq() do
+    local form = datum:first()
+
+    num_forms = num_forms + 1
+
+    local fence = Compiler.ll_new_node('VARFENCE', orig_node.environment)
+    Compiler.ll_insert_after(node, fence)
+    node = fence
+
+    local lisp_node = Compiler.ll_new_node('LISP', orig_node.environment)
+    lisp_node.args = {form}
+    Compiler.ll_insert_after(node, lisp_node)
+    table.insert(dirty_nodes, lisp_node)
+    node = lisp_node
+
+    local endfence = Compiler.ll_new_node('ENDVARFENCE', orig_node.environment)
+    Compiler.ll_insert_after(node, endfence)
+    node = endfence
+
+    datum = datum:rest()
+  end
+
+  if num_forms > 0 then
+    node.prev.set_var_name = ret_var_name
+  end
 
   node = orig_node
   node.op = 'PRIMITIVE'
