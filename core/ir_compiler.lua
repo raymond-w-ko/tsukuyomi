@@ -213,6 +213,7 @@ special_forms['def'] = function(node, datum, new_dirty_nodes)
 
   local symbol = datum:first()
   assert(getmetatable(symbol) == Symbol, 'First argument to def must be a Symbol')
+
   local intern_var_node = Compiler.ll_new_node('INTERNVAR', orig_node.environment)
   local bound_symbol = tsukuyomi_core['*ns*']:bind_symbol(symbol)
   intern_var_node.args = {bound_symbol, symbol:meta()}

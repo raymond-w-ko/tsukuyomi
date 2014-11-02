@@ -13,7 +13,6 @@ Var.__index = Var
 tsukuyomi.lang.Var = Var
 
 local var_cache = {}
---setmetatable(var_cache, {__mode = 'v'})
 
 function Var.intern(symbol)
   assert(getmetatable(symbol) == Symbol, 'tsukuyomi.lang.Var.intern() only accepts Symbols')
