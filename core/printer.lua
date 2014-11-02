@@ -8,6 +8,7 @@ local ArraySeq = tsukuyomi.lang.ArraySeq
 local ConcatSeq = tsukuyomi.lang.ConcatSeq
 local Symbol = tsukuyomi.lang.Symbol
 local Keyword = tsukuyomi.lang.Keyword
+local Var = tsukuyomi.lang.Var
 
 print('PersistentList: ' .. tostring(PersistentList))
 print('PersistentList.EMPTY: ' .. tostring(PersistentList.EMPTY))
@@ -52,6 +53,8 @@ function tsukuyomi.print(datum)
       seq = seq:rest()
     end
     return '{' .. table.concat(items, ' ') .. '}'
+  elseif mt == Var then
+    return tostring(datum)
   elseif datum.first ~= nil then
     local items = {}
 

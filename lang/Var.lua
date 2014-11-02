@@ -9,8 +9,18 @@ local Namespace = tsukuyomi.lang.Namespace
 -- is basically just a place to:
 -- 1. store metadata
 local Var = {}
-Var.__index = Var
 tsukuyomi.lang.Var = Var
+Var.__index = Var
+function Var:__tostring()
+  local name = self._name
+  if name then
+    return name
+  end
+
+  name = "#'" .. tostring(self._symbol)
+  self._name = name
+  return name
+end
 
 local var_cache = {}
 
