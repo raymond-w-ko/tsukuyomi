@@ -167,18 +167,41 @@ function LexicalEnvironment:has_symbol(symbol)
   end
 end
 
+function LexicalEnvironment:set_recur_point(recur_type, recur_point_name, recur_arity)
+  if recur_type == 'fn' then
+    self.recur_type = 'fn'
+    self.recur_point_name = recur_point_name
+    self.recur_arity = recur_arity
+  else
+    assert(false)
+  end
+end
+
 function LexicalEnvironment:__tostring()
   local t = {}
 
-  table.insert(t, '(')
-  for symbol, _ in pairs(self.symbols) do
+  local symbols = {}
+  local env = self
+  while env do
+    for symbol, _ in pairs(env.symbols) do
+      symbols[symbol] = true
+    end
+    env = env.parent
+  end
+  table.insert(t, 'LOCALS: ')
+  for symbol, _ in pairs(symbols) do
     table.insert(t, symbol)
-    table.insert(t, ' ')
   end
-  if self.parent then
-    table.insert(t, tostring(self.parent))
+
+  if self.recur_type == 'fn' then
+    table.insert(t, '\t[RECUR]')
+    table.insert(t, ' TYPE: ')
+    table.insert(t, self.recur_type)
+    table.insert(t, ' NAME: ')
+    table.insert(t, self.recur_point_name)
+    table.insert(t, ' ARITY: ')
+    table.insert(t, self.recur_arity)
   end
-  table.insert(t, ')')
 
   return table.concat(t)
 end
@@ -478,7 +501,7 @@ special_forms['fn'] = function(node, datum, new_dirty_nodes)
         assert(false, "Can't specify more than 20 params")
       end
     end
-    for i = 0, args_count- 1 do
+    for i = 0, args_count - 1 do
       local arg_name = tostring(args:get(i))
       if arg_name ~= '&' then
         node.args[slot] = arg_name
@@ -487,6 +510,8 @@ special_forms['fn'] = function(node, datum, new_dirty_nodes)
         rest_arg_index = i + 1
       end
     end
+
+    extended_environment:set_recur_point('fn', func_var_name ,#node.args)
 
     while exprs do
       local fence = Compiler.ll_new_node('VARFENCE', extended_environment)
