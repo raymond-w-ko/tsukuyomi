@@ -1,8 +1,8 @@
 local paths = {
+  'tsukuyomi/thirdparty/hamt.lua/?.lua',
   package.path,
   './?/init.lua',
   './?.lua',
-  'tsukuyomi/thirdparty/hamt.lua/?.lua',
 }
 package.path=table.concat(paths, ';')
 
