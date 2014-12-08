@@ -1,14 +1,10 @@
-local tsukuyomi = tsukuyomi
-local util = require('tsukuyomi.thirdparty.util')
-
-local PersistentList = tsukuyomi.lang.PersistentList
+local PersistentList = require('tsukuyomi.lang.PersistentList')
 local EMPTY = PersistentList.EMPTY
 
 local ConcatSeq = {}
-tsukuyomi.lang.ConcatSeq = ConcatSeq
 ConcatSeq.__index = ConcatSeq
 -- This is a persistent data structure :-)
-ConcatSeq.__newindex = function(t, k, v)
+ConcatSeq.__newindex = function()
   -- only self[3] == self._count maybe modified after the fact
   assert(false, 'attempted to modify tsukuyomi.lang.ConcatSeq')
 end
@@ -130,3 +126,5 @@ end
 function ConcatSeq:seq()
   return self
 end
+
+return ConcatSeq

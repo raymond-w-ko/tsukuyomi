@@ -1,7 +1,5 @@
-local tsukuyomi = tsukuyomi
-
 local PersistentList = {}
-tsukuyomi.lang.PersistentList = PersistentList
+
 PersistentList.__index = PersistentList
 -- This is a persistent data structure :-)
 PersistentList.__newindex = function()
@@ -162,3 +160,5 @@ function PersistentList:ToLuaArray()
 
   return array, self[3]
 end
+
+return PersistentList

@@ -1,14 +1,13 @@
-local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
 
-local PersistentList = tsukuyomi.lang.PersistentList
-local PersistentVector = tsukuyomi.lang.PersistentVector
-local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
-local ArraySeq = tsukuyomi.lang.ArraySeq
-local ConcatSeq = tsukuyomi.lang.ConcatSeq
-local Symbol = tsukuyomi.lang.Symbol
-local Keyword = tsukuyomi.lang.Keyword
-local Var = tsukuyomi.lang.Var
+local PersistentList = require('tsukuyomi.lang.PersistentList')
+local PersistentVector = require('tsukuyomi.lang.PersistentVector')
+local PersistentHashMap = require('tsukuyomi.lang.PersistentHashMap')
+local ArraySeq = require('tsukuyomi.lang.ArraySeq')
+local ConcatSeq = require('tsukuyomi.lang.ConcatSeq')
+local Symbol = require('tsukuyomi.lang.Symbol')
+local Keyword = require('tsukuyomi.lang.Keyword')
+local Var = require('tsukuyomi.lang.Var')
 
 print('PersistentList: ' .. tostring(PersistentList))
 print('PersistentList.EMPTY: ' .. tostring(PersistentList.EMPTY))
@@ -20,7 +19,7 @@ print('ArraySeq: ' .. tostring(ArraySeq))
 -- TODO: add indenting
 -- TODO: make not vulnerable to a stack overflow when printing cons cells
 -- TODO: make not vulnerable to infinite loop due to self referential data structures
-function tsukuyomi.print(datum)
+local function _print(datum)
   if type(datum) == 'boolean' then
     return tostring(datum)
   elseif type(datum) == 'number' then
@@ -38,7 +37,7 @@ function tsukuyomi.print(datum)
   elseif mt == PersistentVector then
     local items = {}
     for i = 0, datum:count() - 1 do
-      table.insert(items, tsukuyomi.print(datum:get(i)))
+      table.insert(items, _print(datum:get(i)))
     end
     return '[' .. table.concat(items, ' ') .. ']'
   elseif mt == PersistentHashMap then
@@ -48,8 +47,8 @@ function tsukuyomi.print(datum)
       local kv = seq:first()
       local k = kv:get(0)
       local v = kv:get(1)
-      table.insert(items, tsukuyomi.print(k))
-      table.insert(items, tsukuyomi.print(v))
+      table.insert(items, _print(k))
+      table.insert(items, _print(v))
       seq = seq:rest()
     end
     return '{' .. table.concat(items, ' ') .. '}'
@@ -70,14 +69,14 @@ function tsukuyomi.print(datum)
       --end
 
       --local item = datum:first()
-      --table.insert(items, tsukuyomi.print(item))
+      --table.insert(items, _print(item))
 
       --datum = datum:rest()
     --end
 
     while datum:seq() do
       local item = datum:first()
-      table.insert(items, tsukuyomi.print(item))
+      table.insert(items, _print(item))
       datum = datum:rest()
     end
     return '(' .. table.concat(items, ' ') .. ')'
@@ -87,5 +86,10 @@ function tsukuyomi.print(datum)
   end
 end
 
-tsukuyomi.core['pr-str'] = tsukuyomi.lang.Function.new()
-tsukuyomi.core['pr-str'][1] = tsukuyomi.print
+local tsukuyomi = require('tsukuyomi')
+tsukuyomi.print = _print
+local core = require('tsukuyomi.core')
+local Function = require('tsukuyomi.lang.Function')
+core['pr-str'] = Function.new()
+core['pr-str'][1] = _print
+Var.intern(Symbol.intern('pr-str', 'tsukuyomi.core'))

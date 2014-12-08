@@ -1,28 +1,24 @@
-local tsukuyomi = tsukuyomi
-local tsukuyomi_core = tsukuyomi.core
+local tsukuyomi = require('tsukuyomi')
+local tsukuyomi_core = require('tsukuyomi.core')
 local util = require('tsukuyomi.thirdparty.util')
-local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
 
-local Symbol = tsukuyomi.lang.Symbol
-local Keyword = tsukuyomi.lang.Keyword
-local Function = tsukuyomi.lang.Function
+local Symbol = require('tsukuyomi.lang.Symbol')
 -- special forms
-local kNsSymbol = Symbol.intern('ns')
-local kQuoteSymbol = Symbol.intern('quote')
-local kDefSymbol = Symbol.intern('def')
-local kIfSymbol = Symbol.intern('if')
-local kFnSymbol = Symbol.intern('fn')
-local kEmitSymbol = Symbol.intern('_emit_')
 local kNilSymbol = Symbol.intern("nil")
-local kLetSymbol = Symbol.intern("let")
 local kAmpersandSymbol = Symbol.intern("&")
 local kDotSymbol = Symbol.intern(".")
 
-local PersistentList = tsukuyomi.lang.PersistentList
-local PersistentVector = tsukuyomi.lang.PersistentVector
-local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
+local Keyword = require('tsukuyomi.lang.Keyword')
+local Function = require('tsukuyomi.lang.Function')
 
-local Var = tsukuyomi.lang.Var
+local PersistentList = require('tsukuyomi.lang.PersistentList')
+local PersistentVector = require('tsukuyomi.lang.PersistentVector')
+local PersistentHashMap = require('tsukuyomi.lang.PersistentHashMap')
+
+local Var = require('tsukuyomi.lang.Var')
+local Namespace = require('tsukuyomi.lang.Namespace')
+
+local Compiler = Namespace.intern('tsukuyomi.lang.Compiler')
 
 --------------------------------------------------------------------------------
 -- standard doubly-linked list
@@ -191,6 +187,7 @@ function LexicalEnvironment:__tostring()
   table.insert(t, 'LOCALS: ')
   for symbol, _ in pairs(symbols) do
     table.insert(t, symbol)
+    table.insert(t, ' ')
   end
 
   if self.recur_type == 'fn' then
@@ -238,7 +235,7 @@ special_forms['def'] = function(node, datum, new_dirty_nodes)
   assert(getmetatable(symbol) == Symbol, 'First argument to def must be a Symbol')
 
   local intern_var_node = Compiler.ll_new_node('INTERNVAR', orig_node.environment)
-  local bound_symbol = tsukuyomi_core['*ns*']:bind_symbol(symbol)
+  local bound_symbol = tsukuyomi_core['*ns*']:__bind_symbol__(symbol)
   intern_var_node.args = {bound_symbol, symbol:meta()}
   Compiler.ll_insert_before(node, intern_var_node)
 
@@ -618,7 +615,7 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
       local len = symbol_name:len()
       -- make sure it is not an interop macro
       if symbol_name:sub(1, 1) ~= '.' and symbol_name:sub(len, len) ~= '.' then
-        local bound_symbol = tsukuyomi_core['*ns*']:bind_symbol(symbol)
+        local bound_symbol = tsukuyomi_core['*ns*']:__bind_symbol__(symbol)
         local var = Var.GetVar(bound_symbol)
         if var == nil then
           local err = {

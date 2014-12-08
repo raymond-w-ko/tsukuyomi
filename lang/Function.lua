@@ -1,9 +1,9 @@
-local tsukuyomi = tsukuyomi
-local PersistentList = tsukuyomi.lang.PersistentList
-local ArraySeq = tsukuyomi.lang.ArraySeq
+local PersistentList = require('tsukuyomi.lang.PersistentList')
+local ArraySeq = require('tsukuyomi.lang.ArraySeq')
 
 local Function = {}
-tsukuyomi.lang.Function = Function
+-- let's hope this doesn't cause any problems
+package.loaded['tsukuyomi.lang.Function'] = Function
 
 function Function.new()
   return {}
@@ -30,8 +30,9 @@ local function make_fn(arity, rest_arg_index)
   local slot = 1
   local rest_size = arity - rest_arg_index + 1
 
-  text[slot] = 'local ArraySeq = tsukuyomi.lang.ArraySeq\n'; slot = slot + 1
-  text[slot] = 'tsukuyomi.lang.Function._rest_fn_creators'; slot = slot + 1
+  text[slot] = 'local ArraySeq = require("tsukuyomi.lang.ArraySeq")\n'; slot = slot + 1
+  text[slot] = 'local Function = require("tsukuyomi.lang.Function")\n'; slot = slot + 1
+  text[slot] = 'Function._rest_fn_creators'; slot = slot + 1
   text[slot] = '['; slot = slot + 1
   text[slot] = tostring(rest_arg_index); slot = slot + 1
   text[slot] = ']'; slot = slot + 1
@@ -100,9 +101,10 @@ end
 local function make_general_rest_fn(rest_arg_index)
   local text = {}; local slot = 1
   local chunk = [[
-local ArraySeq = tsukuyomi.lang.ArraySeq
-local ConcatSeq = tsukuyomi.lang.ConcatSeq
-tsukuyomi.lang.Function._general_rest_fn_creators[]]
+local ArraySeq = require("tsukuyomi.lang.ArraySeq")
+local ConcatSeq = require("tsukuyomi.lang.ConcatSeq")
+local Function = require("tsukuyomi.lang.Function")
+Function._general_rest_fn_creators[]]
   text[slot] = chunk; slot = slot + 1
 
   text[slot] = tostring(rest_arg_index); slot = slot + 1
@@ -231,3 +233,4 @@ function Function.make_functions_for_rest(fn, rest_arg_index)
   --setmetatable(fn, FunctionWithRestArgsMetatable)
 end
 
+return Function

@@ -1,10 +1,7 @@
 local hamt = require('hamt')
-local tsukuyomi = tsukuyomi
-local util = require('tsukuyomi.thirdparty.util')
-local PersistentVectorSeq = tsukuyomi.lang.PersistentVectorSeq
+local PersistentVectorSeq = require('tsukuyomi.lang.PersistentVectorSeq')
 
 local PersistentVector = {}
-tsukuyomi.lang.PersistentVector = PersistentVector
 PersistentVector.__index = PersistentVector
 -- This is a persistent data structure :-)
 PersistentVector.__newindex = function()
@@ -95,3 +92,5 @@ end
 function PersistentVector:seq()
   return PersistentVectorSeq.new(self._meta, self, 0, self._count)
 end
+
+return PersistentVector

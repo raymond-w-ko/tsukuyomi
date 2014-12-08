@@ -1,15 +1,11 @@
-local tsukuyomi = tsukuyomi
-
-local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
-local Symbol = tsukuyomi.lang.Symbol
-local Keyword = tsukuyomi.lang.Keyword
-local Namespace = tsukuyomi.lang.Namespace
+local PersistentHashMap = require('tsukuyomi.lang.PersistentHashMap')
+local Symbol = require('tsukuyomi.lang.Symbol')
+local Keyword = require('tsukuyomi.lang.Keyword')
 
 -- Since variables do not not as feature rich or complicated as Clojure, this
 -- is basically just a place to:
 -- 1. store metadata
 local Var = {}
-tsukuyomi.lang.Var = Var
 Var.__index = Var
 function Var:__tostring()
   local name = self._name
@@ -48,12 +44,12 @@ function Var.GetVar(symbol)
 end
 
 function Var:get()
-  local ns = Namespace.GetNamespaceSpace(self._symbol.namespace)
+  local ns = require(self._symbol.namespace)
   return ns[self._symbol.name]
 end
 
 function Var:set(x)
-  local ns = Namespace.GetNamespaceSpace(self._symbol.namespace)
+  local ns = require(self._symbol.namespace)
   ns[self._symbol.name] = x
 end
 
@@ -74,3 +70,5 @@ function Var:is_macro()
   end
   return self._meta:get(macro_keyword) == true
 end
+
+return Var

@@ -1,5 +1,3 @@
-local tsukuyomi = tsukuyomi
-
 local dispatch = {
   nil, nil, nil, nil,
   nil, nil, nil, nil,
@@ -348,5 +346,7 @@ local function apply(fn, arglist)
   return dispatch[count + 1](fn[count], arglist)
 end
 
-tsukuyomi.core._apply = tsukuyomi.lang.Function.new()
-tsukuyomi.core._apply[2] = apply
+local Function = require('tsukuyomi.lang.Function')
+local core = require('tsukuyomi.core')
+core._apply = Function.new()
+core._apply[2] = apply

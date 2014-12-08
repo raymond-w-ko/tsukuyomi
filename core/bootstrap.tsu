@@ -57,9 +57,9 @@
 
 (def print
   (fn [x]
-    (_emit_ "io.write(tsukuyomi.print(x))")
-    (_emit_ "io.write('\\n')")
-    nil))
+    (let  [string (pr-str x)]
+      (_emit_ "io.write(string)")
+      (_emit_ "io.write('\\n')"))))
 
 (def concat
   (fn
@@ -74,6 +74,7 @@
 (def count
   (fn [coll] (.count coll)))
 
+; this is just a placeholder until the full version of collection compare is possible
 (def =
   (fn [x y] (=== x y)))
 

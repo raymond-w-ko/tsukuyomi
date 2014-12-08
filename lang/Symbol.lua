@@ -1,10 +1,8 @@
-local tsukuyomi = tsukuyomi
 local hamt = require('hamt')
 
 local Symbol = {}
-tsukuyomi.lang.Symbol = Symbol
 Symbol.__index = Symbol
-Symbol.__newindex = function(t, k)
+Symbol.__newindex = function()
   assert(false, 'attempted to modify tsukuyomi.lang.Symbol')
 end
 
@@ -40,3 +38,5 @@ function Symbol:hasheq()
   end
   return self._hasheq
 end
+
+return Symbol

@@ -1,7 +1,4 @@
-local tsukuyomi = tsukuyomi
-
 local PushbackReader = {}
-tsukuyomi.lang.PushbackReader = PushbackReader
 PushbackReader.__index = PushbackReader
 
 function PushbackReader.new(text, filename)
@@ -32,3 +29,5 @@ end
 function PushbackReader:unread(ch)
   table.insert(self.push_back_buffer, ch)
 end
+
+return PushbackReader

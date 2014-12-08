@@ -1,11 +1,14 @@
-local tsukuyomi = tsukuyomi
-local tsukuyomi_core = tsukuyomi.core
-local PushbackReader = tsukuyomi.lang.PushbackReader
-local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
-local PersistentList = tsukuyomi.lang.PersistentList
-local Symbol = tsukuyomi.lang.Symbol
+local tsukuyomi = require('tsukuyomi')
+local tsukuyomi_core = require('tsukuyomi.core')
+local PushbackReader = require('tsukuyomi.lang.PushbackReader')
+local PersistentList = require('tsukuyomi.lang.PersistentList')
+local Symbol = require('tsukuyomi.lang.Symbol')
+local Function = require('tsukuyomi.lang.Function')
 
-tsukuyomi_core['eval'] = tsukuyomi.lang.Function.new()
+local Namespace = require('tsukuyomi.lang.Namespace')
+local Compiler = Namespace.intern('tsukuyomi.lang.Compiler')
+
+tsukuyomi_core['eval'] = Function.new()
 tsukuyomi_core['eval'][1] = function (form)
   assert(false)
 end
@@ -17,14 +20,14 @@ local function describe(datum)
   if type(datum) == 'table' and datum.first then
     if datum:first() == def_symbol then
       local symbol = datum:rest():first()
-      symbol = tsukuyomi.core['*ns*']:bind_symbol(symbol)
+      symbol = tsukuyomi_core['*ns*']:__bind_symbol__(symbol)
       info = tostring(symbol)
     end
   end
   return info
 end
 
-tsukuyomi_core['load-file'] = tsukuyomi.lang.Function.new()
+tsukuyomi_core['load-file'] = Function.new()
 tsukuyomi_core['load-file'][1] = function (name)
   local f = io.open(name)
   local text = f:read('*all')

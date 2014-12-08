@@ -1,6 +1,7 @@
 local util = require('tsukuyomi.thirdparty.util')
-local tsukuyomi = tsukuyomi
-local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
+local tsukuyomi = require('tsukuyomi')
+local Namespace = require('tsukuyomi.lang.Namespace')
+local Compiler = Namespace.intern('tsukuyomi.lang.Compiler')
 
 local log = io.open('tsukuyomi/tests/compiler.out.txt', 'w')
 if not log then assert(false) end

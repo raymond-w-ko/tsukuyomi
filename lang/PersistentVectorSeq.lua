@@ -1,11 +1,7 @@
-local tsukuyomi = tsukuyomi
-local util = require('tsukuyomi.thirdparty.util')
-
-local PersistentList = tsukuyomi.lang.PersistentList
+local PersistentList = require('tsukuyomi.lang.PersistentList')
 local EMPTY = PersistentList.EMPTY
 
 local PersistentVectorSeq = {}
-tsukuyomi.lang.PersistentVectorSeq = PersistentVectorSeq
 PersistentVectorSeq.__index = PersistentVectorSeq
 -- This is a persistent data structure :-)
 PersistentVectorSeq.__newindex = function()
@@ -129,3 +125,5 @@ function PersistentVectorSeq:ToLuaArray()
 
   return out, len
 end
+
+return PersistentVectorSeq

@@ -1,13 +1,11 @@
--- support strict.lua
-if _G.__STRICT then
-  global('tsukuyomi')
-end
-tsukuyomi = {}
+local tsukuyomi = {}
+package.loaded['tsukuyomi'] = tsukuyomi
 
+-- patches string metatable with required functions
 require('tsukuyomi.lang.String')
+
+require('tsukuyomi.lang.Symbol')
 require('tsukuyomi.lang.Namespace')
--- loaded by Namespace due to somewhat complicated initialization order
---require('tsukuyomi.lang.Symbol')
 require('tsukuyomi.lang.Keyword')
 
 require('tsukuyomi.lang.PushbackReader')
@@ -35,7 +33,8 @@ require('tsukuyomi.core.apply')
 --------------------------------------------------------------------------------
 -- We can finally load Lisp :-)
 --------------------------------------------------------------------------------
-tsukuyomi.core['load-file'][1]('tsukuyomi/core/bootstrap.tsu')
-tsukuyomi.core['load-file'][1]('tsukuyomi/core/tests.tsu')
+local core = require('tsukuyomi.core')
+core['load-file'][1]('tsukuyomi/core/bootstrap.tsu')
+core['load-file'][1]('tsukuyomi/core/tests.tsu')
 
 return tsukuyomi

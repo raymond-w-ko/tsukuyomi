@@ -1,11 +1,9 @@
-local tsukuyomi = tsukuyomi
 local bit = require('bit')
 local tobit = bit.tobit
 
 local Keyword = {}
-tsukuyomi.lang.Keyword = Keyword
 Keyword.__index = Keyword
-Keyword.__newindex = function(t, k)
+Keyword.__newindex = function()
   assert(false, 'attempted to modify tsukuyomi.lang.Keyword')
 end
 
@@ -25,6 +23,9 @@ function Keyword.intern(sym)
     sym = sym:with_meta(nil)
   end
 
+  -- 0x9e3779b9 is negative 1640531527 decimal in two's complement form
+  -- apparently this is suppose to have a random number of 0s and 1s to perturb
+  -- the hash of the symbol
   local hash = tobit(sym:hasheq() + 0x9e3779b9)
   keyword = setmetatable({sym = sym, _hasheq = hash}, Keyword)
   keyword_cache[k] = keyword
@@ -38,3 +39,5 @@ end
 function Keyword:hasheq()
   return self._hasheq
 end
+
+return Keyword

@@ -1,7 +1,4 @@
-local tsukuyomi = tsukuyomi
-local util = require('tsukuyomi.thirdparty.util')
-
-local PersistentList = tsukuyomi.lang.PersistentList
+local PersistentList = require('tsukuyomi.lang.PersistentList')
 local EMPTY = PersistentList.EMPTY
 
 -- ArraySeq transforms a Lua array into something like a PersistentList in
@@ -11,7 +8,6 @@ local EMPTY = PersistentList.EMPTY
 -- This is necessary to maintain speed in (read)ing and destructuring of
 -- function call argument [& rest]
 local ArraySeq = {}
-tsukuyomi.lang.ArraySeq = ArraySeq
 ArraySeq.__index = ArraySeq
 -- This is a persistent data structure :-)
 ArraySeq.__newindex = function()
@@ -135,3 +131,5 @@ function ArraySeq:ToLuaArray()
 
   return out, len
 end
+
+return ArraySeq

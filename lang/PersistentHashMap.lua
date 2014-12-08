@@ -1,14 +1,10 @@
 local hamt = require('hamt')
 
-local tsukuyomi = tsukuyomi
-local util = require('tsukuyomi.thirdparty.util')
-
-local PersistentVector = tsukuyomi.lang.PersistentVector
-local PersistentList = tsukuyomi.lang.PersistentList
-local ArraySeq = tsukuyomi.lang.ArraySeq
+local PersistentVector = require('tsukuyomi.lang.PersistentVector')
+local PersistentList = require('tsukuyomi.lang.PersistentList')
+local ArraySeq = require('tsukuyomi.lang.ArraySeq')
 
 local PersistentHashMap = {}
-tsukuyomi.lang.PersistentHashMap = PersistentHashMap
 PersistentHashMap.__index = PersistentHashMap
 -- This is a persistent data structure :-)
 PersistentHashMap.__newindex = function()
@@ -75,3 +71,5 @@ end
 function PersistentHashMap:with_meta(m)
   return setmetatable({hamt = self.hamt, _meta = m}, PersistentHashMap)
 end
+
+return PersistentHashMap

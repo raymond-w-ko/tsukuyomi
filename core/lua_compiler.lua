@@ -1,8 +1,10 @@
-local tsukuyomi = tsukuyomi
-local Symbol = tsukuyomi.lang.Symbol
-local Compiler = tsukuyomi.lang.Namespace.GetNamespaceSpace('tsukuyomi.lang.Compiler')
-local Var = tsukuyomi.lang.Var
-local Namespace = tsukuyomi.lang.Namespace
+local tsukuyomi = require('tsukuyomi')
+local tsukuyomi_core = require('tsukuyomi.core')
+local Symbol = require('tsukuyomi.lang.Symbol')
+local Namespace = require('tsukuyomi.lang.Namespace')
+local Compiler = Namespace.intern('tsukuyomi.lang.Compiler')
+local Var = require('tsukuyomi.lang.Var')
+local Namespace = require('tsukuyomi.lang.Namespace')
 
 local safe_char_map = {
   -- is the below a good idea?
@@ -31,7 +33,7 @@ end
 
 local function check_var_exists(bound_symbol)
   local lisp_var_exists = Var.GetVar(bound_symbol)
-  local external_var_exists = Namespace.GetExternalNamespace(bound_symbol.namespace)[bound_symbol.name]
+  local external_var_exists = Namespace.intern(bound_symbol.namespace)[bound_symbol.name]
 
   if lisp_var_exists ~= nil or external_var_exists ~= nil then
     return
@@ -47,7 +49,7 @@ end
 
 local function symbol_to_lua(state, symbol, skip_var_existence_check)
   local code = {}
-  local bound_symbol = tsukuyomi.core['*ns*']:bind_symbol(symbol)
+  local bound_symbol = tsukuyomi_core['*ns*']:__bind_symbol__(symbol)
 
   -- var existence check should only be skipped when defining something
   if not skip_var_existence_check then
@@ -135,7 +137,7 @@ end
 
 function Compiler.compile_data(state, data)
   local var_name = Compiler.make_unique_var_name('data')
-  local data_str = string.format('%q', tsukuyomi.core['pr-str'][1](data))
+  local data_str = string.format('%q', tsukuyomi_core['pr-str'][1](data))
   table.insert(state.data_list, {var_name, data_str})
   return var_name
 end
@@ -185,7 +187,8 @@ function Compiler.compile_to_lua(ir_list)
     elseif insn.op == 'EMPTYVAR' then
       emit('local ', insn.args[1])
     elseif insn.op == 'NS' then
-      emit('tsukuyomi.lang.Namespace.SetActiveNamespace("')
+      emit(Compiler.compile_ns(state, 'tsukuyomi.lang.Namespace'))
+      emit('.SetActiveNamespace("')
       emit(insn.args[1].name)
       emit('"); ')
     elseif insn.op == 'PRIMITIVE' then
@@ -372,8 +375,15 @@ function Compiler.compile_to_lua(ir_list)
 
   local final = {}
 
-  table.insert(final, 'local tsukuyomi = _G.tsukuyomi')
-  table.insert(final, '')
+  if #state.seen_symbols_list > 0 then
+    Compiler.compile_ns(state, 'tsukuyomi.lang.Symbol')
+  end
+  if #state.seen_keywords_list > 0 then
+    Compiler.compile_ns(state, 'tsukuyomi.lang.Keyword')
+  end
+  if #state.data_list > 0 then
+    Compiler.compile_ns(state, 'tsukuyomi.core')
+  end
 
   -- write out seen namespaces
   for i = 1, #state.seen_namespaces_list do
@@ -381,7 +391,7 @@ function Compiler.compile_to_lua(ir_list)
     local line = {}
     table.insert(line, 'local ')
     table.insert(line, pair[1])
-    table.insert(line, ' = tsukuyomi.lang.Namespace.GetNamespaceSpace("')
+    table.insert(line, ' = require("')
     table.insert(line, pair[2])
     table.insert(line, '")')
     table.insert(final, table.concat(line))
@@ -395,7 +405,9 @@ function Compiler.compile_to_lua(ir_list)
     local line = {}
     table.insert(line, 'local ')
     table.insert(line, pair[1])
-    table.insert(line, ' = tsukuyomi.lang.Symbol.intern(')
+    table.insert(line, ' = ')
+    table.insert(line, Compiler.compile_ns(state, 'tsukuyomi.lang.Symbol'))
+    table.insert(line, '.intern(')
     table.insert(line, string.format('%q', symbol[1]))
     table.insert(line, '')
     if symbol[2] then
@@ -413,7 +425,9 @@ function Compiler.compile_to_lua(ir_list)
     local line = {}
     table.insert(line, 'local ')
     table.insert(line, pair[1])
-    table.insert(line, ' = tsukuyomi.lang.Keyword.intern(')
+    table.insert(line, ' = ')
+    table.insert(line, Compiler.compile_ns(state, 'tsukuyomi.lang.Keyword'))
+    table.insert(line, '.intern(')
     table.insert(line, pair[2])
     table.insert(line, ')')
     table.insert(final, table.concat(line))
@@ -426,7 +440,9 @@ function Compiler.compile_to_lua(ir_list)
     local line = {}
     table.insert(line, 'local ')
     table.insert(line, pair[1])
-    table.insert(line, ' = tsukuyomi.core.read[1](')
+    table.insert(line, ' = ')
+    table.insert(line, Compiler.compile_ns(state, 'tsukuyomi.core'))
+    table.insert(line, '.read[1](')
     table.insert(line, pair[2])
     table.insert(line, ')')
     table.insert(final, table.concat(line))

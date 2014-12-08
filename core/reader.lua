@@ -1,12 +1,12 @@
-local tsukuyomi = tsukuyomi
 local util = require('tsukuyomi.thirdparty.util')
-local PushbackReader = tsukuyomi.lang.PushbackReader
-local PersistentList = tsukuyomi.lang.PersistentList
-local ArraySeq = tsukuyomi.lang.ArraySeq
-local PersistentVector = tsukuyomi.lang.PersistentVector
-local PersistentHashMap = tsukuyomi.lang.PersistentHashMap
-local Symbol = tsukuyomi.lang.Symbol
-local Keyword = tsukuyomi.lang.Keyword
+
+local PushbackReader = require('tsukuyomi.lang.PushbackReader')
+local PersistentList = require('tsukuyomi.lang.PersistentList')
+local ArraySeq = require('tsukuyomi.lang.ArraySeq')
+local PersistentVector = require('tsukuyomi.lang.PersistentVector')
+local PersistentHashMap = require('tsukuyomi.lang.PersistentHashMap')
+local Symbol = require('tsukuyomi.lang.Symbol')
+local Keyword = require('tsukuyomi.lang.Keyword')
 
 --------------------------------------------------------------------------------
 
@@ -45,7 +45,8 @@ end
 local EOF = ''
 
 local LispReader = {}
-tsukuyomi.lang.LispReader = LispReader
+-- TODO: remove this hack once I can move this file
+package.loaded['tsukuyomi.lang.LispReader'] = LispReader
 
 LispReader.macros = {}
 local macros = LispReader.macros
@@ -361,10 +362,13 @@ end
 macros['^'] = read_meta
 
 -- TODO: fix location to be in tsukuyomi.lang
+local tsukuyomi = require('tsukuyomi')
 tsukuyomi.read = read
 
-tsukuyomi.core.read = tsukuyomi.lang.Function.new()
-tsukuyomi.core.read[1] = read
-tsukuyomi.core.read[2] = read
-tsukuyomi.core.read[3] = read
-tsukuyomi.core.read[4] = read
+local core = require('tsukuyomi.core')
+local Function = require('tsukuyomi.lang.Function')
+core.read = Function.new()
+core.read[1] = read
+core.read[2] = read
+core.read[3] = read
+core.read[4] = read
