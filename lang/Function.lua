@@ -5,8 +5,14 @@ local Function = {}
 -- let's hope this doesn't cause any problems
 package.loaded['tsukuyomi.lang.Function'] = Function
 
+local DebugMetatable = {}
+DebugMetatable.__index = function(t, k)
+  assert(false, 'tsukuyomi.lang.Function given wrong number of args: ' .. tostring(k))
+end
+
 function Function.new()
-  return {}
+  local fn = {}
+  return setmetatable(fn, DebugMetatable)
 end
 
 local kNumArgsBeforeGeneralizedRest = 20
@@ -185,7 +191,7 @@ for rest_arg_index = 1, kMaxArgsBeforeRestArg do
   make_general_rest_fn(rest_arg_index)
 end
 
-local FunctionWithRestArgsMetatable = {}
+--local FunctionWithRestArgsMetatable = {}
 
 --[[
 FunctionWithRestArgsMetatable.__index = function(t, key)
@@ -220,7 +226,7 @@ function Function.make_functions_for_rest(fn, rest_arg_index)
   local base_fn = fn[rest_arg_index]
 
   local index = rest_arg_index - 1
-  if fn[index] == nil then
+  if rawget(fn, index) == nil then
     fn[index] = Function._rest_fn_creators[rest_arg_index][index](base_fn)
   end
 
