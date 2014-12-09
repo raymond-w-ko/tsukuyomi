@@ -52,15 +52,15 @@
 (print (list 1 2 3 4 5 6 7 8 9 10 11))
 (print (list 1 2 3 4 5 6 7 8 9 10 11 12))
 (print (list 1 2 3 4 5 6 7 8 9 10 11 12 13))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18 19))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18 19 20))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18 19 20 21))
-(print (list 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 18 19 20 21 22))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21))
+(print (list 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22))
 
 (def test0
   (fn
@@ -97,6 +97,8 @@
     ([x] "x")
     ([x & args] (cons x args))))
 
+; causes arity error
+;(print (test1))
 (print (test1 "foo"))
 (print (test1 "foo" 1))
 (print (test1 "foo" 1 2))
@@ -161,7 +163,7 @@
 
 (print (test3 "foo" "bar"))
 
-(print "vector seq test")
+(print "BEGIN vector seq test")
 (print (seq []))
 (print (seq [1]))
 (print (seq [1 2]))
@@ -180,26 +182,7 @@
 
 (defn apply-test [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
                   arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20]
-  (print arg1)
-  (print arg2)
-  (print arg3)
-  (print arg4)
-  (print arg5)
-  (print arg6)
-  (print arg7)
-  (print arg8)
-  (print arg9)
-  (print arg10)
-  (print arg11)
-  (print arg12)
-  (print arg13)
-  (print arg14)
-  (print arg15)
-  (print arg16)
-  (print arg17)
-  (print arg18)
-  (print arg19)
-  (print arg20)
+  (print (list arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10 arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20))
   )
 
 ;; error test
@@ -211,28 +194,7 @@
 
 (defn apply-test [arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10
                   arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 & rest]
-  (print arg1)
-  (print arg2)
-  (print arg3)
-  (print arg4)
-  (print arg5)
-  (print arg6)
-  (print arg7)
-  (print arg8)
-  (print arg9)
-  (print arg10)
-  (print arg11)
-  (print arg12)
-  (print arg13)
-  (print arg14)
-  (print arg15)
-  (print arg16)
-  (print arg17)
-  (print arg18)
-  (print arg19)
-  (print arg20)
-  (print rest)
-  )
+  (print (list arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 arg9 arg10 arg11 arg12 arg13 arg14 arg15 arg16 arg17 arg18 arg19 arg20 rest)))
 
 (print "apply-test 20 args 0 rest test")
 (apply-test 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)
@@ -249,8 +211,9 @@
 (print (def asdf 1234))
 (print (def asdf 1234))
 
-(do)
-(print (do (+ 1 1)))
+(print (do))
+(print (do
+         (+ 1 1)))
 (print (do
          (+ 1 1)
          (+ 42 43)))
