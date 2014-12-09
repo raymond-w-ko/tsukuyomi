@@ -13,8 +13,15 @@
   (fn [x]
     (_emit_ "(x == nil)")))
 
-;; this is Lua's ==
-(def ===
+; This is Lua's ==
+
+; Basically the intent (I think) of Clojure's == is to have the lowest cost
+; equality comparison, which was really for math operations. In fact, it casted
+; arguments to java.lang.Number
+
+; There is no straight equivalent since there is no number system, but Lua's ==
+; is probably good enough
+(def ==
   (fn [x y] (_emit_ "x == y")))
 
 (def first
@@ -65,7 +72,7 @@
   (fn
     ([] '()) 
     ([x]
-     (if (=== x nil)
+     (if (== x nil)
        '()
        (seq x)))
     ([x y]
@@ -76,7 +83,7 @@
 
 ; this is just a placeholder until the full version of collection compare is possible
 (def =
-  (fn [x y] (=== x y)))
+  (fn [x y] (== x y)))
 
 (let [_apply tsukuyomi.core/_apply]
   (def apply
