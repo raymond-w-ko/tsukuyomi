@@ -650,7 +650,7 @@ op_dispatch['LISP'] = function(node, new_dirty_nodes)
       local real_sym = Symbol.intern(method.name, ns.name)
       datum = PersistentList.new(nil, real_sym, datum, 1 + datum:count())
 
-      node.is_direct_function = true
+      node.is_pure_lua_function = true
     end
 
     -- normal function call
