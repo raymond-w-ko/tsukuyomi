@@ -193,7 +193,8 @@ insn_dispatch['CALL'] = function(insn, state, line)
     -- does this always hold true? are there other things that are callable?
   end
 
-  local arg_start_index = 2
+  local arg_start_index
+  local num_func_symbols
 
   if getmetatable(fn) == Symbol and fn.namespace == nil and fn.name:sub(1, 1) == '.' then
     -- object oriented function call
@@ -203,12 +204,16 @@ insn_dispatch['CALL'] = function(insn, state, line)
     table.insert(state.line, fn.name:sub(2))
 
     arg_start_index = 3
+    num_func_symbols = 2
   elseif getmetatable(fn) == Symbol and fn.name:sub(name_len, name_len) == '.' then
     -- Protoype.new style constructor call
     -- (Namespace/Prototype.)
     local real_sym = Symbol.intern(args[1].name:sub(1, name_len - 1), args[1].namespace)
     table.insert(state.line, compile_string_or_symbol(state, args[2], insn.environment))
     table.insert(state.line, '.new')
+
+    arg_start_index = 2
+    num_func_symbols = 1
   else
     table.insert(state.line, compile_string_or_symbol(state, fn, insn.environment))
     local arity = #args - 1
@@ -217,28 +222,32 @@ insn_dispatch['CALL'] = function(insn, state, line)
       table.insert(state.line, tostring(math.min(arity, 21)))
       table.insert(state.line, ']')
     end
+
+    arg_start_index = 2
+    num_func_symbols = 1
   end
 
   table.insert(state.line, '(')
-  local stray_args_max_bounds = math.min(20 + 1, #args)
+
+  local stray_args_max_bounds = math.min(20 + num_func_symbols, #args)
   for i = arg_start_index, stray_args_max_bounds do
     table.insert(state.line, compile_string_or_symbol(state, args[i], insn.environment))
     if i < stray_args_max_bounds then
       table.insert(state.line, ', ')
     end
   end
-  if #args > 21 then
+  if #args > (20 + num_func_symbols) then
     table.insert(state.line, ', ')
     table.insert(state.line, Compiler.compile_ns(state, 'tsukuyomi.lang.ArraySeq'))
     table.insert(state.line, '.new(nil, {')
-    for i = 21 + 1, #args do
+    for i = 21 + num_func_symbols, #args do
       table.insert(state.line, compile_string_or_symbol(state, args[i], insn.environment))
       if i < #args then
         table.insert(state.line, ', ')
       end
     end
     table.insert(state.line, '}, 1, ')
-    table.insert(state.line, tostring(#args - 20 - 1))
+    table.insert(state.line, tostring(#args - 20 - num_func_symbols))
     table.insert(state.line,  ')')
   end
   table.insert(state.line,  ')')

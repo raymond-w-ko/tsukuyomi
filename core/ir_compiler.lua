@@ -508,7 +508,7 @@ special_forms['fn'] = function(node, datum, new_dirty_nodes)
       end
     end
 
-    extended_environment:set_recur_point('fn', func_var_name ,#node.args)
+    extended_environment:set_recur_point('fn', func_var_name, #node.args)
 
     while exprs do
       local fence = Compiler.ll_new_node('VARFENCE', extended_environment)
