@@ -152,34 +152,34 @@ function insn_dispatch_mt.__index(t, k)
 end
 setmetatable(insn_dispatch, insn_dispatch_mt)
 
-insn_dispatch['NOP'] = function(insn, state, line)
+insn_dispatch['NOP'] = function(insn, state)
 end
 
-insn_dispatch['EMPTYVAR'] = function(insn, state, line)
+insn_dispatch['EMPTYVAR'] = function(insn, state)
   table.insert(state.line, 'local ')
   table.insert(state.line, insn.args[1])
 end
 
-insn_dispatch['NS'] = function(insn, state, line)
+insn_dispatch['NS'] = function(insn, state)
   table.insert(state.line, Compiler.compile_ns(state, 'tsukuyomi.lang.Namespace'))
   table.insert(state.line, '.SetActiveNamespace("')
   table.insert(state.line, insn.args[1].name)
   table.insert(state.line, '"); ')
 end
 
-insn_dispatch['PRIMITIVE'] = function(insn, state, line)
+insn_dispatch['PRIMITIVE'] = function(insn, state)
   table.insert(state.line, compile_string_or_symbol(state, insn.args[1], insn.environment))
 end
 
-insn_dispatch['RAW'] = function(insn, state, line)
+insn_dispatch['RAW'] = function(insn, state)
   table.insert(state.line, insn.args[1])
 end
 
-insn_dispatch['DATA'] = function(insn, state, line)
+insn_dispatch['DATA'] = function(insn, state)
   table.insert(state.line, Compiler.compile_data(state, insn.args[1]))
 end
 
-insn_dispatch['CALL'] = function(insn, state, line)
+insn_dispatch['CALL'] = function(insn, state)
   local args = insn.args
 
   local fn = insn.args[1]
@@ -253,12 +253,12 @@ insn_dispatch['CALL'] = function(insn, state, line)
   table.insert(state.line,  ')')
 end
 
-insn_dispatch['FUNC'] = function(insn, state, line)
+insn_dispatch['FUNC'] = function(insn, state)
   table.insert(state.line, Compiler.compile_ns(state,  'tsukuyomi.lang.Function'))
   table.insert(state.line, '.new()')
 end
 
-insn_dispatch['FUNCBODY'] = function(insn, state, line)
+insn_dispatch['FUNCBODY'] = function(insn, state)
   local arity = #insn.args
   table.insert(state.line, get_bound_var_name(state, insn.parent))
   table.insert(state.line, '[')
@@ -276,7 +276,18 @@ insn_dispatch['FUNCBODY'] = function(insn, state, line)
   table.insert(state.line, ')')
 end
 
-insn_dispatch['RESTARGSAT'] = function(insn, state, line)
+insn_dispatch['GOTO'] = function(insn, state)
+  table.insert(state.line, 'goto ')
+  table.insert(state.line, insn.args[1])
+end
+
+insn_dispatch['LABEL'] = function(insn, state)
+  table.insert(state.line, '::')
+  table.insert(state.line, insn.args[1])
+  table.insert(state.line, '::')
+end
+
+insn_dispatch['RESTARGSAT'] = function(insn, state)
   local args = insn.args
 
   table.insert(state.line, Compiler.compile_ns(state,  'tsukuyomi.lang.Function'))
@@ -289,40 +300,40 @@ insn_dispatch['RESTARGSAT'] = function(insn, state, line)
   table.insert(state.line, ')')
 end
 
-insn_dispatch['ENDFUNCBODY'] = function(insn, state, line)
+insn_dispatch['ENDFUNCBODY'] = function(insn, state)
   table.insert(state.line, 'end')
   state.indent = state.indent - 1
 end
 
-insn_dispatch['ENDFUNC'] = function(insn, state, line)
+insn_dispatch['ENDFUNC'] = function(insn, state)
 end
 
-insn_dispatch['IF'] = function(insn, state, line)
+insn_dispatch['IF'] = function(insn, state)
   table.insert(state.line, 'if ')
   table.insert(state.line, insn.args[1])
   table.insert(state.line, ' then')
 end
 
-insn_dispatch['ELSE'] = function(insn, state, line)
+insn_dispatch['ELSE'] = function(insn, state)
   state.indent = state.indent - 1
   table.insert(state.line, 'else')
 end
 
-insn_dispatch['ENDIF'] = function(insn, state, line)
+insn_dispatch['ENDIF'] = function(insn, state)
   state.indent = state.indent - 1
   table.insert(state.line, 'end')
 end
 
-insn_dispatch['VARFENCE'] = function(insn, state, line)
+insn_dispatch['VARFENCE'] = function(insn, state)
   table.insert(state.line, 'do')
 end
 
-insn_dispatch['ENDVARFENCE'] = function(insn, state, line)
+insn_dispatch['ENDVARFENCE'] = function(insn, state)
   table.insert(state.line, 'end')
   state.indent = state.indent - 1
 end
 
-insn_dispatch['INTERNVAR'] = function(insn, state, line)
+insn_dispatch['INTERNVAR'] = function(insn, state)
   table.insert(state.line, Compiler.compile_ns(state, 'tsukuyomi.lang.Var'))
   table.insert(state.line, '.intern(')
   table.insert(state.line, Compiler.compile_data(state, insn.args[1]))
@@ -331,19 +342,19 @@ insn_dispatch['INTERNVAR'] = function(insn, state, line)
   table.insert(state.line, ')')
 end
 
-insn_dispatch['GETVAR'] = function(insn, state, line)
+insn_dispatch['GETVAR'] = function(insn, state)
   table.insert(state.line, Compiler.compile_ns(state, 'tsukuyomi.lang.Var'))
   table.insert(state.line, '.GetVar(')
   table.insert(state.line, Compiler.compile_data(state, insn.args[1]))
   table.insert(state.line, ')')
 end
 
-insn_dispatch['NEWVEC'] = function(insn, state, line)
+insn_dispatch['NEWVEC'] = function(insn, state)
   table.insert(state.line, Compiler.compile_ns(state,  'tsukuyomi.lang.PersistentVector'))
   table.insert(state.line, '.new()')
 end
 
-insn_dispatch['VECADD'] = function(insn, state, line)
+insn_dispatch['VECADD'] = function(insn, state)
   local vec = insn.args[1]
   local datum = insn.args[2]
   local vec_name = get_bound_var_name(state, vec)
@@ -355,12 +366,12 @@ insn_dispatch['VECADD'] = function(insn, state, line)
   table.insert(state.line, ')')
 end
 
-insn_dispatch['NEWMAP'] = function(insn, state, line)
+insn_dispatch['NEWMAP'] = function(insn, state)
   table.insert(state.line, Compiler.compile_ns(state,  'tsukuyomi.lang.PersistentHashMap'))
   table.insert(state.line, '.new()')
 end
 
-insn_dispatch['MAPADD'] = function(insn, state, line)
+insn_dispatch['MAPADD'] = function(insn, state)
   local map = insn.args[1]
   local k = insn.args[2]
   local v = insn.args[3]
@@ -375,7 +386,7 @@ insn_dispatch['MAPADD'] = function(insn, state, line)
   table.insert(state.line, ')')
 end
 
-insn_dispatch['KEYWORD'] = function(insn, state, line)
+insn_dispatch['KEYWORD'] = function(insn, state)
   table.insert(state.line, Compiler.compile_keyword(state, insn.args[1]))
 end
 

@@ -167,7 +167,7 @@ function LexicalEnvironment:set_recur_point(recur_type, recur_point_name, recur_
   if recur_type == 'fn' then
     self.recur_type = 'fn'
     self.recur_point_name = recur_point_name
-    self.recur_arity = recur_arity
+    self.recur_arg_list = recur_arity
   else
     assert(false)
   end
@@ -197,7 +197,12 @@ function LexicalEnvironment:__tostring()
     table.insert(t, ' NAME: ')
     table.insert(t, self.recur_point_name)
     table.insert(t, ' ARITY: ')
-    table.insert(t, self.recur_arity)
+    table.insert(t, #self.recur_arg_list)
+    table.insert(t, ' ARGS: ')
+    for i = 1, #self.recur_arg_list do
+      table.insert(t, self.recur_arg_list[i])
+      table.insert(t, ' ')
+    end
   end
 
   return table.concat(t)
@@ -480,6 +485,7 @@ special_forms['fn'] = function(node, datum, new_dirty_nodes)
     Compiler.ll_insert_after(node, func_node)
     node = func_node
     node.args = {}; local slot = 1
+    local function_arg_list = node.args
     node.parent = orig_node
 
     -- convert function argument symbols to string
@@ -508,7 +514,45 @@ special_forms['fn'] = function(node, datum, new_dirty_nodes)
       end
     end
 
-    extended_environment:set_recur_point('fn', func_var_name, #node.args)
+    local entry_point_name = func_var_name .. '_entry_point'
+    local rebind_point_name = func_var_name .. '_rebind_point'
+
+    local rebind_args_list = {}
+    extended_environment:set_recur_point('fn', rebind_point_name, rebind_args_list)
+
+    for i = 1, #function_arg_list do
+      local rebind_arg_node = Compiler.ll_new_node('EMPTYVAR', extended_environment)
+      local rebind_arg_name = Compiler.make_unique_var_name('rebind_arg')
+      rebind_arg_node.args = {rebind_arg_name}
+      table.insert(rebind_args_list, rebind_arg_name)
+      Compiler.ll_insert_after(node, rebind_arg_node)
+      node = rebind_arg_node
+    end
+
+    local goto_entry_point_node = Compiler.ll_new_node('GOTO', extended_environment)
+    goto_entry_point_node.args = {entry_point_name}
+    Compiler.ll_insert_after(node, goto_entry_point_node)
+    node = goto_entry_point_node
+
+    -- rebind entry point
+    local rebind_entry_point_node = Compiler.ll_new_node('LABEL', extended_environment)
+    rebind_entry_point_node.args = {rebind_point_name}
+    Compiler.ll_insert_after(node, rebind_entry_point_node)
+    node = rebind_entry_point_node
+
+    for i = 1, #function_arg_list do
+      local rebind_var_node = Compiler.ll_new_node('PRIMITIVE', extended_environment)
+      rebind_var_node.set_var_name = function_arg_list[i]
+      rebind_var_node.args = {rebind_args_list[i]}
+      Compiler.ll_insert_after(node, rebind_var_node)
+      node = rebind_var_node
+    end
+
+    -- initial, normal entry point
+    local entry_point_label_node = Compiler.ll_new_node('LABEL', extended_environment)
+    entry_point_label_node.args = {entry_point_name}
+    Compiler.ll_insert_after(node, entry_point_label_node)
+    node = entry_point_label_node
 
     while exprs do
       local fence = Compiler.ll_new_node('VARFENCE', extended_environment)
@@ -545,6 +589,10 @@ special_forms['fn'] = function(node, datum, new_dirty_nodes)
 
   local end_func_node = Compiler.ll_new_node('ENDFUNC', orig_node.environment)
   Compiler.ll_insert_after(node, end_func_node)
+end
+
+special_forms['recur'] = function(node, datum, new_dirty_nodes)
+  assert(false)
 end
 
 Compiler.op_dispatch = {}
