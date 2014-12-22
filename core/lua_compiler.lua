@@ -7,8 +7,8 @@ local Var = require('tsukuyomi.lang.Var')
 local Namespace = require('tsukuyomi.lang.Namespace')
 
 local safe_char_map = {
-  -- is the below a good idea?
-  -- or is the following needed instead?
+  -- Is the below a good idea?
+  -- Or is the following safer? It makes it harder to read though.
   --['-'] = '__SUB__',
   --['.'] = '__DOT__',
   ['-'] = '_',
@@ -72,12 +72,12 @@ end
 local kNilSymbol = Symbol.intern('nil')
 local function compile_string_or_symbol(state, datum, environment)
   if type(datum) == 'string' then
-    return datum
+    return Compiler.to_safe_lua_identifier(datum)
   elseif datum == kNilSymbol then
     return 'nil'
   elseif getmetatable(datum) == Symbol then
     if environment:has_symbol(datum) then
-      return datum.name
+      return Compiler.to_safe_lua_identifier(datum.name)
     else
       return symbol_to_lua(state, datum)
     end
@@ -268,7 +268,7 @@ insn_dispatch['FUNCBODY'] = function(insn, state)
   table.insert(state.line, '(')
   for i = 1, #insn.args do
     local arg_name = insn.args[i]
-    table.insert(state.line, arg_name)
+    table.insert(state.line, Compiler.to_safe_lua_identifier(arg_name))
     if i < #insn.args then
       table.insert(state.line, ', ')
     end
@@ -415,10 +415,10 @@ function Compiler.compile_to_lua(ir_list)
     -- variable definition, or returning
     if insn.new_lvar_name then
       table.insert(state.line, 'local ')
-      table.insert(state.line, insn.new_lvar_name)
+      table.insert(state.line, Compiler.to_safe_lua_identifier(insn.new_lvar_name))
       table.insert(state.line, ' = ')
     elseif insn.set_var_name then
-      table.insert(state.line, insn.set_var_name)
+      table.insert(state.line, Compiler.to_safe_lua_identifier(insn.set_var_name))
       table.insert(state.line, ' = ')
     elseif insn.define_symbol then
       table.insert(state.line, symbol_to_lua(state, insn.define_symbol, true))

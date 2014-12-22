@@ -221,3 +221,6 @@
          (+ 1 1)
          (+ 42 43)
          "snoopy"))
+
+(defn test-fn [test-arg]
+  (+ 42 test-arg))
