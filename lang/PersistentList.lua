@@ -113,7 +113,7 @@ function EmptyList:is_empty()
 end
 
 function EmptyList:cons(datum)
-  return PersistentList.new(self._meta, datum, nil, 1)
+  return PersistentList.new(self._meta, datum, self, 1)
 end
 
 function EmptyList:meta()
