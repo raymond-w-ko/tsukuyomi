@@ -5,14 +5,31 @@ local Function = {}
 -- let's hope this doesn't cause any problems
 package.loaded['tsukuyomi.lang.Function'] = Function
 
-local DebugMetatable = {}
-DebugMetatable.__index = function(t, k)
+local FunctionObjectMetatable = {}
+FunctionObjectMetatable.__index = function(t, k)
   assert(false, 'tsukuyomi.lang.Function given wrong number of args: ' .. tostring(k))
+end
+
+-- slow path for calling this function, available so that external Lua code can
+-- treat this as a normal function to call
+--
+-- TODO: avoid use of ... so that LuaJIT can trace this and potentially JIT this.
+-- basically would need a list of __call functions specialized for each function arity.
+FunctionObjectMetatable.__call = function(t, ...)
+  local num_fns = 0
+  local func
+  for arity, fn in pairs(t) do
+    num_fns = num_fns + 1
+    func = fn
+  end
+  assert(num_fns == 1,
+         'can not use __call metamethod on tsukuyomi.lang.Function on multiple arity functions')
+  return func(...)
 end
 
 function Function.new()
   local fn = {}
-  return setmetatable(fn, DebugMetatable)
+  return setmetatable(fn, FunctionObjectMetatable)
 end
 
 local kNumArgsBeforeGeneralizedRest = 20
