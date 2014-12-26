@@ -34,7 +34,7 @@ require('tsukuyomi.core.apply')
 -- We can finally load Lisp :-)
 --------------------------------------------------------------------------------
 local core = require('tsukuyomi.core')
-core['load-file'][1]('tsukuyomi/core/bootstrap.tsu')
-core['load-file'][1]('tsukuyomi/core/tests.tsu')
+core['load-file']('tsukuyomi/core/bootstrap.tsu')
+core['load-file']('tsukuyomi/core/tests.tsu')
 
 return tsukuyomi
