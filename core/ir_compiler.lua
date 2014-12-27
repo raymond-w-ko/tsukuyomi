@@ -165,11 +165,12 @@ function LexicalEnvironment:has_symbol(symbol)
   end
 end
 
-function LexicalEnvironment:set_recur_point(recur_type, recur_label_name, recur_arity)
+function LexicalEnvironment:set_recur_point(recur_type, recur_label_name, recur_arity, rest_arg_index)
   if recur_type == 'fn' then
     self.recur_type = 'fn'
     self.recur_label_name = recur_label_name
     self.recur_arg_list = recur_arity
+    self.recur_rest_arg_index = rest_arg_index
   else
     assert(false)
   end
@@ -520,7 +521,7 @@ special_forms['fn'] = function(node, datum, new_dirty_nodes)
     local rebind_point_name = func_var_name .. '_rebind_point'
 
     local rebind_args_list = {}
-    extended_environment:set_recur_point('fn', rebind_point_name, rebind_args_list)
+    extended_environment:set_recur_point('fn', rebind_point_name, rebind_args_list, rest_arg_index)
 
     for i = 1, #function_arg_list do
       local rebind_arg_node = Compiler.ll_new_node('EMPTYVAR', extended_environment)
@@ -598,38 +599,49 @@ special_forms['recur'] = function(node, datum, new_dirty_nodes)
   local recur_type = env.recur_type
   local label = env.recur_label_name
   local rebind_args =  env.recur_arg_list
+  local rest_arg_index = env.recur_rest_arg_index
 
   assert(type(label) == 'string', '(recur ...) does not have a valid point to jump to')
 
+  local args = datum
+
   if recur_type == 'fn' then
-    if #rebind_args <= 20 then
-    elseif #rebind_args == 21 then
+    if not rest_arg_index then
+      assert(#rebind_args == args:count(),
+             'number of args supplied to (recur) does not match number of args of (fn)')
     else
-      assert(false, 'while checking number of args supplied to a fn type (recur), found more than 21 arguments (severe compiler bug?)')
+      assert(args:count() >= (#rebind_args - 1),
+             'number of args supplied to (recur) does not match number of args of (fn), maybe you forgot the rest argument?')
+    end
   else
     assert(false, 'unkown (recur) type')
   end
 
-  local args = datum
   local arg_num = 1
-  local more_args = {}
-  local more_args_rebind_args
+  local rest_args = {}
+  local rest_args_rebind_arg
+  if rest_arg_index then
+    rest_args_rebind_arg = rebind_args[rest_arg_index]
+  end
+  local had_some_rest_args = false
   while args:seq() do
-    --Compiler._log(tsukuyomi.print(args:first()))
     node.op = 'LISP'
     node.args = {args:first()}
     args = args:rest()
 
     if recur_type == 'fn' then
-      if arg_num <= 20 then
+      if not rest_arg_index then
+        -- easy, just set the variables one by one
         node.set_var_name = rebind_args[arg_num]
       else
-        if arg_num == 21 then
-          more_args_rebind_args = rebind_args[arg_num]
+        if arg_num < rest_arg_index then
+          node.set_var_name = rebind_args[arg_num]
+        else
+          local seq_item_name = make_unique_var_name('array_seq_item')
+          node.new_lvar_name = seq_item_name
+          table.insert(rest_args, seq_item_name)
+          had_some_rest_args = true
         end
-        local seq_item_name = make_unique_var_name('array_seq_item')
-        node.new_lvar_name = seq_item_name
-        table.insert(more_args, seq_item_name)
       end
     else
       assert(false, 'unrecognized recur point type, please implement')
@@ -644,10 +656,23 @@ special_forms['recur'] = function(node, datum, new_dirty_nodes)
     node = next_node
   end
 
-  if recur_type == 'fn' and more_args_rebind_args then
+  if recur_type == 'fn' and rest_args_rebind_arg and had_some_rest_args then
     node.op = 'ARRAYSEQ'
-    node.args = more_args
-    node.set_var_name = more_args_rebind_args
+    node.args = rest_args
+    node.set_var_name = rest_args_rebind_arg
+
+    local next_node = Compiler.ll_new_node('UNINITIALIZED', env)
+    Compiler.ll_insert_after(node, next_node)
+    node = next_node
+  end
+  -- I think this is needed in case a function has two possible (recur) calls ,
+  -- where one uses the "rest" arg and then one doesn't. If this is the case,
+  -- then the rest arg can contains "stale" data which totally breaks things in
+  -- the subtlest ways possible.
+  if recur_type == 'fn' and rest_args_rebind_arg and not had_some_rest_args then
+    node.op = 'PRIMITIVE'
+    node.args = {'nil'}
+    node.set_var_name = rest_args_rebind_arg
 
     local next_node = Compiler.ll_new_node('UNINITIALIZED', env)
     Compiler.ll_insert_after(node, next_node)

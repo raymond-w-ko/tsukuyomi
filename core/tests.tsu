@@ -273,3 +273,10 @@
          (list) 2 3 4 5 6 7 8 9 10
          11 12 13 14 15 16 17 18 19 20
          "initial_more_arg"))
+
+(defn smaller-recur-test
+  [arg0 & args]
+  (if (= 8 (count arg0))
+    arg0
+    (recur (cons args arg0) "fizz" "buzz")))
+(print (smaller-recur-test '() "foo" "bar"))
