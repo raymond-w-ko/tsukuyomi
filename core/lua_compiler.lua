@@ -73,6 +73,8 @@ local kNilSymbol = Symbol.intern('nil')
 local function compile_string_or_symbol(state, datum, environment)
   if type(datum) == 'string' then
     return Compiler.to_safe_lua_identifier(datum)
+  elseif type(datum) == 'number' then
+    return tostring(datum)
   elseif datum == kNilSymbol then
     return 'nil'
   elseif getmetatable(datum) == Symbol then
@@ -250,6 +252,22 @@ insn_dispatch['CALL'] = function(insn, state)
     table.insert(state.line, tostring(#args - 20 - num_func_symbols))
     table.insert(state.line,  ')')
   end
+  table.insert(state.line,  ')')
+end
+
+insn_dispatch['ARRAYSEQ'] = function(insn, state)
+  local seq_items = insn.args
+
+  table.insert(state.line, Compiler.compile_ns(state, 'tsukuyomi.lang.ArraySeq'))
+  table.insert(state.line, '.new(nil, {')
+  for i = 1, #seq_items do
+    table.insert(state.line, seq_items[i])
+    if i < #seq_items then
+      table.insert(state.line, ', ')
+    end
+  end
+  table.insert(state.line, '}, 1, ')
+  table.insert(state.line, tostring(#seq_items))
   table.insert(state.line,  ')')
 end
 

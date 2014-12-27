@@ -87,8 +87,10 @@ local function is_lua_primitive(datum)
 end
 
 local function compile_lua_primitive(datum)
-  if type(datum) == 'number' or type(datum) == 'boolean' then
+  if type(datum) == 'boolean' then
     return tostring(datum)
+  elseif type(datum) == 'number' then
+    return datum
   elseif type(datum) == 'string' then
     return string.format('%q', datum)
   elseif getmetatable(datum) == Symbol then
@@ -163,10 +165,10 @@ function LexicalEnvironment:has_symbol(symbol)
   end
 end
 
-function LexicalEnvironment:set_recur_point(recur_type, recur_point_name, recur_arity)
+function LexicalEnvironment:set_recur_point(recur_type, recur_label_name, recur_arity)
   if recur_type == 'fn' then
     self.recur_type = 'fn'
-    self.recur_point_name = recur_point_name
+    self.recur_label_name = recur_label_name
     self.recur_arg_list = recur_arity
   else
     assert(false)
@@ -195,7 +197,7 @@ function LexicalEnvironment:__tostring()
     table.insert(t, ' TYPE: ')
     table.insert(t, self.recur_type)
     table.insert(t, ' NAME: ')
-    table.insert(t, self.recur_point_name)
+    table.insert(t, self.recur_label_name)
     table.insert(t, ' ARITY: ')
     table.insert(t, #self.recur_arg_list)
     table.insert(t, ' ARGS: ')
@@ -592,7 +594,68 @@ special_forms['fn'] = function(node, datum, new_dirty_nodes)
 end
 
 special_forms['recur'] = function(node, datum, new_dirty_nodes)
-  assert(false)
+  local env = node.environment
+  local recur_type = env.recur_type
+  local label = env.recur_label_name
+  local rebind_args =  env.recur_arg_list
+
+  assert(type(label) == 'string', '(recur ...) does not have a valid point to jump to')
+
+  if recur_type == 'fn' then
+    if #rebind_args <= 20 then
+    elseif #rebind_args == 21 then
+    else
+      assert(false, 'while checking number of args supplied to a fn type (recur), found more than 21 arguments (severe compiler bug?)')
+  else
+    assert(false, 'unkown (recur) type')
+  end
+
+  local args = datum
+  local arg_num = 1
+  local more_args = {}
+  local more_args_rebind_args
+  while args:seq() do
+    --Compiler._log(tsukuyomi.print(args:first()))
+    node.op = 'LISP'
+    node.args = {args:first()}
+    args = args:rest()
+
+    if recur_type == 'fn' then
+      if arg_num <= 20 then
+        node.set_var_name = rebind_args[arg_num]
+      else
+        if arg_num == 21 then
+          more_args_rebind_args = rebind_args[arg_num]
+        end
+        local seq_item_name = make_unique_var_name('array_seq_item')
+        node.new_lvar_name = seq_item_name
+        table.insert(more_args, seq_item_name)
+      end
+    else
+      assert(false, 'unrecognized recur point type, please implement')
+    end
+
+    arg_num = arg_num + 1
+
+    table.insert(new_dirty_nodes, node)
+
+    local next_node = Compiler.ll_new_node('UNINITIALIZED', env)
+    Compiler.ll_insert_after(node, next_node)
+    node = next_node
+  end
+
+  if recur_type == 'fn' and more_args_rebind_args then
+    node.op = 'ARRAYSEQ'
+    node.args = more_args
+    node.set_var_name = more_args_rebind_args
+
+    local next_node = Compiler.ll_new_node('UNINITIALIZED', env)
+    Compiler.ll_insert_after(node, next_node)
+    node = next_node
+  end
+
+  node.op = 'GOTO'
+  node.args = {label}
 end
 
 Compiler.op_dispatch = {}
