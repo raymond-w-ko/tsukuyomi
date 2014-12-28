@@ -611,7 +611,7 @@ special_forms['recur'] = function(node, datum, new_dirty_nodes)
              'number of args supplied to (recur) does not match number of args of (fn)')
     else
       assert(args:count() >= (#rebind_args - 1),
-             'number of args supplied to (recur) does not match number of args of (fn), maybe you forgot the rest argument?')
+             'number of args supplied to (recur) does not match number of args of (fn)')
     end
   else
     assert(false, 'unkown (recur) type')
