@@ -225,7 +225,7 @@ special_forms['ns'] = function(node, datum, new_dirty_nodes)
   node.op = 'NS'
   node.args = {datum:first()}
 
-  -- TODO: see if it makes sense to return anything here other than a dummy value
+  -- like Clojure, this returns nil
   if node.is_return then
     node.is_return = false
 
