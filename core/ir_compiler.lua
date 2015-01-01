@@ -448,6 +448,7 @@ special_forms['let'] = function(node, datum, new_dirty_nodes)
 end
 
 -- (fn [arg0 arg1] (body))
+-- (fn [arg0 arg1] (body0) (body1))
 special_forms['fn'] = function(node, datum, new_dirty_nodes)
   local func_var_name = make_unique_var_name('func')
 
